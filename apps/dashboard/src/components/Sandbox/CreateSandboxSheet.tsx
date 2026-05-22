@@ -27,12 +27,11 @@ import { useCreateSandboxMutation } from '@/hooks/mutations/useCreateSandboxMuta
 import { useSnapshotsQuery } from '@/hooks/queries/useSnapshotsQuery'
 import { useConfig } from '@/hooks/useConfig'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
-import { useRegions } from '@/hooks/useRegions'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { parseEnvFile } from '@/lib/env'
 import { handleApiError } from '@/lib/error-handling'
 import { imageNameSchema } from '@/lib/schema'
-import { cn, getRegionFullDisplayName } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Sandbox } from '@boxlite-ai/sdk'
 import { useForm } from '@tanstack/react-form'
 import { Info, Minus, Plus, Upload } from 'lucide-react'
@@ -80,7 +79,6 @@ const buildBaseFormSchema = (maxCpu?: number, maxMemory?: number, maxDisk?: numb
       .string()
       .optional()
       .refine((val) => !val || NAME_REGEX.test(val), 'Only letters, digits, dots, underscores and dashes are allowed'),
-    regionId: z.string().optional(),
     cpu: resourceSchema('CPU', maxCpu),
     memory: resourceSchema('Memory', maxMemory),
     disk: resourceSchema('Storage', maxDisk),
@@ -124,7 +122,6 @@ const defaultValues: FormValues = {
   source: Source.SNAPSHOT,
   snapshot: undefined,
   image: '',
-  regionId: undefined,
   cpu: undefined,
   memory: undefined,
   disk: undefined,
@@ -159,7 +156,6 @@ export const CreateSandboxSheet = ({
   const [open, setOpen] = useState(false)
 
   const config = useConfig()
-  const { availableRegions: regions, loadingAvailableRegions: loadingRegions } = useRegions()
   const { selectedOrganization } = useSelectedOrganization()
   const { reset: resetCreateSandboxMutation, ...createSandboxMutation } = useCreateSandboxMutation()
   const formRef = useRef<HTMLFormElement>(null)
@@ -209,7 +205,6 @@ export const CreateSandboxSheet = ({
 
       const baseParams = {
         name: value.name?.trim() || undefined,
-        target: value.regionId || undefined,
         autoStopInterval: value.autoStopInterval,
         autoArchiveInterval: value.autoArchiveInterval,
         autoDeleteInterval: value.autoDeleteInterval,
@@ -571,29 +566,6 @@ export const CreateSandboxSheet = ({
               )}
             </form.Subscribe>
 
-            <form.Field name="regionId">
-              {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Region</FieldLabel>
-                  <Select value={field.state.value} onValueChange={field.handleChange}>
-                    <SelectTrigger className="h-8" id={field.name} disabled={loadingRegions} loading={loadingRegions}>
-                      <SelectValue placeholder={loadingRegions ? 'Loading regions...' : 'Select a region'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {regions.map((region) => (
-                        <SelectItem key={region.id} value={region.id}>
-                          {getRegionFullDisplayName(region)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldDescription>
-                    The region where the Box will be created. If not specified, your organization's default region will
-                    be used.
-                  </FieldDescription>
-                </Field>
-              )}
-            </form.Field>
             <div className="flex flex-col gap-2">
               <Label className="text-sm font-medium">Lifecycle</Label>
               <div className="flex flex-col gap-2">
