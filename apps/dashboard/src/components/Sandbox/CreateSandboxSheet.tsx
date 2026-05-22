@@ -244,7 +244,7 @@ export const CreateSandboxSheet = ({
 
         if (sandbox?.id) {
           navigate({
-            pathname: generatePath(RoutePath.SANDBOX_DETAILS, { sandboxId: sandbox.id }),
+            pathname: generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id }),
             search: `${createSearchParams({
               tab: 'terminal',
             })}`,

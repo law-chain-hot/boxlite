@@ -171,9 +171,9 @@ function App() {
           </Suspense>
         }
       >
-        <Route index element={<Navigate to={`${getRouteSubPath(RoutePath.SANDBOXES)}${location.search}`} replace />} />
+        <Route index element={<Navigate to={`${getRouteSubPath(RoutePath.BOXES)}${location.search}`} replace />} />
         <Route path={getRouteSubPath(RoutePath.KEYS)} element={<Keys />} />
-        <Route path={getRouteSubPath(RoutePath.SANDBOXES)} element={<Sandboxes />} />
+        <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Sandboxes />} />
         {/* Pathless layout route: a single SandboxSessionProvider fiber
             persists across the three sandbox routes, so activation state
             (e.g. "terminal connected") survives navigation between the
@@ -186,9 +186,9 @@ function App() {
             </SandboxSessionProvider>
           }
         >
-          <Route path={getRouteSubPath(RoutePath.SANDBOX_TERMINAL)} element={<SandboxTerminalFullscreen />} />
-          <Route path={getRouteSubPath(RoutePath.SANDBOX_VNC)} element={<SandboxVncFullscreen />} />
-          <Route path={getRouteSubPath(RoutePath.SANDBOX_DETAILS)} element={<SandboxDetails />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_TERMINAL)} element={<SandboxTerminalFullscreen />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_VNC)} element={<SandboxVncFullscreen />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_DETAILS)} element={<SandboxDetails />} />
         </Route>
         <Route path={getRouteSubPath(RoutePath.SNAPSHOTS)} element={<Snapshots />} />
         <Route path={getRouteSubPath(RoutePath.REGISTRIES)} element={<Registries />} />

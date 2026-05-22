@@ -46,7 +46,7 @@ export default function SandboxTerminalFullscreen() {
     setActivated(true)
   }
 
-  const backPath = sandboxId ? RoutePath.SANDBOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.SANDBOXES
+  const backPath = sandboxId ? RoutePath.BOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.BOXES
 
   let body: ReactNode
   if (sandboxLoading) {

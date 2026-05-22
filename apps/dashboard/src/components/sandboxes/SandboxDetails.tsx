@@ -158,7 +158,7 @@ export default function SandboxDetails() {
       await deleteMutation.mutateAsync({ sandboxId: sandbox.id })
       toast.success('Sandbox deleted')
       setDeleteDialogOpen(false)
-      navigate(RoutePath.SANDBOXES)
+      navigate(RoutePath.BOXES)
     } catch (error) {
       handleApiError(error, 'Failed to delete sandbox')
     }
@@ -197,7 +197,7 @@ export default function SandboxDetails() {
         onRecover={handleRecover}
         onDelete={() => setDeleteDialogOpen(true)}
         onRefresh={() => refetch()}
-        onBack={() => navigate(RoutePath.SANDBOXES)}
+        onBack={() => navigate(RoutePath.BOXES)}
         onCreateSshAccess={() => setCreateSshDialogOpen(true)}
         onRevokeSshAccess={() => setRevokeSshDialogOpen(true)}
         onScreenRecordings={handleScreenRecordings}
@@ -219,7 +219,7 @@ export default function SandboxDetails() {
               <EmptyTitle>Sandbox not found</EmptyTitle>
               <EmptyDescription>Are you sure you're in the right organization?</EmptyDescription>
             </EmptyHeader>
-            <Button variant="outline" size="sm" onClick={() => navigate(RoutePath.SANDBOXES)}>
+            <Button variant="outline" size="sm" onClick={() => navigate(RoutePath.BOXES)}>
               Back to Sandboxes
             </Button>
           </Empty>

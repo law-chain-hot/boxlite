@@ -77,7 +77,7 @@ export function SandboxTableActions({
     items.push({
       key: 'open',
       label: 'Open',
-      onClick: () => navigate(generatePath(RoutePath.SANDBOX_DETAILS, { sandboxId: sandbox.id })),
+      onClick: () => navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })),
       disabled: isLoading,
     })
 

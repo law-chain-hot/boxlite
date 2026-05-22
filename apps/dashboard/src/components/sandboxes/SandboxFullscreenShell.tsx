@@ -21,7 +21,7 @@ export function SandboxFullscreenShell({ sandboxId, title, copyValue, children }
   const navigate = useNavigate()
 
   const handleBack = () => {
-    navigate(sandboxId ? RoutePath.SANDBOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.SANDBOXES)
+    navigate(sandboxId ? RoutePath.BOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.BOXES)
   }
 
   return (

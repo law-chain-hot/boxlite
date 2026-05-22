@@ -88,7 +88,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
           <SheetTitle className="text-2xl font-medium">Sandbox Details</SheetTitle>
           <div className="flex gap-2 items-center">
             <Button variant="link" asChild>
-              <Link to={generatePath(RoutePath.SANDBOX_DETAILS, { sandboxId: sandbox.id })}>View</Link>
+              <Link to={generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })}>View</Link>
             </Button>
             {writePermitted && (
               <>

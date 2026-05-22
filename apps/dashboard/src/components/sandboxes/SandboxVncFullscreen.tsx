@@ -20,7 +20,7 @@ export default function SandboxVncFullscreen() {
   useSandboxWsSync({ sandboxId })
 
   const label = sandbox?.name || sandbox?.id || sandboxId
-  const backPath = sandboxId ? RoutePath.SANDBOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.SANDBOXES
+  const backPath = sandboxId ? RoutePath.BOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.BOXES
 
   return (
     <SandboxFullscreenShell
