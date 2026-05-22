@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BOXLITE_DOCS_URL, BOXLITE_SLACK_URL } from '@/constants/ExternalLinks'
+import { NAV } from '@/constants/navConfig'
+import { PRODUCT } from '@/constants/product'
 import { useTheme } from '@/contexts/ThemeContext'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { RoutePath } from '@/enums/RoutePath'
@@ -44,14 +46,12 @@ import {
   LockKeyhole,
   LogOut,
   Mail,
-  MapPinned,
   Menu,
   MessageCircle,
   MoreHorizontal,
   MoonIcon,
   PackageOpen,
   SearchIcon,
-  Server,
   Settings,
   SquareUserRound,
   SunIcon,
@@ -113,31 +113,38 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
   const { count: organizationInvitationsCount } = useUserOrganizationInvitations()
   const { isInitialized: webhooksInitialized } = useWebhooks()
   const webhooksAccess = useWebhookAppPortalAccessQuery(selectedOrganization?.id)
-  const orgInfraEnabled = useFeatureFlagEnabled(FeatureFlags.ORGANIZATION_INFRASTRUCTURE)
   const organizationExperimentsEnabled = useFeatureFlagEnabled(FeatureFlags.ORGANIZATION_EXPERIMENTS)
   const playgroundEnabled = useFeatureFlagEnabled(FeatureFlags.DASHBOARD_PLAYGROUND)
   const webhooksEnabled = useFeatureFlagEnabled(FeatureFlags.DASHBOARD_WEBHOOKS)
 
   const primaryItems = useMemo(() => {
-    const arr: SidebarItem[] = [
-      {
+    const arr: SidebarItem[] = []
+
+    if (NAV.primary.boxes) {
+      arr.push({
         icon: <Container size={16} strokeWidth={1.5} />,
-        label: 'Sandboxes',
+        label: PRODUCT.box.plural,
         path: RoutePath.SANDBOXES,
-      },
-      {
+      })
+    }
+
+    if (NAV.primary.snapshots) {
+      arr.push({
         icon: <Box size={16} strokeWidth={1.5} />,
         label: 'Snapshots',
         path: RoutePath.SNAPSHOTS,
-      },
-      {
+      })
+    }
+
+    if (NAV.primary.registries) {
+      arr.push({
         icon: <PackageOpen size={16} strokeWidth={1.5} />,
         label: 'Registries',
         path: RoutePath.REGISTRIES,
-      },
-    ]
+      })
+    }
 
-    if (authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_VOLUMES)) {
+    if (NAV.primary.volumes && authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_VOLUMES)) {
       arr.push({
         icon: <HardDrive size={16} strokeWidth={1.5} />,
         label: 'Volumes',
@@ -145,7 +152,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
       })
     }
 
-    if (authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_AUDIT_LOGS)) {
+    if (NAV.primary.auditLogs && authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_AUDIT_LOGS)) {
       arr.push({
         icon: <TextSearch size={16} strokeWidth={1.5} />,
         label: 'Audit Logs',
@@ -229,30 +236,6 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
     ]
   }, [authenticatedUserOrganizationMember?.role, billingEnabled])
 
-  const infrastructureItems = useMemo(() => {
-    if (!orgInfraEnabled) {
-      return []
-    }
-
-    const arr: SidebarItem[] = [
-      {
-        icon: <MapPinned size={16} strokeWidth={1.5} />,
-        label: 'Regions',
-        path: RoutePath.REGIONS,
-      },
-    ]
-
-    if (authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_RUNNERS)) {
-      arr.push({
-        icon: <Server size={16} strokeWidth={1.5} />,
-        label: 'Runners',
-        path: RoutePath.RUNNERS,
-      })
-    }
-
-    return arr
-  }, [authenticatedUserHasPermission, orgInfraEnabled])
-
   const experimentalItems = useMemo(() => {
     if (
       !organizationExperimentsEnabled ||
@@ -290,10 +273,9 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
         { label: 'Misc', items: miscItems },
         { label: 'Settings', items: settingsItems },
         { label: 'Billing', items: billingItems },
-        { label: 'Infrastructure', items: infrastructureItems },
         { label: 'Experimental', items: experimentalItems },
       ].filter((group) => group.items.length > 0),
-    [billingItems, experimentalItems, infrastructureItems, miscItems, settingsItems],
+    [billingItems, experimentalItems, miscItems, settingsItems],
   )
 
   const commandItems = useMemo(
