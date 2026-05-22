@@ -702,7 +702,7 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
       {
         name: 'Personal',
         // 普通用户经 OIDC 注册时不带 region;personal org 必须兜底到默认 region,
-        // 否则用户既建不了 box 也找不到配 region 的入口(见 brian-notes Task4 ADR-003)。
+        // 否则用户既建不了 box 也找不到配 region 的入口。
         defaultRegionId:
           payload.personalOrganizationDefaultRegionId ?? this.configService.getOrThrow('defaultRegion.id'),
       },
