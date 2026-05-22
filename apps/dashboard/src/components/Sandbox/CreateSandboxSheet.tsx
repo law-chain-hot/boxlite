@@ -191,7 +191,7 @@ export const CreateSandboxSheet = ({
     },
     onSubmit: async ({ value }) => {
       if (!selectedOrganization?.id) {
-        toast.error('Select an organization to create a sandbox.')
+        toast.error('Select an organization to create a Box.')
         return
       }
 
@@ -238,7 +238,7 @@ export const CreateSandboxSheet = ({
           })
         }
 
-        toast.success(`Sandbox created`)
+        toast.success(`Box created`)
 
         setOpen(false)
 
@@ -251,7 +251,7 @@ export const CreateSandboxSheet = ({
           })
         }
       } catch (error) {
-        handleApiError(error, 'Failed to create sandbox')
+        handleApiError(error, 'Failed to create Box')
       }
     },
   })
@@ -333,15 +333,15 @@ export const CreateSandboxSheet = ({
       }}
     >
       <SheetTrigger asChild>
-        <Button variant="default" size="sm" title="Create Sandbox" className={cn('w-full sm:w-auto', triggerClassName)}>
+        <Button variant="default" size="sm" title="Create Box" className={cn('w-full sm:w-auto', triggerClassName)}>
           <Plus className="size-4" />
-          <span>{isCompactScreen ? 'Create' : 'Create Sandbox'}</span>
+          <span>{isCompactScreen ? 'Create' : 'Create Box'}</span>
         </Button>
       </SheetTrigger>
       <SheetContent className={`w-dvw sm:w-[500px] p-0 flex flex-col gap-0 ${className ?? ''}`}>
         <SheetHeader className="border-b border-border p-4 px-5 items-center flex text-left flex-row">
-          <SheetTitle className="text-2xl">Create Sandbox</SheetTitle>
-          <SheetDescription className="sr-only">Create a new sandbox in your organization.</SheetDescription>
+          <SheetTitle className="text-2xl">Create Box</SheetTitle>
+          <SheetDescription className="sr-only">Create a new Box in your organization.</SheetDescription>
         </SheetHeader>
         <ScrollArea fade="mask" className="flex-1 min-h-0">
           <form
@@ -370,8 +370,8 @@ export const CreateSandboxSheet = ({
                       placeholder="my-sandbox"
                     />
                     <FieldDescription>
-                      Optional. If not provided, the sandbox ID will be used as the name. Names are reusable once a
-                      sandbox is destroyed.
+                      Optional. If not provided, the Box ID will be used as the name. Names are reusable once a Box is
+                      destroyed.
                     </FieldDescription>
                     {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
                       <FieldError errors={field.state.meta.errors} />
@@ -588,8 +588,8 @@ export const CreateSandboxSheet = ({
                     </SelectContent>
                   </Select>
                   <FieldDescription>
-                    The region where the sandbox will be created. If not specified, your organization's default region
-                    will be used.
+                    The region where the Box will be created. If not specified, your organization's default region will
+                    be used.
                   </FieldDescription>
                 </Field>
               )}
@@ -638,7 +638,7 @@ export const CreateSandboxSheet = ({
                           label={<InfoTooltipButton aria-label="Auto-archive information" />}
                           content={
                             <p>
-                              Minutes a sandbox must remain continuously stopped before archiving.
+                              Minutes a Box must remain continuously stopped before archiving.
                               <br />
                               <span className="text-muted-foreground">0 = max (30 days)</span>
                             </p>
@@ -671,7 +671,7 @@ export const CreateSandboxSheet = ({
                               label={<InfoTooltipButton aria-label="Auto-delete information" />}
                               content={
                                 <p>
-                                  Minutes a sandbox must remain continuously stopped before permanent deletion.
+                                  Minutes a Box must remain continuously stopped before permanent deletion.
                                   <br />
                                   <span className="text-muted-foreground">0 = deleted on stop</span>
                                   <br />
@@ -721,7 +721,7 @@ export const CreateSandboxSheet = ({
                         <Label htmlFor={field.name} className="text-sm font-normal">
                           Ephemeral
                         </Label>
-                        <FieldDescription>Automatically delete the sandbox when it stops.</FieldDescription>
+                        <FieldDescription>Automatically delete the Box when it stops.</FieldDescription>
                       </div>
                     </div>
                   )}
@@ -900,7 +900,7 @@ export const CreateSandboxSheet = ({
                       <Label htmlFor={field.name} className="text-sm font-normal">
                         Block All Network Access
                       </Label>
-                      <FieldDescription>Block all outbound network access from the sandbox.</FieldDescription>
+                      <FieldDescription>Block all outbound network access from the Box.</FieldDescription>
                     </div>
                   </div>
                 )}

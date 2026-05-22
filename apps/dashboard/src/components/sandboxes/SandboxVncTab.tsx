@@ -73,9 +73,9 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
           <EmptyMedia variant="icon">
             <Monitor className="size-4" />
           </EmptyMedia>
-          <EmptyTitle>Sandbox is not running</EmptyTitle>
+          <EmptyTitle>Box is not running</EmptyTitle>
           <EmptyDescription>
-            Start the sandbox to access the VNC desktop.{' '}
+            Start the Box to access the VNC desktop.{' '}
             <a href={`${BOXLITE_DOCS_URL}/en/vnc-access`} target="_blank" rel="noopener noreferrer">
               Learn more
             </a>

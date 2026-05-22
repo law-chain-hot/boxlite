@@ -107,9 +107,9 @@ export default function SandboxDetails() {
     if (!sandbox) return
     try {
       await startMutation.mutateAsync({ sandboxId: sandbox.id })
-      toast.success('Sandbox started')
+      toast.success('Box started')
     } catch (error) {
-      handleApiError(error, 'Failed to start sandbox', {
+      handleApiError(error, 'Failed to start Box', {
         action:
           error instanceof OrganizationSuspendedError &&
           config.billingApiUrl &&
@@ -126,9 +126,9 @@ export default function SandboxDetails() {
     if (!sandbox) return
     try {
       await stopMutation.mutateAsync({ sandboxId: sandbox.id })
-      toast.success('Sandbox stopped')
+      toast.success('Box stopped')
     } catch (error) {
-      handleApiError(error, 'Failed to stop sandbox')
+      handleApiError(error, 'Failed to stop Box')
     }
   }
 
@@ -136,9 +136,9 @@ export default function SandboxDetails() {
     if (!sandbox) return
     try {
       await archiveMutation.mutateAsync({ sandboxId: sandbox.id })
-      toast.success('Sandbox archived')
+      toast.success('Box archived')
     } catch (error) {
-      handleApiError(error, 'Failed to archive sandbox')
+      handleApiError(error, 'Failed to archive Box')
     }
   }
 
@@ -146,9 +146,9 @@ export default function SandboxDetails() {
     if (!sandbox) return
     try {
       await recoverMutation.mutateAsync({ sandboxId: sandbox.id })
-      toast.success('Sandbox recovery started')
+      toast.success('Box recovery started')
     } catch (error) {
-      handleApiError(error, 'Failed to recover sandbox')
+      handleApiError(error, 'Failed to recover Box')
     }
   }
 
@@ -156,17 +156,17 @@ export default function SandboxDetails() {
     if (!sandbox) return
     try {
       await deleteMutation.mutateAsync({ sandboxId: sandbox.id })
-      toast.success('Sandbox deleted')
+      toast.success('Box deleted')
       setDeleteDialogOpen(false)
       navigate(RoutePath.BOXES)
     } catch (error) {
-      handleApiError(error, 'Failed to delete sandbox')
+      handleApiError(error, 'Failed to delete Box')
     }
   }
 
   const handleScreenRecordings = async () => {
     if (!sandbox || !isStoppable(sandbox)) {
-      toast.error('Sandbox must be started to access Screen Recordings')
+      toast.error('Box must be started to access Screen Recordings')
       return
     }
     try {
@@ -181,7 +181,7 @@ export default function SandboxDetails() {
   return (
     <PageLayout className="h-[var(--app-content-height,calc(100svh_-_3.5rem))] overflow-hidden">
       <PageHeader className="hidden sm:flex">
-        <PageTitle>Sandboxes</PageTitle>
+        <PageTitle>Boxes</PageTitle>
       </PageHeader>
 
       <SandboxHeader
@@ -216,11 +216,11 @@ export default function SandboxDetails() {
               <EmptyMedia variant="icon">
                 <Container className="size-4" />
               </EmptyMedia>
-              <EmptyTitle>Sandbox not found</EmptyTitle>
+              <EmptyTitle>Box not found</EmptyTitle>
               <EmptyDescription>Are you sure you're in the right organization?</EmptyDescription>
             </EmptyHeader>
             <Button variant="outline" size="sm" onClick={() => navigate(RoutePath.BOXES)}>
-              Back to Sandboxes
+              Back to Boxes
             </Button>
           </Empty>
         </div>
@@ -243,7 +243,7 @@ export default function SandboxDetails() {
                     <InfoPanelSkeleton />
                   ) : isError || !sandbox ? (
                     <div className="flex flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
-                      <p className="text-sm">Failed to load sandbox details.</p>
+                      <p className="text-sm">Failed to load Box details.</p>
                       <Button variant="outline" size="sm" onClick={() => refetch()}>
                         <RefreshCw className="size-4" />
                         Retry
@@ -272,9 +272,9 @@ export default function SandboxDetails() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sandbox</AlertDialogTitle>
+            <AlertDialogTitle>Delete Box</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this sandbox? This action cannot be undone.
+              Are you sure you want to delete this Box? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

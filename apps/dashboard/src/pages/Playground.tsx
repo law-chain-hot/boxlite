@@ -28,7 +28,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 
 const playgroundCategoriesData = [
-  { value: PlaygroundCategories.SANDBOX, label: 'Sandbox' },
+  { value: PlaygroundCategories.SANDBOX, label: 'Box' },
   { value: PlaygroundCategories.TERMINAL, label: 'Terminal' },
   { value: PlaygroundCategories.VNC, label: 'VNC' },
 ]

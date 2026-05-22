@@ -115,7 +115,7 @@ export function SandboxTableHeader({
           variant="outline"
           onClick={onRefresh}
           disabled={isRefreshing}
-          aria-label="Refresh sandboxes"
+          aria-label="Refresh Boxes"
           className={cn('flex items-center gap-2', isCompactScreen && 'px-2')}
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />

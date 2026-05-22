@@ -194,7 +194,7 @@ export function SandboxTable({
 
   const emptyStateDescription = (
     <div className="space-y-2">
-      <p>Spin up a Sandbox to run code in an isolated environment.</p>
+      <p>Spin up a Box to run code in an isolated environment.</p>
       <p>Use the BoxLite SDK or CLI to create one.</p>
       <p>
         <button onClick={() => navigate(RoutePath.ONBOARDING)} className="text-primary hover:underline font-medium">
@@ -382,7 +382,7 @@ export function SandboxTable({
             ) : (
               <TableEmptyState
                 colSpan={table.getAllColumns().length}
-                message="No Sandboxes yet."
+                message="No Boxes yet."
                 icon={<Container className="w-8 h-8" />}
                 description={emptyStateDescription}
               />

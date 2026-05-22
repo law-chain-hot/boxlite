@@ -193,7 +193,7 @@ export function useDocsSearchCommands() {
         },
         {
           id: 'suggestion-sandboxes',
-          label: 'Sandboxes',
+          label: 'Boxes',
           icon: <Container className="w-4 h-4" />,
           onSelect: () => openDocs('/en/sandboxes'),
         },

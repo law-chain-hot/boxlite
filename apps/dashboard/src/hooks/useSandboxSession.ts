@@ -111,7 +111,7 @@ export function useSandboxSession(options?: UseSandboxSessionOptions): UseSandbo
     },
     onError: (error) => {
       if (notifyRef.current.sandbox) {
-        toast.error('Failed to create sandbox', {
+        toast.error('Failed to create Box', {
           description: error.message,
           action: { label: 'Try again', onClick: () => createMutation.mutate(createParams) },
         })

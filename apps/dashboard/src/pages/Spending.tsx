@@ -235,9 +235,9 @@ const Spending = () => {
                   <EmptyMedia variant="icon">
                     <BarChart3 />
                   </EmptyMedia>
-                  <EmptyTitle>No sandbox usage yet</EmptyTitle>
+                  <EmptyTitle>No Box usage yet</EmptyTitle>
                   <EmptyDescription>
-                    Once you create and run a sandbox, its resource consumption will appear here.
+                    Once you create and run a Box, its resource consumption will appear here.
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>

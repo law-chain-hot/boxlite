@@ -44,9 +44,9 @@ export function SandboxTerminalTab({ sandbox }: { sandbox: Sandbox }) {
               <EmptyMedia variant="icon">
                 <TerminalSquare className="size-4" />
               </EmptyMedia>
-              <EmptyTitle>Sandbox is not running</EmptyTitle>
+              <EmptyTitle>Box is not running</EmptyTitle>
               <EmptyDescription>
-                Start the sandbox to access the terminal.{' '}
+                Start the Box to access the terminal.{' '}
                 <a href={`${BOXLITE_DOCS_URL}/en/web-terminal`} target="_blank" rel="noopener noreferrer">
                   Learn more
                 </a>

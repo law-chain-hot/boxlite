@@ -39,7 +39,7 @@ export default function SandboxVncFullscreen() {
             <EmptyMedia variant="icon">
               <Container className="size-4" />
             </EmptyMedia>
-            <EmptyTitle>Sandbox not found</EmptyTitle>
+            <EmptyTitle>Box not found</EmptyTitle>
             <EmptyDescription>Are you sure you're in the right organization?</EmptyDescription>
           </EmptyHeader>
           <Button variant="outline" size="sm" asChild>

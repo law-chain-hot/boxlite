@@ -85,7 +85,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-dvw sm:w-[800px] p-0 flex flex-col gap-0 [&>button]:hidden">
         <SheetHeader className="space-y-0 flex flex-row justify-between items-center  p-4 px-5 border-b border-border">
-          <SheetTitle className="text-2xl font-medium">Sandbox Details</SheetTitle>
+          <SheetTitle className="text-2xl font-medium">Box Details</SheetTitle>
           <div className="flex gap-2 items-center">
             <Button variant="link" asChild>
               <Link to={generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })}>View</Link>

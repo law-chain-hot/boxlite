@@ -203,7 +203,7 @@ const SandboxCodeSnippetsResponse = ({ className }: { className?: string }) => {
 
   const runCodeSnippet = async () => {
     setIsCodeSnippetRunning(true)
-    let codeSnippetOutput = 'Creating sandbox...\n'
+    let codeSnippetOutput = 'Creating Box...\n'
     setCodeSnippetOutput(codeSnippetOutput)
     let sandbox: Sandbox | undefined
 
@@ -299,7 +299,7 @@ const SandboxCodeSnippetsResponse = ({ className }: { className?: string }) => {
         response.branches.forEach((branch) => (codeSnippetOutput += `Branch: ${branch}\n`))
         setCodeSnippetOutput(codeSnippetOutput)
       }
-      setCodeSnippetOutput(codeSnippetOutput + '\nSandbox session finished.')
+      setCodeSnippetOutput(codeSnippetOutput + '\nBox session finished.')
     } catch (error) {
       console.error(error)
       setCodeSnippetOutput(
@@ -318,7 +318,7 @@ const SandboxCodeSnippetsResponse = ({ className }: { className?: string }) => {
 
   return (
     <Window className={className}>
-      <WindowTitleBar>Sandbox Code</WindowTitleBar>
+      <WindowTitleBar>Box Code</WindowTitleBar>
       <WindowContent className="relative">
         <Tabs
           value={codeSnippetLanguage}

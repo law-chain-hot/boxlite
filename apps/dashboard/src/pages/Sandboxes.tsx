@@ -128,7 +128,7 @@ const Sandboxes: React.FC = () => {
 
   useEffect(() => {
     if (sandboxesDataError) {
-      handleApiError(sandboxesDataError, 'Failed to fetch sandboxes')
+      handleApiError(sandboxesDataError, 'Failed to fetch Boxes')
     }
   }, [sandboxesDataError])
 
@@ -203,7 +203,7 @@ const Sandboxes: React.FC = () => {
     try {
       await refetchSandboxesData()
     } catch (error) {
-      handleApiError(error, 'Failed to refresh sandboxes')
+      handleApiError(error, 'Failed to refresh Boxes')
     } finally {
       setSandboxDataIsRefreshing(false)
     }
@@ -407,10 +407,10 @@ const Sandboxes: React.FC = () => {
 
     try {
       await sandboxApi.startSandbox(id, selectedOrganization?.id)
-      toast.success(`Starting sandbox with ID: ${id}`)
+      toast.success(`Starting Box with ID: ${id}`)
       await markAllSandboxQueriesAsStale()
     } catch (error) {
-      handleApiError(error, 'Failed to start sandbox', {
+      handleApiError(error, 'Failed to start Box', {
         action:
           error instanceof OrganizationSuspendedError &&
           config.billingApiUrl &&
@@ -441,10 +441,10 @@ const Sandboxes: React.FC = () => {
 
     try {
       await sandboxApi.recoverSandbox(id, selectedOrganization?.id)
-      toast.success('Sandbox recovered. Restarting...')
+      toast.success('Box recovered. Restarting...')
       await markAllSandboxQueriesAsStale()
     } catch (error) {
-      handleApiError(error, 'Failed to recover sandbox')
+      handleApiError(error, 'Failed to recover Box')
       revertSandboxStateOptimisticUpdate(id, previousState)
     } finally {
       setSandboxIsLoading((prev) => ({ ...prev, [id]: false }))
@@ -467,16 +467,16 @@ const Sandboxes: React.FC = () => {
     try {
       await sandboxApi.stopSandbox(id, selectedOrganization?.id)
       toast.success(
-        `Stopping sandbox with ID: ${id}`,
+        `Stopping Box with ID: ${id}`,
         sandboxToStop?.autoDeleteInterval !== undefined && sandboxToStop.autoDeleteInterval >= 0
           ? {
-              description: `This sandbox will be deleted automatically ${sandboxToStop.autoDeleteInterval === 0 ? 'upon stopping' : `in ${formatDuration(sandboxToStop.autoDeleteInterval)} unless it is started again`}.`,
+              description: `This Box will be deleted automatically ${sandboxToStop.autoDeleteInterval === 0 ? 'upon stopping' : `in ${formatDuration(sandboxToStop.autoDeleteInterval)} unless it is started again`}.`,
             }
           : undefined,
       )
       await markAllSandboxQueriesAsStale()
     } catch (error) {
-      handleApiError(error, 'Failed to stop sandbox')
+      handleApiError(error, 'Failed to stop Box')
       revertSandboxStateOptimisticUpdate(id, previousState)
     } finally {
       setSandboxIsLoading((prev) => ({ ...prev, [id]: false }))
@@ -506,11 +506,11 @@ const Sandboxes: React.FC = () => {
         setSelectedSandbox(null)
       }
 
-      toast.success(`Deleting sandbox with ID:  ${id}`)
+      toast.success(`Deleting Box with ID:  ${id}`)
 
       await markAllSandboxQueriesAsStale()
     } catch (error) {
-      handleApiError(error, 'Failed to delete sandbox')
+      handleApiError(error, 'Failed to delete Box')
       revertSandboxStateOptimisticUpdate(id, previousState)
     } finally {
       setSandboxIsLoading((prev) => ({ ...prev, [id]: false }))
@@ -532,10 +532,10 @@ const Sandboxes: React.FC = () => {
 
     try {
       await sandboxApi.archiveSandbox(id, selectedOrganization?.id)
-      toast.success(`Archiving sandbox with ID: ${id}`)
+      toast.success(`Archiving Box with ID: ${id}`)
       await markAllSandboxQueriesAsStale()
     } catch (error) {
-      handleApiError(error, 'Failed to archive sandbox')
+      handleApiError(error, 'Failed to archive Box')
       revertSandboxStateOptimisticUpdate(id, previousState)
     } finally {
       setSandboxIsLoading((prev) => ({ ...prev, [id]: false }))
@@ -574,7 +574,7 @@ const Sandboxes: React.FC = () => {
       let successCount = 0
       let failureCount = 0
 
-      const totalLabel = pluralize(ids.length, 'sandbox', 'sandboxes')
+      const totalLabel = pluralize(ids.length, 'Box', 'Boxes')
       const onCancel = () => {
         isCancelled = true
       }
@@ -615,7 +615,7 @@ const Sandboxes: React.FC = () => {
         bulkToast.result({ successCount, failureCount }, toastMessages)
       } catch (error) {
         console.error(`${actionName} sandboxes failed`, error)
-        bulkToast.error(`${actionName} sandboxes failed.`)
+        bulkToast.error(`${actionName} Boxes failed.`)
       }
 
       return { successCount, failureCount }
@@ -637,9 +637,9 @@ const Sandboxes: React.FC = () => {
       optimisticState: SandboxState.STARTING,
       apiCall: (id) => sandboxApi.startSandbox(id, selectedOrganization?.id),
       toastMessages: {
-        successTitle: `${pluralize(ids.length, 'sandbox', 'sandboxes')} started.`,
-        errorTitle: `Failed to start ${pluralize(ids.length, 'sandbox', 'sandboxes')}.`,
-        warningTitle: 'Failed to start some sandboxes.',
+        successTitle: `${pluralize(ids.length, 'Box', 'Boxes')} started.`,
+        errorTitle: `Failed to start ${pluralize(ids.length, 'Box', 'Boxes')}.`,
+        warningTitle: 'Failed to start some Boxes.',
         canceledTitle: 'Start canceled.',
       },
     })
@@ -651,9 +651,9 @@ const Sandboxes: React.FC = () => {
       optimisticState: SandboxState.STOPPING,
       apiCall: (id) => sandboxApi.stopSandbox(id, selectedOrganization?.id),
       toastMessages: {
-        successTitle: `${pluralize(ids.length, 'sandbox', 'sandboxes')} stopped.`,
-        errorTitle: `Failed to stop ${pluralize(ids.length, 'sandbox', 'sandboxes')}.`,
-        warningTitle: 'Failed to stop some sandboxes.',
+        successTitle: `${pluralize(ids.length, 'Box', 'Boxes')} stopped.`,
+        errorTitle: `Failed to stop ${pluralize(ids.length, 'Box', 'Boxes')}.`,
+        warningTitle: 'Failed to stop some Boxes.',
         canceledTitle: 'Stop canceled.',
       },
     })
@@ -665,9 +665,9 @@ const Sandboxes: React.FC = () => {
       optimisticState: SandboxState.ARCHIVING,
       apiCall: (id) => sandboxApi.archiveSandbox(id, selectedOrganization?.id),
       toastMessages: {
-        successTitle: `${pluralize(ids.length, 'sandbox', 'sandboxes')} archived.`,
-        errorTitle: `Failed to archive ${pluralize(ids.length, 'sandbox', 'sandboxes')}.`,
-        warningTitle: 'Failed to archive some sandboxes.',
+        successTitle: `${pluralize(ids.length, 'Box', 'Boxes')} archived.`,
+        errorTitle: `Failed to archive ${pluralize(ids.length, 'Box', 'Boxes')}.`,
+        warningTitle: 'Failed to archive some Boxes.',
         canceledTitle: 'Archive canceled.',
       },
     })
@@ -681,9 +681,9 @@ const Sandboxes: React.FC = () => {
       optimisticState: SandboxState.DESTROYING,
       apiCall: (id) => sandboxApi.deleteSandbox(id, selectedOrganization?.id),
       toastMessages: {
-        successTitle: `${pluralize(ids.length, 'sandbox', 'sandboxes')} deleted.`,
-        errorTitle: `Failed to delete ${pluralize(ids.length, 'sandbox', 'sandboxes')}.`,
-        warningTitle: 'Failed to delete some sandboxes.',
+        successTitle: `${pluralize(ids.length, 'Box', 'Boxes')} deleted.`,
+        errorTitle: `Failed to delete ${pluralize(ids.length, 'Box', 'Boxes')}.`,
+        warningTitle: 'Failed to delete some Boxes.',
         canceledTitle: 'Delete canceled.',
       },
     })
@@ -816,7 +816,7 @@ const Sandboxes: React.FC = () => {
     // Check if sandbox is started
     const sandbox = sandboxesData?.items?.find((s) => s.id === id)
     if (!sandbox || sandbox.state !== SandboxState.STARTED) {
-      toast.error('Sandbox must be started to access Screen Recordings')
+      toast.error('Box must be started to access Screen Recordings')
       return
     }
 
@@ -922,7 +922,7 @@ const Sandboxes: React.FC = () => {
   return (
     <PageLayout>
       <PageHeader size="full">
-        <PageTitle>Sandboxes</PageTitle>
+        <PageTitle>Boxes</PageTitle>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           {!sandboxesDataIsLoading && (!sandboxesData?.items || sandboxesData.items.length === 0) && (
             <>
@@ -1002,9 +1002,9 @@ const Sandboxes: React.FC = () => {
           >
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Sandbox Deletion</AlertDialogTitle>
+                <AlertDialogTitle>Confirm Box Deletion</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete this sandbox? This action cannot be undone.
+                  Are you sure you want to delete this Box? This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
