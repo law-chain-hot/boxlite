@@ -67,4 +67,36 @@ describe('AdminTelemetryController', () => {
 
     expect(telemetryService.getPlatformTraceSpans).toHaveBeenCalledWith('trace-1')
   })
+
+  it('reads platform traces with default pagination', async () => {
+    const { controller, telemetryService } = buildController()
+
+    await controller.getPlatformTraces({
+      from: '2026-05-25T00:00:00.000Z',
+      to: '2026-05-25T01:00:00.000Z',
+    })
+
+    expect(telemetryService.getPlatformTraces).toHaveBeenCalledWith(
+      '2026-05-25T00:00:00.000Z',
+      '2026-05-25T01:00:00.000Z',
+      1,
+      100,
+    )
+  })
+
+  it('reads platform metrics with metric filters', async () => {
+    const { controller, telemetryService } = buildController()
+
+    await controller.getPlatformMetrics({
+      from: '2026-05-25T00:00:00.000Z',
+      to: '2026-05-25T01:00:00.000Z',
+      metricNames: ['nodejs.eventloop.delay.mean', 'v8js.memory.heap.used'],
+    })
+
+    expect(telemetryService.getPlatformMetrics).toHaveBeenCalledWith(
+      '2026-05-25T00:00:00.000Z',
+      '2026-05-25T01:00:00.000Z',
+      ['nodejs.eventloop.delay.mean', 'v8js.memory.heap.used'],
+    )
+  })
 })

@@ -7,7 +7,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
-import { buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
+import { adminTelemetryPaths, buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
 import { MetricsResponse } from '@boxlite-ai/api-client'
 
 export interface MetricsQueryParams {
@@ -32,7 +32,7 @@ export function useSandboxMetrics(
       : queryKeys.telemetry.metrics(sandboxId ?? '', params),
     queryFn: async () => {
       if (isAdminPlatform) {
-        const response = await api.axiosInstance.get('/admin/telemetry/metrics', {
+        const response = await api.axiosInstance.get(adminTelemetryPaths.metrics, {
           params: buildTelemetrySearchParams(params),
         })
         return response.data

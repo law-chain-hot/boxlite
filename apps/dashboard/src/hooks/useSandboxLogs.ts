@@ -7,7 +7,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
-import { buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
+import { adminTelemetryPaths, buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
 import { PaginatedLogs } from '@boxlite-ai/api-client'
 
 export interface LogsQueryParams {
@@ -38,7 +38,7 @@ export function useSandboxLogs(
       const page = params.page ?? 1
 
       if (isAdminPlatform) {
-        const response = await api.axiosInstance.get('/admin/telemetry/logs', {
+        const response = await api.axiosInstance.get(adminTelemetryPaths.logs, {
           params: buildTelemetrySearchParams({ ...params, page, limit }),
         })
         return response.data

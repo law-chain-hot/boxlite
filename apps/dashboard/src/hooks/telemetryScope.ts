@@ -5,6 +5,13 @@
 
 export type TelemetryScope = 'sandbox' | 'admin-platform'
 
+export const adminTelemetryPaths = {
+  logs: '/admin/telemetry/logs',
+  traces: '/admin/telemetry/traces',
+  metrics: '/admin/telemetry/metrics',
+  traceSpans: (traceId: string) => `/admin/telemetry/traces/${encodeURIComponent(traceId)}`,
+} as const
+
 interface TelemetrySearchParams {
   from: Date
   to: Date

@@ -7,7 +7,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
-import { TelemetryScope } from '@/hooks/telemetryScope'
+import { adminTelemetryPaths, TelemetryScope } from '@/hooks/telemetryScope'
 import { TraceSpan } from '@boxlite-ai/api-client'
 
 export function useSandboxTraceSpans(
@@ -29,7 +29,7 @@ export function useSandboxTraceSpans(
         if (!traceId) {
           throw new Error('Missing required parameters')
         }
-        const response = await api.axiosInstance.get(`/admin/telemetry/traces/${encodeURIComponent(traceId)}`)
+        const response = await api.axiosInstance.get(adminTelemetryPaths.traceSpans(traceId))
         return response.data
       }
 

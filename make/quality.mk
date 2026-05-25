@@ -90,17 +90,18 @@ fmt\:check\:c:
 	fi; \
 	"$$CLANG_FORMAT" --dry-run --Werror sdks/c/tests/*.c
 
-# Format the apps/ workspace via the repo's own blessed script
-# (nx run-many format + root-level prettier over TS/JSON/YAML).
+# Format the apps/ workspace via the repo's own blessed script, then cover
+# non-generated TypeScript surfaces that do not have their own Nx format target.
 fmt\:apps: _ensure-apps-deps
 	@echo "🔧 Formatting apps workspace..."
 	@cd apps && yarn format
+	@cd apps && yarn prettier --write "{api,dashboard,infra,otel-collector}/**/*.{ts,tsx,astro}" --config ../.prettierrc
 
-# apps/ has no `format:check` script; prettier --check over the same TS globs
-# `lint:ts` uses is the check counterpart.
+# apps/ has no `format:check` script; keep this aligned with fmt:apps while
+# skipping generated API clients that are intentionally excluded from lint-staged.
 fmt\:check\:apps: _ensure-apps-deps
 	@echo "🔍 Checking apps workspace formatting..."
-	@cd apps && yarn prettier --check "{apps,libs,test}/**/*.{ts,tsx}"
+	@cd apps && yarn prettier --check "{api,dashboard,infra,otel-collector}/**/*.{ts,tsx,astro}" "*.{ts,js,json,yaml}" --config ../.prettierrc
 
 # Smart lint: only lint changed components.
 lint:
