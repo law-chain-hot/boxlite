@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { ChevronRight, Users, X } from 'lucide-react'
-import React, { useMemo } from 'react'
+import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Users, X } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { type AdminBox, filterOwnerGroups, getBoxRollupText, groupBoxesByOwner, isErrorState } from './adminHelpers'
-import { AdminStateBadge, BreakdownBar } from './AdminPrimitives'
+import { AdminSectionFrame, AdminStateBadge, BreakdownBar } from './AdminPrimitives'
 import { useAdminBoxes } from './useAdminData'
 
 interface AdminPeopleBoxesViewProps {
@@ -29,6 +29,7 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
   onOpenBox,
 }) => {
   const boxesQuery = useAdminBoxes()
+  const [expandedOwnerIds, setExpandedOwnerIds] = useState<string[]>([])
 
   const groups = useMemo(() => {
     const boxes = boxesQuery.data ?? []
@@ -36,7 +37,12 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
     return filterOwnerGroups(groupBoxesByOwner(scoped), query)
   }, [boxesQuery.data, runnerFilter, query])
 
-  const openIds = useMemo(() => groups.map((g) => g.organizationId), [groups])
+  const groupIds = useMemo(() => groups.map((g) => g.organizationId), [groups])
+  const hasActiveFilter = Boolean(query.trim() || runnerFilter)
+
+  useEffect(() => {
+    setExpandedOwnerIds(hasActiveFilter ? groupIds : [])
+  }, [groupIds, hasActiveFilter])
 
   if (boxesQuery.isPending) {
     return (
@@ -48,8 +54,40 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
     )
   }
 
+  const action = (
+    <div className="flex gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8"
+        disabled={groups.length === 0 || expandedOwnerIds.length === groupIds.length}
+        onClick={() => setExpandedOwnerIds(groupIds)}
+      >
+        <ChevronsUpDown className="h-3.5 w-3.5" />
+        Expand all
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8"
+        disabled={expandedOwnerIds.length === 0}
+        onClick={() => setExpandedOwnerIds([])}
+      >
+        <ChevronsDownUp className="h-3.5 w-3.5" />
+        Collapse all
+      </Button>
+    </div>
+  )
+
   return (
-    <div className="space-y-3">
+    <AdminSectionFrame
+      title="People & Boxes"
+      description={`${groups.length} owner group${groups.length === 1 ? '' : 's'} · boxes grouped by owner`}
+      action={action}
+      contentClassName="space-y-3"
+    >
       {runnerFilter && (
         <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-4 py-2 text-sm">
           <span className="text-muted-foreground">
@@ -70,12 +108,12 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
           </span>
         </div>
       ) : (
-        <Accordion key={`${query}|${runnerFilter ?? ''}`} type="multiple" defaultValue={openIds} className="space-y-3">
+        <Accordion type="multiple" value={expandedOwnerIds} onValueChange={setExpandedOwnerIds} className="space-y-3">
           {groups.map((group) => (
             <AccordionItem
               key={group.organizationId}
               value={group.organizationId}
-              className="overflow-hidden rounded-md border border-border bg-card px-4"
+              className="overflow-hidden rounded-md border border-border bg-background/60 px-4"
             >
               <AccordionTrigger className="hover:no-underline">
                 <div className="flex w-full flex-col gap-3 pr-4 sm:flex-row sm:items-center sm:justify-between">
@@ -147,7 +185,7 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
           ))}
         </Accordion>
       )}
-    </div>
+    </AdminSectionFrame>
   )
 }
 

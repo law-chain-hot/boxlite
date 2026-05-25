@@ -8,6 +8,35 @@ import { cn } from '@/lib/utils'
 import React from 'react'
 import { type BreakdownSegment, stateBadgeVariant } from './adminHelpers'
 
+export function AdminSectionFrame({
+  title,
+  description,
+  action,
+  children,
+  className,
+  contentClassName,
+}: {
+  title: string
+  description?: string
+  action?: React.ReactNode
+  children: React.ReactNode
+  className?: string
+  contentClassName?: string
+}) {
+  return (
+    <section className={cn('overflow-hidden rounded-lg border border-border bg-card', className)}>
+      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-medium">{title}</h2>
+          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+        </div>
+        {action}
+      </div>
+      <div className={cn('p-4', contentClassName)}>{children}</div>
+    </section>
+  )
+}
+
 export function AdminStateBadge({ state, className }: { state: string; className?: string }) {
   return (
     <Badge variant={stateBadgeVariant(state)} className={cn('capitalize', className)}>

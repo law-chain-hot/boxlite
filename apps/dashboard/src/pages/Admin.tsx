@@ -8,6 +8,7 @@ import { type AdminBox, findBoxById, groupBoxesByOwner } from '@/components/admi
 import AdminFleetView from '@/components/admin/AdminFleetView'
 import AdminOverviewView from '@/components/admin/AdminOverviewView'
 import AdminPeopleBoxesView from '@/components/admin/AdminPeopleBoxesView'
+import AdminStatusStrip from '@/components/admin/AdminStatusStrip'
 import AdminTelemetryDrawer from '@/components/admin/AdminTelemetryDrawer'
 import { useAdminActions, useAdminBoxes, useAdminOverview, useAdminRunners } from '@/components/admin/useAdminData'
 import { Input } from '@/components/ui/input'
@@ -19,10 +20,10 @@ import { Navigate } from 'react-router-dom'
 
 type AdminView = 'overview' | 'people' | 'fleet'
 
-const VIEWS: { id: AdminView; label: string; hint: string }[] = [
-  { id: 'overview', label: 'Overview', hint: 'monitor' },
-  { id: 'people', label: 'People & Boxes', hint: 'who · what' },
-  { id: 'fleet', label: 'Fleet', hint: 'where it runs' },
+const VIEWS: { id: AdminView; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'people', label: 'People & Boxes' },
+  { id: 'fleet', label: 'Fleet' },
 ]
 
 const Admin: React.FC = () => {
@@ -103,8 +104,10 @@ const Admin: React.FC = () => {
       </PageHeader>
 
       <PageContent size="full">
+        <AdminStatusStrip />
+
         {/* toolbar: view switch + global search */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="inline-flex w-fit gap-1 rounded-lg border border-border bg-card p-1">
             {VIEWS.map((v) => (
               <button
@@ -117,9 +120,6 @@ const Admin: React.FC = () => {
                 )}
               >
                 {v.label}
-                <span className={cn('text-[10px]', view === v.id ? 'text-primary' : 'text-muted-foreground/60')}>
-                  {v.hint}
-                </span>
               </button>
             ))}
           </div>

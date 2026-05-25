@@ -21,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils'
 import React, { useEffect, useMemo, useState } from 'react'
 import { type AdminRunner, isOnlineRunner, runnerCpuPercent } from './adminHelpers'
-import { AdminStateBadge } from './AdminPrimitives'
+import { AdminSectionFrame, AdminStateBadge } from './AdminPrimitives'
 import { useAdminMachines, useAdminRunners, useAdminActions } from './useAdminData'
 
 interface AdminFleetViewProps {
@@ -188,16 +188,11 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
 
   return (
     <div className="space-y-6">
-      {/* Runners */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-medium">Runners</h2>
-            <p className="text-xs text-muted-foreground">A runner is one machine host in the MVP — online first.</p>
-          </div>
-          <Badge variant="success">{online.length} online</Badge>
-        </div>
-
+      <AdminSectionFrame
+        title="Runners"
+        description="Scheduling surface for online, stale, cordoned, and draining runners."
+        action={<Badge variant="success">{online.length} online</Badge>}
+      >
         {runnersQuery.isPending ? (
           <Skeleton className="h-40 rounded-md" />
         ) : (
@@ -233,16 +228,9 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
             )}
           </>
         )}
-      </section>
+      </AdminSectionFrame>
 
-      {/* Machines */}
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-sm font-medium">Machines</h2>
-          <p className="text-xs text-muted-foreground">
-            Capacity &amp; oversell per host. Oversell &gt; 1.0× is flagged.
-          </p>
-        </div>
+      <AdminSectionFrame title="Machines" description="Capacity and oversell per host. Oversell > 1.0x is flagged.">
         {machinesQuery.isPending ? (
           <Skeleton className="h-32 rounded-md" />
         ) : (
@@ -288,7 +276,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
             </Table>
           </div>
         )}
-      </section>
+      </AdminSectionFrame>
 
       <AlertDialog open={!!confirm} onOpenChange={(open) => !open && setConfirm(null)}>
         <AlertDialogContent>

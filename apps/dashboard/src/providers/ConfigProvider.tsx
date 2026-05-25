@@ -10,7 +10,7 @@ import { BoxliteConfiguration } from '@boxlite-ai/api-client'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { InMemoryWebStorage, WebStorageStateStore } from 'oidc-client-ts'
 import { ReactNode, useMemo } from 'react'
-import { AuthProvider, AuthProviderProps } from 'react-oidc-context'
+import { AuthContext, type AuthContextProps, AuthProvider, AuthProviderProps } from 'react-oidc-context'
 import { ConfigContext } from '../contexts/ConfigContext'
 
 const apiUrl = (import.meta.env.VITE_BASE_API_URL ?? window.location.origin) + '/api'
@@ -20,6 +20,7 @@ type Props = {
 }
 
 export function ConfigProvider(props: Props) {
+  const mockAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === 'true'
   const { data: config } = useSuspenseQuery({
     queryKey: queryKeys.config.all,
     queryFn: async () => {
@@ -61,9 +62,38 @@ export function ConfigProvider(props: Props) {
     }
   }, [config])
 
+  const mockAuthContext = useMemo<AuthContextProps>(
+    () =>
+      ({
+        isAuthenticated: true,
+        isLoading: false,
+        activeNavigator: undefined,
+        user: {
+          access_token: 'mock-access-token',
+          token_type: 'Bearer',
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          profile: {
+            sub: 'mock-admin-user',
+            email: 'brian@example.com',
+            name: 'Brian Luo',
+            picture: '',
+          },
+        },
+        signinRedirect: async () => undefined,
+        signinSilent: async () => null,
+        signoutRedirect: async () => undefined,
+        removeUser: async () => undefined,
+      }) as unknown as AuthContextProps,
+    [],
+  )
+
   return (
     <ConfigContext.Provider value={{ ...config, apiUrl }}>
-      <AuthProvider {...oidcConfig}>{props.children}</AuthProvider>
+      {mockAuthEnabled ? (
+        <AuthContext.Provider value={mockAuthContext}>{props.children}</AuthContext.Provider>
+      ) : (
+        <AuthProvider {...oidcConfig}>{props.children}</AuthProvider>
+      )}
     </ConfigContext.Provider>
   )
 }
