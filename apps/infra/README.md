@@ -178,7 +178,7 @@ For Auth0 specifically:
 | **Proxy**           | `<port>-<id>.proxy.<domain>` previews | `https://*.proxy.<STACK_DOMAIN>` (direct ALB) |
 | **SshGateway**      | `ssh <token>@ssh.<domain>:2222`      | `ssh.<STACK_DOMAIN>:2222` (NLB, raw TCP)     |
 | **SnapshotManager** | S3-backed docker registry            | internal only                                |
-| **Jaeger**          | Trace viewer                         | public ALB                                   |
+| **Jaeger**          | Trace viewer for future Phase 3.1    | standalone ALB DNS; not wired in Phase 3     |
 | **OtelCollector**   | OTLP ingest                          | internal + public health                     |
 | **PgAdmin**         | Postgres admin UI                    | public ALB                                   |
 | **RegistryUI**      | Browse snapshot images               | public ALB                                   |
@@ -187,6 +187,10 @@ For Auth0 specifically:
 Run `npx sst deploy --stage dev` without changes to reprint all URLs. See
 [Public hostnames](#public-hostnames) below for the rationale behind the
 dashboard-vs-API split.
+
+POL-14 Phase 3 uses ClickHouse-backed in-panel trace inspection. Jaeger is
+provisioned but the collector does not export to it, and the dashboard does not
+expose `/jaeger` links until the Phase 3.1 proxy/exporter path is complete.
 
 ## Common commands
 

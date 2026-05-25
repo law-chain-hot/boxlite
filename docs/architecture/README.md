@@ -70,6 +70,16 @@ can be embedded directly into applications without requiring a daemon or externa
 
 ## Core Components
 
+### Admin Platform Observability
+
+The hosted admin UI includes a platform observability panel for system administrators. It shows
+`boxlite-api` logs, traces, and Node runtime metrics from ClickHouse, not per-Box daemon telemetry.
+
+**Source:** `apps/api/src/admin/controllers/telemetry.controller.ts`,
+`apps/api/src/sandbox-telemetry/`, `apps/dashboard/src/pages/admin/AdminBoxTelemetry.tsx`
+
+**Design note:** [Admin Platform Observability](./admin-observability.md)
+
 ### BoxliteRuntime
 
 The main entry point for creating and managing Boxes. Holds all runtime state protected by a single

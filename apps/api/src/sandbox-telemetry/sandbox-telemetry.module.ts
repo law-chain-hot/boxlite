@@ -8,9 +8,10 @@ import { SandboxTelemetryController } from './controllers/sandbox-telemetry.cont
 import { SandboxTelemetryService } from './services/sandbox-telemetry.service'
 import { SandboxModule } from '../sandbox/sandbox.module'
 import { OrganizationModule } from '../organization/organization.module'
+import { ClickHouseModule } from '../clickhouse/clickhouse.module'
 
 @Module({
-  imports: [SandboxModule, OrganizationModule],
+  imports: [SandboxModule, OrganizationModule, ClickHouseModule],
   controllers: [SandboxTelemetryController],
   providers: [SandboxTelemetryService],
   exports: [SandboxTelemetryService],
