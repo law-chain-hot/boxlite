@@ -26,7 +26,7 @@ function MetaRow({ k, children }: { k: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 border-t border-border pt-2 first:border-t-0 first:pt-0">
       <dt className="text-muted-foreground">{k}</dt>
-      <dd className="min-w-0 truncate text-right font-medium">{children}</dd>
+      <dd className="min-w-0 max-w-[70%] truncate text-right font-medium">{children}</dd>
     </div>
   )
 }
@@ -76,7 +76,7 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
                 {box.runnerId ? (
                   <button
                     type="button"
-                    className="font-mono text-xs text-primary hover:underline"
+                    className="block max-w-full truncate font-mono text-xs text-primary hover:underline"
                     onClick={() => onJumpToRunner?.(box.runnerId as string)}
                   >
                     {box.runnerId}
@@ -95,8 +95,8 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
               </MetaRow>
             </dl>
             <p className="text-xs italic text-muted-foreground">
-              One click from any box. Logs &amp; metrics populate once the platform telemetry store (ClickHouse) is
-              live; traces are explorable in Jaeger today.
+              One click from any box. This panel shows platform telemetry from ClickHouse; trace waterfalls open
+              in-panel while external trace links remain a Phase 3.1 follow-up.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               {isErrorState(box.state) && (

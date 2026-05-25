@@ -3,10 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import React, { useMemo } from 'react'
 import {
@@ -78,7 +76,7 @@ const AdminOverviewView: React.FC<AdminOverviewViewProps> = ({ onJumpToOwner, on
   return (
     <div className="space-y-6">
       {/* KPI strip */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {overviewQuery.isPending || !overview ? (
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
         ) : (
@@ -93,7 +91,7 @@ const AdminOverviewView: React.FC<AdminOverviewViewProps> = ({ onJumpToOwner, on
               </CardContent>
             </KpiCard>
 
-            <Card className="p-0 sm:col-span-2">
+            <KpiCard>
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-medium text-muted-foreground">Boxes</CardTitle>
               </CardHeader>
@@ -111,7 +109,7 @@ const AdminOverviewView: React.FC<AdminOverviewViewProps> = ({ onJumpToOwner, on
                   </>
                 )}
               </CardContent>
-            </Card>
+            </KpiCard>
 
             <KpiCard>
               <CardHeader className="pb-2">
@@ -127,32 +125,27 @@ const AdminOverviewView: React.FC<AdminOverviewViewProps> = ({ onJumpToOwner, on
                 </p>
               </CardContent>
             </KpiCard>
+
+            <KpiCard>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground">Cluster CPU</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-medium tabular-nums">{(overview.cluster.cpuUtil * 100).toFixed(1)}%</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {overview.cluster.oversell.toFixed(1)}x oversell · online runners
+                </p>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/40">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${Math.min(overview.cluster.cpuUtil * 100, 100)}%` }}
+                  />
+                </div>
+              </CardContent>
+            </KpiCard>
           </>
         )}
       </div>
-
-      {/* second KPI row: cluster (kept separate so the strip stays 4-up on wide screens) */}
-      {overview && (
-        <Card className="p-0">
-          <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Cluster CPU (online runners)</p>
-              <p className="mt-1 text-2xl font-medium tabular-nums">
-                {(overview.cluster.cpuUtil * 100).toFixed(1)}%{' '}
-                <span className="text-sm font-normal text-muted-foreground">
-                  · {overview.cluster.oversell.toFixed(1)}× oversell
-                </span>
-              </p>
-            </div>
-            <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted/40">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${Math.min(overview.cluster.cpuUtil * 100, 100)}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Needs attention */}
       <section className="space-y-3">

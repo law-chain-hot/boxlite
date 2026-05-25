@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
@@ -26,6 +25,7 @@ import { AdminStateBadge } from './AdminPrimitives'
 import { useAdminMachines, useAdminRunners, useAdminActions } from './useAdminData'
 
 interface AdminFleetViewProps {
+  query: string
   highlightRunnerId: string | null
   onShowRunnerBoxes: (runnerId: string) => void
 }
@@ -33,18 +33,39 @@ interface AdminFleetViewProps {
 interface ConfirmState {
   title: string
   description: string
+  confirmLabel: string
   onConfirm: () => void
 }
 
-const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onShowRunnerBoxes }) => {
+const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerId, onShowRunnerBoxes }) => {
   const runnersQuery = useAdminRunners()
   const machinesQuery = useAdminMachines()
   const { cordon, drain } = useAdminActions()
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
 
-  const runners = runnersQuery.data ?? []
+  const normalizedQuery = query.trim().toLowerCase()
+  const runners = useMemo(() => {
+    const allRunners = runnersQuery.data ?? []
+    if (!normalizedQuery) return allRunners
+    return allRunners.filter((runner) => {
+      return (
+        runner.id.toLowerCase().includes(normalizedQuery) ||
+        runner.state.toLowerCase().includes(normalizedQuery) ||
+        String(runner.currentStartedSandboxes).includes(normalizedQuery)
+      )
+    })
+  }, [runnersQuery.data, normalizedQuery])
   const online = useMemo(() => runners.filter(isOnlineRunner), [runners])
   const stale = useMemo(() => runners.filter((r) => !isOnlineRunner(r)), [runners])
+  const machines = useMemo(() => {
+    const allMachines = machinesQuery.data ?? []
+    if (!normalizedQuery) return allMachines
+    return allMachines.filter((machine) => {
+      return (
+        machine.host.toLowerCase().includes(normalizedQuery) || machine.region.toLowerCase().includes(normalizedQuery)
+      )
+    })
+  }, [machinesQuery.data, normalizedQuery])
 
   useEffect(() => {
     if (!highlightRunnerId) return
@@ -79,9 +100,11 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onSh
               </div>
             </TableCell>
             <TableCell className="font-mono">
-              {r.currentAllocatedCpu}/{r.cpu}
-              <span className={cn('ml-1 text-xs', pct >= 80 ? 'text-destructive' : 'text-muted-foreground')}>
-                {pct}%
+              <span className="inline-flex items-baseline gap-1.5">
+                <span>
+                  {r.currentAllocatedCpu}/{r.cpu}
+                </span>
+                <span className={cn('text-xs', pct >= 80 ? 'text-destructive' : 'text-muted-foreground')}>{pct}%</span>
               </span>
             </TableCell>
             <TableCell className="font-mono">
@@ -112,6 +135,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onSh
                       description: r.unschedulable
                         ? `Allow runner ${r.id} to accept new sandboxes again?`
                         : `Prevent runner ${r.id} from accepting new sandboxes? Existing sandboxes keep running.`,
+                      confirmLabel: r.unschedulable ? 'Un-cordon runner' : 'Cordon runner',
                       onConfirm: () => cordon.mutate(r),
                     })
                   }
@@ -127,6 +151,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onSh
                       setConfirm({
                         title: 'Drain runner',
                         description: `Drain runner ${r.id}? Scheduling stops immediately and existing sandboxes are migrated away.`,
+                        confirmLabel: 'Drain runner',
                         onConfirm: () => drain.mutate(r.id),
                       })
                     }
@@ -234,8 +259,8 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onSh
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {machinesQuery.data && machinesQuery.data.length > 0 ? (
-                  machinesQuery.data.map((m) => (
+                {machines.length > 0 ? (
+                  machines.map((m) => (
                     <TableRow key={m.host}>
                       <TableCell className="font-mono text-xs">{m.host}</TableCell>
                       <TableCell>{m.region}</TableCell>
@@ -255,7 +280,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onSh
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="h-20 text-center text-muted-foreground">
-                      No machines found.
+                      {normalizedQuery ? 'No machines match the current search.' : 'No machines found.'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -279,7 +304,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ highlightRunnerId, onSh
                 setConfirm(null)
               }}
             >
-              Confirm
+              {confirm?.confirmLabel ?? 'Confirm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

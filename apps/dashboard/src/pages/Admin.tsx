@@ -9,7 +9,7 @@ import AdminFleetView from '@/components/admin/AdminFleetView'
 import AdminOverviewView from '@/components/admin/AdminOverviewView'
 import AdminPeopleBoxesView from '@/components/admin/AdminPeopleBoxesView'
 import AdminTelemetryDrawer from '@/components/admin/AdminTelemetryDrawer'
-import { useAdminActions, useAdminBoxes, useAdminOverview } from '@/components/admin/useAdminData'
+import { useAdminActions, useAdminBoxes, useAdminOverview, useAdminRunners } from '@/components/admin/useAdminData'
 import { Input } from '@/components/ui/input'
 import { RoutePath } from '@/enums/RoutePath'
 import { cn } from '@/lib/utils'
@@ -35,6 +35,7 @@ const Admin: React.FC = () => {
 
   const overviewQuery = useAdminOverview()
   const boxesQuery = useAdminBoxes()
+  const runnersQuery = useAdminRunners()
   const { recover } = useAdminActions()
 
   // 403 gate — non-admins are redirected (backend is the real guard).
@@ -52,11 +53,21 @@ const Admin: React.FC = () => {
     setRunnerFilter(null)
     if (value) setView('people')
 
-    // Typing a full box id jumps straight into its telemetry.
     const trimmed = value.trim().toLowerCase()
-    if (trimmed.startsWith('box-')) {
-      const hit = findBoxById(groupBoxesByOwner(boxesQuery.data ?? []), value.trim())
-      if (hit) openBox(hit.box)
+    if (!trimmed) return
+
+    // Pasting a full box id jumps straight into telemetry. Real box ids are
+    // UUIDs in dev, while older mockups used box-* ids.
+    const boxHit = findBoxById(groupBoxesByOwner(boxesQuery.data ?? []), trimmed)
+    if (boxHit) {
+      openBox(boxHit.box)
+      return
+    }
+
+    const runnerHit = runnersQuery.data?.find((runner) => runner.id.toLowerCase().includes(trimmed))
+    if (runnerHit) {
+      setHighlightRunner(runnerHit.id)
+      setView('fleet')
     }
   }
 
@@ -68,6 +79,8 @@ const Admin: React.FC = () => {
 
   const jumpToRunner = (runnerId: string) => {
     setDrawerOpen(false)
+    setQuery('')
+    setRunnerFilter(null)
     setHighlightRunner(runnerId)
     setView('fleet')
   }
@@ -133,7 +146,7 @@ const Admin: React.FC = () => {
             />
           )}
           {view === 'fleet' && (
-            <AdminFleetView highlightRunnerId={highlightRunner} onShowRunnerBoxes={showRunnerBoxes} />
+            <AdminFleetView query={query} highlightRunnerId={highlightRunner} onShowRunnerBoxes={showRunnerBoxes} />
           )}
         </div>
       </PageContent>
