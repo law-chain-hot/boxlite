@@ -41,13 +41,13 @@ describe('SandboxTelemetryService', () => {
 
     expect(clickhouseService.query).toHaveBeenCalledTimes(2)
     expect(clickhouseService.query.mock.calls[0][0]).toContain('FROM otel_logs')
-    expect(clickhouseService.query.mock.calls[0][0]).toContain('SeverityText IN')
+    expect(clickhouseService.query.mock.calls[0][0]).toContain('lower(SeverityText) IN')
     expect(clickhouseService.query.mock.calls[0][0]).toContain('Body ILIKE')
     expect(clickhouseService.query.mock.calls[0][1]).toMatchObject({
       serviceName: 'boxlite-api',
       limit: 25,
       offset: 25,
-      severities: ['ERROR'],
+      severities: ['error'],
       search: '%databaseName%',
     })
     expect(result).toEqual({

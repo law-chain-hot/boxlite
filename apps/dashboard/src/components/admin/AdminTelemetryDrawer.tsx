@@ -5,10 +5,8 @@
 
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { RoutePath } from '@/enums/RoutePath'
-import { ExternalLink, Wrench, X } from 'lucide-react'
+import { Wrench, X } from 'lucide-react'
 import React from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
 import { type AdminBox, isErrorState } from './adminHelpers'
 import { AdminStateBadge } from './AdminPrimitives'
 
@@ -36,8 +34,6 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
   onRecover,
   onJumpToRunner,
 }) => {
-  const navigate = useNavigate()
-
   if (!box) return null
 
   return (
@@ -95,14 +91,6 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
                 Recover
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate(generatePath(RoutePath.ADMIN_BOX_TELEMETRY, { boxId: box.id }))}
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open platform telemetry
-            </Button>
           </div>
         </div>
       </SheetContent>

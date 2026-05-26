@@ -42,7 +42,7 @@ describe('AdminTelemetryDrawer', () => {
     document.body.innerHTML = ''
   })
 
-  it('shows box facts and links to platform telemetry without embedding platform evidence tabs', () => {
+  it('shows box facts without offering box-scoped platform telemetry', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
 
@@ -59,7 +59,7 @@ describe('AdminTelemetryDrawer', () => {
 
     expect(text).toContain('Box details')
     expect(text).toContain('Platform telemetry is global boxlite-api evidence.')
-    expect(text).toContain('Open platform telemetry')
+    expect(text).not.toContain('Open platform telemetry')
     expect(text).not.toContain('Logs')
     expect(text).not.toContain('Traces')
     expect(text).not.toContain('Metrics')

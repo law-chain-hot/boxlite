@@ -33,7 +33,12 @@ interface LogsTabProps {
   scope?: TelemetryScope
 }
 
-const SEVERITY_OPTIONS = ['DEBUG', 'INFO', 'WARN', 'ERROR']
+const SEVERITY_OPTIONS = [
+  { label: 'DEBUG', value: 'debug' },
+  { label: 'INFO', value: 'info' },
+  { label: 'WARN', value: 'warn' },
+  { label: 'ERROR', value: 'error' },
+]
 
 export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }) => {
   const [timeRange, setTimeRange] = useState(() => {
@@ -58,6 +63,12 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }
 
   const { data, isLoading, isError, refetch } = useSandboxLogs(sandboxId, queryParams, { scope })
   const targetLabel = scope === 'admin-platform' ? 'platform' : 'this box'
+  const selectedSeverityLabel = selectedSeverities.length === 1 ? selectedSeverities[0].toUpperCase() : undefined
+  const emptyStateText = selectedSeverityLabel
+    ? `No ${selectedSeverityLabel} logs found`
+    : search
+      ? 'No logs match the current search'
+      : 'No logs found'
 
   const handleTimeRangeChange = useCallback((from: Date, to: Date) => {
     setTimeRange({ from, to })
@@ -115,9 +126,9 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
-            {SEVERITY_OPTIONS.map((sev) => (
-              <SelectItem key={sev} value={sev}>
-                {sev}
+            {SEVERITY_OPTIONS.map((severity) => (
+              <SelectItem key={severity.value} value={severity.value}>
+                {severity.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -141,7 +152,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }
         ) : !data?.items?.length ? (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground gap-2">
             <FileText className="w-8 h-8" />
-            <span className="text-sm">No logs found</span>
+            <span className="text-sm">{emptyStateText}</span>
           </div>
         ) : (
           <Table>

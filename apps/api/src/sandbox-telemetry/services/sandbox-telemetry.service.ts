@@ -117,7 +117,7 @@ export class SandboxTelemetryService {
       AND Timestamp <= {to:DateTime64}`
 
     if (severities && severities.length > 0) {
-      whereClause += ` AND SeverityText IN ({severities:Array(String)})`
+      whereClause += ` AND lower(SeverityText) IN ({severities:Array(String)})`
     }
 
     if (search) {
@@ -133,7 +133,7 @@ export class SandboxTelemetryService {
     }
 
     if (severities && severities.length > 0) {
-      params.severities = severities
+      params.severities = severities.map((severity) => severity.toLowerCase())
     }
 
     if (search) {

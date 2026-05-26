@@ -80,7 +80,7 @@ describe('sandbox telemetry hooks', () => {
     expect(axiosGet).toHaveBeenCalledWith(adminTelemetryPaths.logs, {
       params: expect.any(URLSearchParams),
     })
-    expect(axiosGet.mock.calls[0][1].params.toString()).toContain('severities=ERROR')
+    expect(axiosGet.mock.calls[0][1].params.toString()).toContain('severities=error')
     expect(sandboxApi.getSandboxLogs).not.toHaveBeenCalled()
   })
 

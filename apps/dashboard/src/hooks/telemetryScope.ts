@@ -37,7 +37,7 @@ export function buildTelemetrySearchParams(params: TelemetrySearchParams): URLSe
     searchParams.set('search', params.search)
   }
   for (const severity of params.severities ?? []) {
-    searchParams.append('severities', severity)
+    searchParams.append('severities', severity.toLowerCase())
   }
   for (const metricName of params.metricNames ?? []) {
     searchParams.append('metricNames', metricName)

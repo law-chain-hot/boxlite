@@ -13,13 +13,13 @@ describe('telemetryScope', () => {
       to: new Date('2026-05-25T01:00:00.000Z'),
       page: 2,
       limit: 25,
-      severities: ['ERROR', 'WARN'],
+      severities: ['ERROR', 'warn'],
       metricNames: ['nodejs.eventloop.delay.mean', 'v8js.memory.heap.used'],
       search: 'databaseName',
     })
 
     expect(params.toString()).toBe(
-      'from=2026-05-25T00%3A00%3A00.000Z&to=2026-05-25T01%3A00%3A00.000Z&page=2&limit=25&search=databaseName&severities=ERROR&severities=WARN&metricNames=nodejs.eventloop.delay.mean&metricNames=v8js.memory.heap.used',
+      'from=2026-05-25T00%3A00%3A00.000Z&to=2026-05-25T01%3A00%3A00.000Z&page=2&limit=25&search=databaseName&severities=error&severities=warn&metricNames=nodejs.eventloop.delay.mean&metricNames=v8js.memory.heap.used',
     )
   })
 

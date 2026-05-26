@@ -7,6 +7,7 @@ import React, { useState, useCallback } from 'react'
 import { useSandboxMetrics, MetricsQueryParams } from '@/hooks/useSandboxMetrics'
 import { TelemetryScope } from '@/hooks/telemetryScope'
 import { TimeRangeSelector } from './TimeRangeSelector'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart'
@@ -17,6 +18,7 @@ import { format } from 'date-fns'
 import { subHours } from 'date-fns'
 import { MetricSeries } from '@boxlite-ai/api-client'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { getMetricDisplayName, groupPlatformMetricSeries } from './platformMetrics'
 
 interface MetricsTabProps {
   sandboxId?: string
@@ -75,7 +77,7 @@ function buildChartConfig(series: MetricSeries[]): ChartConfig {
   const config: ChartConfig = {}
   series.forEach((s, index) => {
     config[s.metricName] = {
-      label: s.metricName.replace(/^boxlite\.sandbox\./, ''),
+      label: getMetricDisplayName(s.metricName.replace(/^boxlite\.sandbox\./, '')),
       color: CHART_COLORS[index % CHART_COLORS.length],
     }
   })
@@ -96,6 +98,8 @@ interface MetricGroupChartProps {
   convertToGiB: boolean
   viewMode?: ViewMode
   onViewModeChange?: (mode: ViewMode) => void
+  description?: string
+  watchFirst?: boolean
 }
 
 const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
@@ -104,6 +108,8 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
   convertToGiB,
   viewMode,
   onViewModeChange,
+  description,
+  watchFirst,
 }) => {
   const chartData = React.useMemo(() => buildChartData(series, convertToGiB), [series, convertToGiB])
   const chartConfig = React.useMemo(() => buildChartConfig(series), [series])
@@ -111,9 +117,19 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
   const displayTitle = viewMode ? `${title} (${viewMode})` : title
 
   return (
-    <div className="min-h-[250px]">
-      <div className="flex items-center gap-2 mb-2">
-        <h3 className="text-sm font-medium">{displayTitle}</h3>
+    <div className="min-h-[250px] rounded-md border border-border bg-background/50 p-3">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-medium">{displayTitle}</h3>
+            {watchFirst && (
+              <Badge variant="secondary" className="text-[10px] font-normal">
+                Watch first
+              </Badge>
+            )}
+          </div>
+          {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+        </div>
         {viewMode && onViewModeChange && (
           <ToggleGroup
             type="single"
@@ -233,28 +249,12 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId, scope = 'sand
     }).filter((group) => group.series.length > 0)
   }, [data, viewModes])
 
-  // POL-14 Phase 3 Plan B: the platform (boxlite-api) emits node runtime metrics
-  // (nodejs.*, v8js.*, ...) that don't fit the sandbox cpu/memory/filesystem
-  // groups above. Render whatever else came back, grouped by metric namespace,
-  // so the panel isn't blank for platform telemetry.
-  const platformGroups = React.useMemo(() => {
-    if (!data?.series?.length) return []
-    const shownNames = new Set(groupedSeries.flatMap((group) => group.series.map((s) => s.metricName)))
-    const platformSeries = data.series.filter((s) => !shownNames.has(s.metricName))
-    const byNamespace = new Map<string, MetricSeries[]>()
-    for (const s of platformSeries) {
-      const parts = s.metricName.split('.')
-      const namespace = parts.length > 1 ? parts.slice(0, 2).join('.') : parts[0] || 'metrics'
-      const list = byNamespace.get(namespace) ?? []
-      list.push(s)
-      byNamespace.set(namespace, list)
-    }
-    return Array.from(byNamespace.entries()).map(([namespace, series]) => ({
-      key: namespace,
-      title: namespace,
-      series,
-    }))
-  }, [data, groupedSeries])
+  // Platform telemetry needs operational groups; sandbox telemetry keeps the
+  // original CPU/memory/filesystem grouping.
+  const platformMetricGroups = React.useMemo(() => {
+    if (scope !== 'admin-platform' || !data?.series?.length) return []
+    return groupPlatformMetricSeries(data.series)
+  }, [data, scope])
 
   return (
     <div className="flex flex-col h-full gap-4 p-4">
@@ -283,19 +283,27 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId, scope = 'sand
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {groupedSeries.map((group) => (
-              <MetricGroupChart
-                key={group.key}
-                title={group.title}
-                series={group.series}
-                convertToGiB={group.convertToGiB}
-                viewMode={group.hasToggle ? group.viewMode : undefined}
-                onViewModeChange={group.hasToggle ? (mode) => handleViewModeChange(group.key, mode) : undefined}
-              />
-            ))}
-            {platformGroups.map((group) => (
-              <MetricGroupChart key={group.key} title={group.title} series={group.series} convertToGiB={false} />
-            ))}
+            {scope === 'admin-platform'
+              ? platformMetricGroups.map((group) => (
+                  <MetricGroupChart
+                    key={group.key}
+                    title={group.title}
+                    description={group.description}
+                    watchFirst={group.watchFirst}
+                    series={group.series}
+                    convertToGiB={group.convertToGiB}
+                  />
+                ))
+              : groupedSeries.map((group) => (
+                  <MetricGroupChart
+                    key={group.key}
+                    title={group.title}
+                    series={group.series}
+                    convertToGiB={group.convertToGiB}
+                    viewMode={group.hasToggle ? group.viewMode : undefined}
+                    onViewModeChange={group.hasToggle ? (mode) => handleViewModeChange(group.key, mode) : undefined}
+                  />
+                ))}
           </div>
         )}
       </ScrollArea>

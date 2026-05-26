@@ -11,17 +11,19 @@ import AdminPeopleBoxesView from '@/components/admin/AdminPeopleBoxesView'
 import AdminPlatformTelemetryView from '@/components/admin/AdminPlatformTelemetryView'
 import AdminStatusStrip from '@/components/admin/AdminStatusStrip'
 import AdminTelemetryDrawer from '@/components/admin/AdminTelemetryDrawer'
-import { ADMIN_VIEWS, type AdminView } from '@/components/admin/adminNavigation'
+import { ADMIN_VIEWS, adminViewFromParam, type AdminView } from '@/components/admin/adminNavigation'
 import { useAdminActions, useAdminBoxes, useAdminOverview, useAdminRunners } from '@/components/admin/useAdminData'
 import { Input } from '@/components/ui/input'
 import { RoutePath } from '@/enums/RoutePath'
 import { cn } from '@/lib/utils'
 import { Search } from 'lucide-react'
-import React, { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Navigate, useSearchParams } from 'react-router-dom'
 
 const Admin: React.FC = () => {
-  const [view, setView] = useState<AdminView>('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewFromParams = adminViewFromParam(searchParams.get('view')) ?? 'overview'
+  const [view, setViewState] = useState<AdminView>(viewFromParams)
   const [query, setQuery] = useState('')
   const [runnerFilter, setRunnerFilter] = useState<string | null>(null)
   const [highlightRunner, setHighlightRunner] = useState<string | null>(null)
@@ -32,6 +34,21 @@ const Admin: React.FC = () => {
   const boxesQuery = useAdminBoxes()
   const runnersQuery = useAdminRunners()
   const { recover } = useAdminActions()
+
+  useEffect(() => {
+    setViewState(viewFromParams)
+  }, [viewFromParams])
+
+  const setView = (nextView: AdminView) => {
+    setViewState(nextView)
+    const nextParams = new URLSearchParams(searchParams)
+    if (nextView === 'overview') {
+      nextParams.delete('view')
+    } else {
+      nextParams.set('view', nextView)
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
 
   // 403 gate — non-admins are redirected (backend is the real guard).
   if (overviewQuery.isError && (overviewQuery.error as { response?: { status?: number } })?.response?.status === 403) {

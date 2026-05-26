@@ -11,3 +11,7 @@ export const ADMIN_VIEWS: { id: AdminView; label: string }[] = [
   { id: 'fleet', label: 'Fleet' },
   { id: 'platformTelemetry', label: 'Platform Telemetry' },
 ]
+
+export function adminViewFromParam(value: string | null): AdminView | null {
+  return ADMIN_VIEWS.some((view) => view.id === value) ? (value as AdminView) : null
+}
