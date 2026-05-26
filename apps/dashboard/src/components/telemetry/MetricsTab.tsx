@@ -184,6 +184,7 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
                 key={s.metricName}
                 type="monotone"
                 dataKey={s.metricName}
+                name={getMetricDisplayName(s.metricName.replace(/^boxlite\.sandbox\./, ''))}
                 stroke={CHART_COLORS[index % CHART_COLORS.length]}
                 strokeWidth={2}
                 dot={false}
