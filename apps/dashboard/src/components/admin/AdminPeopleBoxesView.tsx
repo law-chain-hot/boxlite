@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Users, X } from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Users, X } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
 import { type AdminBox, filterOwnerGroups, getBoxRollupText, groupBoxesByOwner, isErrorState } from './adminHelpers'
 import { AdminSectionFrame, AdminStateBadge, BreakdownBar } from './AdminPrimitives'
@@ -147,7 +147,7 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
                         <TableHead>Mem</TableHead>
                         <TableHead>Runner</TableHead>
                         <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Telemetry</TableHead>
+                        <TableHead className="text-right">Details</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -170,10 +170,7 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
                             {new Date(box.createdAt).toLocaleString()}
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="inline-flex items-center gap-1 text-xs text-primary">
-                              open
-                              <ChevronRight className="h-3.5 w-3.5" />
-                            </span>
+                            <span className="text-xs text-primary">view</span>
                           </TableCell>
                         </TableRow>
                       ))}

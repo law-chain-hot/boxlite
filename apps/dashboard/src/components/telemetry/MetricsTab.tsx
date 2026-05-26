@@ -19,7 +19,7 @@ import { MetricSeries } from '@boxlite-ai/api-client'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 interface MetricsTabProps {
-  sandboxId: string
+  sandboxId?: string
   scope?: TelemetryScope
 }
 

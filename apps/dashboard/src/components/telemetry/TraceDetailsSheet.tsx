@@ -13,7 +13,7 @@ import { CopyButton } from '@/components/CopyButton'
 import { TraceSpan } from '@boxlite-ai/api-client'
 
 interface TraceDetailsSheetProps {
-  sandboxId: string
+  sandboxId?: string
   traceId: string | null
   scope?: TelemetryScope
   open: boolean

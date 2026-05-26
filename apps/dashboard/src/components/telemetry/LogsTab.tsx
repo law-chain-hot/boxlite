@@ -29,7 +29,7 @@ import { subHours } from 'date-fns'
 import { LogEntry } from '@boxlite-ai/api-client'
 
 interface LogsTabProps {
-  sandboxId: string
+  sandboxId?: string
   scope?: TelemetryScope
 }
 

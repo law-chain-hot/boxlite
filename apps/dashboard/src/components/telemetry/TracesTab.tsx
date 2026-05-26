@@ -20,7 +20,7 @@ import { subHours } from 'date-fns'
 import { TraceSummary } from '@boxlite-ai/api-client'
 
 interface TracesTabProps {
-  sandboxId: string
+  sandboxId?: string
   getTraceHref?: (traceId: string) => string
   scope?: TelemetryScope
 }

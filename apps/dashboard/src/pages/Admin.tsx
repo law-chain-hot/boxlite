@@ -8,8 +8,10 @@ import { type AdminBox, findBoxById, groupBoxesByOwner } from '@/components/admi
 import AdminFleetView from '@/components/admin/AdminFleetView'
 import AdminOverviewView from '@/components/admin/AdminOverviewView'
 import AdminPeopleBoxesView from '@/components/admin/AdminPeopleBoxesView'
+import AdminPlatformTelemetryView from '@/components/admin/AdminPlatformTelemetryView'
 import AdminStatusStrip from '@/components/admin/AdminStatusStrip'
 import AdminTelemetryDrawer from '@/components/admin/AdminTelemetryDrawer'
+import { ADMIN_VIEWS, type AdminView } from '@/components/admin/adminNavigation'
 import { useAdminActions, useAdminBoxes, useAdminOverview, useAdminRunners } from '@/components/admin/useAdminData'
 import { Input } from '@/components/ui/input'
 import { RoutePath } from '@/enums/RoutePath'
@@ -17,14 +19,6 @@ import { cn } from '@/lib/utils'
 import { Search } from 'lucide-react'
 import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-
-type AdminView = 'overview' | 'people' | 'fleet'
-
-const VIEWS: { id: AdminView; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'people', label: 'People & Boxes' },
-  { id: 'fleet', label: 'Fleet' },
-]
 
 const Admin: React.FC = () => {
   const [view, setView] = useState<AdminView>('overview')
@@ -57,7 +51,7 @@ const Admin: React.FC = () => {
     const trimmed = value.trim().toLowerCase()
     if (!trimmed) return
 
-    // Pasting a full box id jumps straight into telemetry. Real box ids are
+    // Pasting a full box id jumps straight into the box detail drawer. Real box ids are
     // UUIDs in dev, while older mockups used box-* ids.
     const boxHit = findBoxById(groupBoxesByOwner(boxesQuery.data ?? []), trimmed)
     if (boxHit) {
@@ -109,7 +103,7 @@ const Admin: React.FC = () => {
         {/* toolbar: view switch + global search */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="inline-flex w-fit gap-1 rounded-lg border border-border bg-card p-1">
-            {VIEWS.map((v) => (
+            {ADMIN_VIEWS.map((v) => (
               <button
                 key={v.id}
                 type="button"
@@ -148,6 +142,7 @@ const Admin: React.FC = () => {
           {view === 'fleet' && (
             <AdminFleetView query={query} highlightRunnerId={highlightRunner} onShowRunnerBoxes={showRunnerBoxes} />
           )}
+          {view === 'platformTelemetry' && <AdminPlatformTelemetryView />}
         </div>
       </PageContent>
 
