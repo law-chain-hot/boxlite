@@ -25,3 +25,14 @@ for (const signal of ['traces', 'metrics', 'logs']) {
 if (!config.exporters?.clickhouse) {
   throw new Error('production collector config must define the ClickHouse exporter')
 }
+
+const clickhouse = config.exporters.clickhouse
+if (clickhouse.endpoint !== '${env:CLICKHOUSE_ENDPOINT}') {
+  throw new Error('ClickHouse exporter endpoint must come from CLICKHOUSE_ENDPOINT')
+}
+if (clickhouse.database !== '${env:CLICKHOUSE_DATABASE:-otel}') {
+  throw new Error('ClickHouse exporter database must come from CLICKHOUSE_DATABASE with otel default')
+}
+if (clickhouse.username !== '${env:CLICKHOUSE_USERNAME:-default}') {
+  throw new Error('ClickHouse exporter username must come from CLICKHOUSE_USERNAME with default fallback')
+}

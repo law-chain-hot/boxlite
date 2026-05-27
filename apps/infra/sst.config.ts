@@ -69,6 +69,12 @@ const HEALTH_DEFAULTS = {
 // Env var with fallback. Empty string also falls through.
 const envOr = <T>(key: string, fallback: T) => process.env[key] || fallback
 
+const requireEnv = (key: string) => {
+  const value = process.env[key]
+  if (!value) throw new Error(`${key} is required`)
+  return value
+}
+
 // HTTP health check with defaults + optional overrides.
 const httpHealth = (path: string, overrides: Partial<{ successCodes: string }> = {}) => ({
   path,
@@ -121,6 +127,11 @@ export default $config({
     // Strip trailing slash from service.url so path concat produces clean URLs
     // (api.url = "https://api.dev.boxlite.ai/" → apiBase = "https://api.dev.boxlite.ai").
     const stripTrailingSlash = (url: $util.Output<string>) => url.apply((u) => (u.endsWith('/') ? u.slice(0, -1) : u))
+    const clickHouseMode = envOr('CLICKHOUSE_MODE', 'self-hosted').toLowerCase()
+    const useExternalClickHouse = clickHouseMode === 'cloud' || clickHouseMode === 'external'
+    if (!useExternalClickHouse && clickHouseMode !== 'self-hosted') {
+      throw new Error('CLICKHOUSE_MODE must be one of: self-hosted, cloud, external')
+    }
 
     // HTTPS everywhere: the Router CloudFront Function deletes customOriginConfig
     // for http origins and CF then falls back to match-viewer (→ tries HTTPS on a
@@ -156,22 +167,44 @@ export default $config({
     const redis = new sst.aws.Redis('Cache', { vpc, cluster: false }) // NestJS uses SELECT (multi-DB)
     const storage = new sst.aws.Bucket('Storage')
     const cluster = new sst.aws.Cluster('Cluster', { vpc, forceUpgrade: 'v2' })
-    const clickHouse = new sst.aws.Service('ClickHouse', {
-      cluster,
-      image: IMAGES.clickhouse,
-      loadBalancer: {
-        rules: [
-          { listen: `${PORTS.CLICKHOUSE_HTTP}/tcp`, forward: `${PORTS.CLICKHOUSE_HTTP}/tcp` },
-          { listen: `${PORTS.CLICKHOUSE_NATIVE}/tcp`, forward: `${PORTS.CLICKHOUSE_NATIVE}/tcp` },
-        ],
-      },
-      environment: {
-        CLICKHOUSE_DB: 'otel',
-        CLICKHOUSE_USER: 'default',
-        CLICKHOUSE_PASSWORD: envOr('CLICKHOUSE_PASSWORD', clickHousePassword.result),
-        CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1',
-      },
-    })
+    const clickHouseDatabase = envOr('CLICKHOUSE_DATABASE', 'otel')
+    const clickHouseUsername = envOr('CLICKHOUSE_USERNAME', 'default')
+    const clickHousePasswordValue = useExternalClickHouse
+      ? requireEnv('CLICKHOUSE_PASSWORD')
+      : envOr('CLICKHOUSE_PASSWORD', clickHousePassword.result)
+    let clickHouseHttpHost: string | $util.Output<string>
+    let clickHouseHttpPort: string
+    let clickHouseHttpProtocol: string
+    let clickHouseCollectorEndpoint: string | $util.Output<string>
+
+    if (useExternalClickHouse) {
+      clickHouseHttpProtocol = envOr('CLICKHOUSE_PROTOCOL', 'https')
+      clickHouseHttpHost = requireEnv('CLICKHOUSE_HOST')
+      clickHouseHttpPort = envOr('CLICKHOUSE_PORT', clickHouseHttpProtocol === 'https' ? '8443' : '8123')
+      clickHouseCollectorEndpoint = requireEnv('CLICKHOUSE_OTEL_ENDPOINT')
+    } else {
+      const clickHouse = new sst.aws.Service('ClickHouse', {
+        cluster,
+        image: IMAGES.clickhouse,
+        loadBalancer: {
+          rules: [
+            { listen: `${PORTS.CLICKHOUSE_HTTP}/tcp`, forward: `${PORTS.CLICKHOUSE_HTTP}/tcp` },
+            { listen: `${PORTS.CLICKHOUSE_NATIVE}/tcp`, forward: `${PORTS.CLICKHOUSE_NATIVE}/tcp` },
+          ],
+        },
+        environment: {
+          CLICKHOUSE_DB: clickHouseDatabase,
+          CLICKHOUSE_USER: clickHouseUsername,
+          CLICKHOUSE_PASSWORD: clickHousePasswordValue,
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1',
+        },
+      })
+
+      clickHouseHttpHost = clickHouse.nodes.loadBalancer.dnsName
+      clickHouseHttpPort = String(PORTS.CLICKHOUSE_HTTP)
+      clickHouseHttpProtocol = 'http'
+      clickHouseCollectorEndpoint = $interpolate`tcp://${clickHouse.nodes.loadBalancer.dnsName}:${PORTS.CLICKHOUSE_NATIVE}`
+    }
 
     // ─── 3. IAM ──────────────────────────────────────────────────────────────
     // S3 IAM user: API signs STS tokens for sandbox S3 uploads.
@@ -256,8 +289,10 @@ export default $config({
         },
       },
       environment: {
-        CLICKHOUSE_ENDPOINT: $interpolate`tcp://${clickHouse.nodes.loadBalancer.dnsName}:${PORTS.CLICKHOUSE_NATIVE}`,
-        CLICKHOUSE_PASSWORD: envOr('CLICKHOUSE_PASSWORD', clickHousePassword.result),
+        CLICKHOUSE_ENDPOINT: clickHouseCollectorEndpoint,
+        CLICKHOUSE_DATABASE: clickHouseDatabase,
+        CLICKHOUSE_USERNAME: clickHouseUsername,
+        CLICKHOUSE_PASSWORD: clickHousePasswordValue,
         BOXLITE_API_URL: `https://api.${stackDomain}/api`,
       },
     })
@@ -314,12 +349,12 @@ export default $config({
         REDIS_TLS: 'true',
 
         // ClickHouse (platform observability)
-        CLICKHOUSE_HOST: clickHouse.nodes.loadBalancer.dnsName,
-        CLICKHOUSE_PORT: String(PORTS.CLICKHOUSE_HTTP),
-        CLICKHOUSE_PROTOCOL: 'http',
-        CLICKHOUSE_DATABASE: 'otel',
-        CLICKHOUSE_USERNAME: 'default',
-        CLICKHOUSE_PASSWORD: envOr('CLICKHOUSE_PASSWORD', clickHousePassword.result),
+        CLICKHOUSE_HOST: clickHouseHttpHost,
+        CLICKHOUSE_PORT: clickHouseHttpPort,
+        CLICKHOUSE_PROTOCOL: clickHouseHttpProtocol,
+        CLICKHOUSE_DATABASE: clickHouseDatabase,
+        CLICKHOUSE_USERNAME: clickHouseUsername,
+        CLICKHOUSE_PASSWORD: clickHousePasswordValue,
 
         // Encryption
         ENCRYPTION_KEY: envOr('ENCRYPTION_KEY', encryptionKey.result),

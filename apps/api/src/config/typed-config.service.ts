@@ -184,12 +184,13 @@ export class TypedConfigService {
    * @returns The ClickHouse configuration
    */
   getClickHouseConfig() {
+    const url = this.get('clickhouse.url')
     const host = this.get('clickhouse.host')
-    if (!host) {
+    if (!url && !host) {
       return null
     }
     return {
-      url: `${this.get('clickhouse.protocol')}://${host}:${this.get('clickhouse.port')}`,
+      url: url || `${this.get('clickhouse.protocol')}://${host}:${this.get('clickhouse.port')}`,
       username: this.get('clickhouse.username'),
       password: this.get('clickhouse.password'),
       database: this.get('clickhouse.database'),

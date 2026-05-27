@@ -9,7 +9,7 @@ not claim to show per-Box daemon telemetry or user-program telemetry.
 ```
 boxlite-api OTLP
   -> OtelCollector :4318
-  -> ClickHouse database otel
+  -> ClickHouse database otel (SST self-hosted by default, ClickHouse Cloud via CLICKHOUSE_MODE=cloud)
   -> Admin dashboard Platform telemetry panel
 ```
 
@@ -40,6 +40,13 @@ Plan B does not emit inside-microVM telemetry.
 
 Metrics preserve the existing dashboard response shape. Gauges and sums are averaged into one-minute
 points. Histograms are represented as per-minute means using `sum(Sum) / nullIf(sum(Count), 0)`.
+
+## ClickHouse Deployment
+
+Development and staging can use the SST-managed ClickHouse ECS service. For a managed provider such
+as ClickHouse Cloud, set `CLICKHOUSE_MODE=cloud` and pass the provider's API query endpoint plus the
+collector write endpoint through env vars. The dashboard and API contracts do not change; only the
+storage endpoint behind the API/collector changes.
 
 ## Jaeger
 

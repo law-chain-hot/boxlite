@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
+const clickHouseProtocol = process.env.CLICKHOUSE_PROTOCOL || 'https'
+const clickHouseDefaultPort = clickHouseProtocol === 'https' ? '8443' : '8123'
+
 const configuration = {
   production: process.env.NODE_ENV === 'production',
   version: process.env.VERSION || '0.0.0-dev',
@@ -322,12 +325,13 @@ const configuration = {
     apiKey: process.env.OTEL_COLLECTOR_API_KEY,
   },
   clickhouse: {
+    url: process.env.CLICKHOUSE_URL,
     host: process.env.CLICKHOUSE_HOST,
-    port: parseInt(process.env.CLICKHOUSE_PORT || '8123', 10),
+    port: parseInt(process.env.CLICKHOUSE_PORT || clickHouseDefaultPort, 10),
     database: process.env.CLICKHOUSE_DATABASE || 'otel',
     username: process.env.CLICKHOUSE_USERNAME || 'default',
     password: process.env.CLICKHOUSE_PASSWORD,
-    protocol: process.env.CLICKHOUSE_PROTOCOL || 'https',
+    protocol: clickHouseProtocol,
   },
   sandboxActivity: {
     throttleTtlSeconds: parseInt(process.env.SANDBOX_ACTIVITY_THROTTLE_TTL_SECONDS || '5', 10),

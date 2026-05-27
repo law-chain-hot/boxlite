@@ -40,9 +40,9 @@ exporters:
 
   clickhouse:
     endpoint: ${env:CLICKHOUSE_ENDPOINT}
-    database: otel
+    database: ${env:CLICKHOUSE_DATABASE:-otel}
     ttl: ${env:CLICKHOUSE_TTL:-72h}
-    username: default
+    username: ${env:CLICKHOUSE_USERNAME:-default}
     password: ${env:CLICKHOUSE_PASSWORD}
 
     sending_queue:

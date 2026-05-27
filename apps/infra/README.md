@@ -192,6 +192,31 @@ POL-14 Phase 3 uses ClickHouse-backed in-panel trace inspection. Jaeger is
 provisioned but the collector does not export to it, and the dashboard does not
 expose `/jaeger` links until the Phase 3.1 proxy/exporter path is complete.
 
+### ClickHouse mode
+
+By default, SST provisions a self-hosted ClickHouse ECS service. This keeps dev
+usable without third-party accounts, but it is not the recommended long-term
+storage layer for production observability.
+
+Set `CLICKHOUSE_MODE=cloud` or `CLICKHOUSE_MODE=external` to use a managed
+ClickHouse endpoint instead. In that mode SST skips the `ClickHouse` ECS service
+and wires both the API and OtelCollector to the supplied endpoint:
+
+```bash
+CLICKHOUSE_MODE=cloud
+CLICKHOUSE_HOST=abc123.us-east-1.aws.clickhouse.cloud
+CLICKHOUSE_PORT=8443
+CLICKHOUSE_PROTOCOL=https
+CLICKHOUSE_DATABASE=otel
+CLICKHOUSE_USERNAME=default
+CLICKHOUSE_PASSWORD=...
+CLICKHOUSE_OTEL_ENDPOINT=tcp://abc123.us-east-1.aws.clickhouse.cloud:9440?secure=true
+```
+
+`CLICKHOUSE_HOST`/`PORT`/`PROTOCOL` are used by the API for dashboard queries.
+`CLICKHOUSE_OTEL_ENDPOINT` is used by the collector exporter for OTLP writes.
+Keep credentials in the deployment environment; do not commit them.
+
 ## Common commands
 
 ```bash
