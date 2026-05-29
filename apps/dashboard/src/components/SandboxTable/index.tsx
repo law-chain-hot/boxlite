@@ -227,7 +227,6 @@ export function SandboxTable({
             {table.getRowModel().rows.map((row) => {
               const sandbox = row.original
               const lastEvent = getSandboxLastEvent(sandbox)
-              const regionName = getRegionName(sandbox.target) ?? sandbox.target
 
               return (
                 <div
@@ -264,8 +263,7 @@ export function SandboxTable({
                       </div>
 
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs md:grid-cols-4 md:gap-x-4">
-                        <CompactSandboxMeta label="Snapshot">{sandbox.snapshot || '-'}</CompactSandboxMeta>
-                        <CompactSandboxMeta label="Region">{regionName}</CompactSandboxMeta>
+                        <CompactSandboxMeta label="Environment">{sandbox.snapshot || '-'}</CompactSandboxMeta>
                         <CompactSandboxMeta label="Resources">
                           {sandbox.cpu} vCPU • {sandbox.memory} GiB • {sandbox.disk} GiB
                         </CompactSandboxMeta>

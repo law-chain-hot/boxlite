@@ -86,12 +86,12 @@ export function useSandboxTable({
     const saved = getLocalStorageItem(LocalStorageKey.SandboxTableColumnVisibility)
     if (saved) {
       try {
-        return JSON.parse(saved)
+        return { ...JSON.parse(saved), region: false }
       } catch {
-        return { id: false, labels: false }
+        return { id: false, labels: false, region: false }
       }
     }
-    return { id: false, labels: false }
+    return { id: false, labels: false, region: false }
   })
 
   useEffect(() => {

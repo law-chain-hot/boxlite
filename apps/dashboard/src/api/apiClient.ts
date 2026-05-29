@@ -54,6 +54,13 @@ export class ApiClient {
     })
 
     const axiosInstance = axios.create()
+    axiosInstance.interceptors.request.use((request) => {
+      request.headers?.delete?.('User-Agent')
+      if (request.headers) {
+        delete (request.headers as Record<string, unknown>)['User-Agent']
+      }
+      return request
+    })
     axiosInstance.interceptors.response.use(
       (response) => {
         return response

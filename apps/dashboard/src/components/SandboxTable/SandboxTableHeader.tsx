@@ -9,14 +9,13 @@ import { cn } from '@/lib/utils'
 import {
   ArrowUpDown,
   Calendar,
-  Camera,
   Check,
   Columns,
   Cpu,
-  Globe,
   HardDrive,
   ListFilter,
   MemoryStick,
+  Package,
   RefreshCw,
   Square,
   Tag,
@@ -46,7 +45,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { LabelFilter, LabelFilterIndicator } from './filters/LabelFilter'
 import { LastEventFilter, LastEventFilterIndicator } from './filters/LastEventFilter'
-import { RegionFilter, RegionFilterIndicator } from './filters/RegionFilter'
 import { ResourceFilter, ResourceFilterIndicator, ResourceFilterValue } from './filters/ResourceFilter'
 import { SnapshotFilter, SnapshotFilterIndicator } from './filters/SnapshotFilter'
 import { StateFilter, StateFilterIndicator } from './filters/StateFilter'
@@ -60,8 +58,6 @@ const RESOURCE_FILTERS = [
 
 export function SandboxTableHeader({
   table,
-  regionOptions,
-  regionsDataIsLoading,
   snapshots,
   snapshotsDataIsLoading,
   snapshotsDataHasMore,
@@ -77,14 +73,12 @@ export function SandboxTableHeader({
   const sortableColumns = [
     { id: 'name', label: 'Name' },
     { id: 'state', label: 'State' },
-    { id: 'snapshot', label: 'Snapshot' },
-    { id: 'region', label: 'Region' },
+    { id: 'snapshot', label: 'Environment' },
     { id: 'lastEvent', label: 'Last Event' },
   ]
 
   const stateFilterValue = (table.getColumn('state')?.getFilterValue() as string[]) || []
   const snapshotFilterValue = (table.getColumn('snapshot')?.getFilterValue() as string[]) || []
-  const regionFilterValue = (table.getColumn('region')?.getFilterValue() as string[]) || []
   const resourceFilterValue = (table.getColumn('resources')?.getFilterValue() as ResourceFilterValue) || {}
   const labelFilterValue = (table.getColumn('labels')?.getFilterValue() as string[]) || []
   const lastEventFilterValue = (table.getColumn('lastEvent')?.getFilterValue() as Date[]) || []
@@ -92,7 +86,6 @@ export function SandboxTableHeader({
   const hasActiveFilters =
     stateFilterValue.length > 0 ||
     snapshotFilterValue.length > 0 ||
-    regionFilterValue.length > 0 ||
     RESOURCE_FILTERS.some((filter) => Boolean(resourceFilterValue[filter.type])) ||
     labelFilterValue.length > 0 ||
     lastEventFilterValue.length > 0
@@ -242,8 +235,8 @@ export function SandboxTableHeader({
             </DropdownMenuSub>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                <Camera className="w-4 h-4" />
-                Snapshot
+                <Package className="w-4 h-4" />
+                Environment
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="p-0 w-64">
@@ -254,22 +247,6 @@ export function SandboxTableHeader({
                     isLoading={snapshotsDataIsLoading}
                     hasMore={snapshotsDataHasMore}
                     onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
-                  />
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Globe className="w-4 h-4" />
-                Region
-              </DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent className="p-0 w-64">
-                  <RegionFilter
-                    value={regionFilterValue}
-                    onFilterChange={(value) => table.getColumn('region')?.setFilterValue(value)}
-                    options={regionOptions}
-                    isLoading={regionsDataIsLoading}
                   />
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
@@ -345,15 +322,6 @@ export function SandboxTableHeader({
               isLoading={snapshotsDataIsLoading}
               hasMore={snapshotsDataHasMore}
               onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
-            />
-          )}
-
-          {regionFilterValue.length > 0 && (
-            <RegionFilterIndicator
-              value={regionFilterValue}
-              onFilterChange={(value) => table.getColumn('region')?.setFilterValue(value)}
-              options={regionOptions}
-              isLoading={regionsDataIsLoading}
             />
           )}
 

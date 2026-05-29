@@ -975,8 +975,8 @@ const Sandboxes: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Start with a Sandbox</DialogTitle>
             <DialogDescription>
-              Create a sandbox, open the terminal, then stop or delete it when you are done. The environment, region,
-              resources, and network defaults are managed for you.
+              Create a sandbox, open the terminal, then stop or delete it when you are done. The environment, resources,
+              and network defaults are managed for you.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1193,7 +1193,6 @@ const Sandboxes: React.FC = () => {
           writePermitted={authenticatedUserOrganizationMember?.role === OrganizationUserRoleEnum.OWNER}
           deletePermitted={authenticatedUserOrganizationMember?.role === OrganizationUserRoleEnum.OWNER}
           handleRecover={handleRecover}
-          getRegionName={getRegionName}
         />
       </PageContent>
     </PageLayout>

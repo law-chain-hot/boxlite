@@ -29,6 +29,7 @@ export function useSandboxWsSync({ sandboxId, refetchOnCreate = false }: UseSand
     const updateStateInListCache = (targetId: string, state: SandboxState) => {
       queryClient.setQueriesData<PaginatedSandboxes>({ queryKey: getSandboxesQueryKey(orgId) }, (oldData) => {
         if (!oldData) return oldData
+        if (!Array.isArray(oldData.items)) return oldData
         return {
           ...oldData,
           items: oldData.items.map((s) => (s.id === targetId ? { ...s, state } : s)),

@@ -33,7 +33,6 @@ interface SandboxDetailsSheetProps {
   handleDelete: (id: string) => void
   handleArchive: (id: string) => void
   getWebTerminalUrl: (id: string) => Promise<string | null>
-  getRegionName: (regionId: string) => string | undefined
   writePermitted: boolean
   deletePermitted: boolean
   handleRecover: (id: string) => void
@@ -49,7 +48,6 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
   handleDelete,
   handleArchive,
   getWebTerminalUrl,
-  getRegionName,
   writePermitted,
   deletePermitted,
   handleRecover,
@@ -231,7 +229,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <h3 className="text-sm text-muted-foreground">State</h3>
                 <div className="mt-1 text-sm">
@@ -243,19 +241,12 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                 </div>
               </div>
               <div>
-                <h3 className="text-sm text-muted-foreground">Snapshot</h3>
+                <h3 className="text-sm text-muted-foreground">Environment</h3>
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-sm font-medium truncate">{sandbox.snapshot || '-'}</p>
                   {sandbox.snapshot && (
-                    <CopyButton value={sandbox.snapshot} tooltipText="Copy snapshot" size="icon-xs" />
+                    <CopyButton value={sandbox.snapshot} tooltipText="Copy environment" size="icon-xs" />
                   )}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm text-muted-foreground">Region</h3>
-                <div className="mt-1 flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{getRegionName(sandbox.target) ?? sandbox.target}</p>
-                  <CopyButton value={sandbox.target} tooltipText="Copy region" size="icon-xs" />
                 </div>
               </div>
             </div>
