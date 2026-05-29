@@ -29,6 +29,14 @@ export class CreateSandboxDto {
   snapshot?: string
 
   @ApiPropertyOptional({
+    description: 'The ID or name of a system environment used for the sandbox',
+    example: 'ubuntu-24.04',
+  })
+  @IsOptional()
+  @IsString()
+  environmentId?: string
+
+  @ApiPropertyOptional({
     description: 'The user associated with the project',
     example: 'boxlite',
   })

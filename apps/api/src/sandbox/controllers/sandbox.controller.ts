@@ -252,6 +252,7 @@ export class SandboxController {
     requestMetadata: {
       body: (req: TypedRequest<CreateSandboxDto>) => ({
         name: req.body?.name,
+        environmentId: req.body?.environmentId,
         snapshot: req.body?.snapshot,
         user: req.body?.user,
         env: req.body?.env
@@ -282,7 +283,23 @@ export class SandboxController {
     const organization = authContext.organization
     let sandbox: SandboxDto
 
-    if (createSandboxDto.buildInfo) {
+    if (createSandboxDto.environmentId) {
+      if (createSandboxDto.snapshot) {
+        throw new BadRequestError('Cannot specify a snapshot when using an environment')
+      }
+      if (createSandboxDto.buildInfo) {
+        throw new BadRequestError('Cannot specify build info when using an environment')
+      }
+      if (createSandboxDto.cpu || createSandboxDto.gpu || createSandboxDto.memory || createSandboxDto.disk) {
+        throw new BadRequestError('Cannot specify Sandbox resources when using an environment')
+      }
+      sandbox = await this.sandboxService.createFromEnvironment(createSandboxDto, organization)
+      if (sandbox.state === SandboxState.STARTED) {
+        return sandbox
+      }
+
+      await this.waitForSandboxStarted(sandbox, 30)
+    } else if (createSandboxDto.buildInfo) {
       if (createSandboxDto.snapshot) {
         throw new BadRequestError('Cannot specify a snapshot when using a build info entry')
       }

@@ -309,7 +309,7 @@ export class SnapshotManager implements TrackableJobExecutions, OnApplicationShu
             throw new Error(`No internal registry found for snapshot ${snapshot.ref} in region ${runner.region}`)
           }
 
-          const snapshotRunner = await this.runnerService.getSnapshotRunner(runner.id, snapshot.ref)
+          let snapshotRunner = await this.runnerService.getSnapshotRunner(runner.id, snapshot.ref)
 
           try {
             if (!snapshotRunner) {
@@ -318,14 +318,28 @@ export class SnapshotManager implements TrackableJobExecutions, OnApplicationShu
                 snapshot.ref,
                 SnapshotRunnerState.PULLING_SNAPSHOT,
               )
+              snapshotRunner = await this.runnerService.getSnapshotRunner(runner.id, snapshot.ref)
               await this.pullSnapshotRunner(runner, snapshot.ref, internalRegistry)
             } else if (snapshotRunner.state === SnapshotRunnerState.PULLING_SNAPSHOT) {
               await this.handleSnapshotRunnerStatePullingSnapshot(snapshotRunner, runner)
             }
           } catch (err) {
             this.logger.error(`Error propagating snapshot to runner ${runner.id}: ${fromAxiosError(err)}`)
+            const errorReason = err instanceof Error ? err.message : String(err)
+            if (!snapshotRunner) {
+              snapshotRunner = await this.runnerService.getSnapshotRunner(runner.id, snapshot.ref)
+            }
+            if (!snapshotRunner) {
+              await this.runnerService.createSnapshotRunnerEntry(
+                runner.id,
+                snapshot.ref,
+                SnapshotRunnerState.ERROR,
+                errorReason,
+              )
+              return
+            }
             snapshotRunner.state = SnapshotRunnerState.ERROR
-            snapshotRunner.errorReason = err.message
+            snapshotRunner.errorReason = errorReason
             await this.snapshotRunnerRepository.update(snapshotRunner.id, snapshotRunner)
           }
         }),

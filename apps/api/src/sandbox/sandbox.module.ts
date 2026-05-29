@@ -20,6 +20,7 @@ import { SandboxManager } from './managers/sandbox.manager'
 import { ToolboxController } from './controllers/toolbox.deprecated.controller'
 import { Snapshot } from './entities/snapshot.entity'
 import { SnapshotController } from './controllers/snapshot.controller'
+import { EnvironmentController } from './controllers/environment.controller'
 import { SnapshotService } from './services/snapshot.service'
 import { SnapshotManager } from './managers/snapshot.manager'
 import { SnapshotRunner } from './entities/snapshot-runner.entity'
@@ -93,6 +94,7 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     RunnerController,
     ToolboxController,
     SnapshotController,
+    EnvironmentController,
     WorkspaceController,
     PreviewController,
     VolumeController,

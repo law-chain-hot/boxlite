@@ -38,7 +38,10 @@ import { TypedConfigService } from '../config/typed-config.service'
 import { UpdateOrganizationRegionQuotaDto } from '../organization/dto/update-organization-region-quota.dto'
 import { UpdateOrganizationDefaultRegionDto } from '../organization/dto/update-organization-default-region.dto'
 
-type RequestWithUser = Request & { user?: { userId: string; organizationId: string } }
+type RequestWithUser = Request & {
+  user?: { userId: string; organizationId: string }
+  params: Record<string, string>
+}
 type CommonCaptureProps = {
   organizationId?: string
   distinctId: string

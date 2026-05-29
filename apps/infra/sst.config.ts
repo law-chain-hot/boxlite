@@ -108,7 +108,7 @@ export default $config({
       home: "aws",
       providers: {
         aws: { region: REGION, profile: envOr("AWS_PROFILE", "default") },
-        cloudflare: "6.14.0",
+        cloudflare: "6.15.0",
         random: "4.16.6",
       },
     };
@@ -259,7 +259,7 @@ export default $config({
         RUN_MIGRATIONS: "true",
         VERSION: "0.1.0",
         DEFAULT_REGION_ENFORCE_QUOTAS: "false",
-        DEFAULT_SNAPSHOT: envOr("DEFAULT_SNAPSHOT", "ubuntu:latest"),
+        DEFAULT_SNAPSHOT: envOr("DEFAULT_SNAPSHOT", "ubuntu:24.04"),
 
         // Database (SST-linked)
         DB_HOST: db.host,

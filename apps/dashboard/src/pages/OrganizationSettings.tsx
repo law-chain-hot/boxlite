@@ -16,6 +16,7 @@ import { InputGroup, InputGroupButton, InputGroupInput } from '@/components/ui/i
 import { useDeleteOrganizationMutation } from '@/hooks/mutations/useDeleteOrganizationMutation'
 import { useLeaveOrganizationMutation } from '@/hooks/mutations/useLeaveOrganizationMutation'
 import { useSetOrganizationDefaultRegionMutation } from '@/hooks/mutations/useSetOrganizationDefaultRegionMutation'
+import { useApi } from '@/hooks/useApi'
 import { useOrganizations } from '@/hooks/useOrganizations'
 import { useRegions } from '@/hooks/useRegions'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
@@ -26,7 +27,16 @@ import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useCopyToClipboard } from 'usehooks-ts'
 
+const DEFAULT_ORGANIZATION_DISPLAY_NAME = 'Default Organization'
+
+const getOrganizationDisplayName = (name?: string, personal?: boolean) => {
+  if (!name) return DEFAULT_ORGANIZATION_DISPLAY_NAME
+  if (personal || name === 'Personal') return DEFAULT_ORGANIZATION_DISPLAY_NAME
+  return name
+}
+
 const OrganizationSettings: React.FC = () => {
+  const { axiosInstance } = useApi()
   const { refreshOrganizations } = useOrganizations()
   const { selectedOrganization, authenticatedUserOrganizationMember } = useSelectedOrganization()
   const { getRegionName, sharedRegions: regions, loadingSharedRegions: loadingRegions } = useRegions()
@@ -35,6 +45,8 @@ const OrganizationSettings: React.FC = () => {
   const leaveOrganizationMutation = useLeaveOrganizationMutation()
   const setDefaultRegionMutation = useSetOrganizationDefaultRegionMutation()
   const [showSetDefaultRegionDialog, setSetDefaultRegionDialog] = useState(false)
+  const [organizationName, setOrganizationName] = useState('')
+  const [renamingOrganization, setRenamingOrganization] = useState(false)
   const [copied, copyToClipboard] = useCopyToClipboard()
 
   useEffect(() => {
@@ -42,6 +54,10 @@ const OrganizationSettings: React.FC = () => {
       setSetDefaultRegionDialog(true)
     }
   }, [selectedOrganization])
+
+  useEffect(() => {
+    setOrganizationName(getOrganizationDisplayName(selectedOrganization?.name, selectedOrganization?.personal))
+  }, [selectedOrganization?.name, selectedOrganization?.personal])
 
   if (!selectedOrganization) {
     return null
@@ -88,6 +104,26 @@ const OrganizationSettings: React.FC = () => {
   }
 
   const isOwner = authenticatedUserOrganizationMember?.role === OrganizationUserRoleEnum.OWNER
+  const trimmedOrganizationName = organizationName.trim()
+  const organizationNameChanged =
+    trimmedOrganizationName.length > 0 && trimmedOrganizationName !== selectedOrganization.name
+
+  const handleRenameOrganization = async () => {
+    if (!isOwner || !organizationNameChanged) {
+      return
+    }
+
+    setRenamingOrganization(true)
+    try {
+      await axiosInstance.patch(`/organizations/${selectedOrganization.id}/name`, { name: trimmedOrganizationName })
+      toast.success('Organization renamed successfully')
+      await refreshOrganizations(selectedOrganization.id)
+    } catch (error) {
+      handleApiError(error, 'Failed to rename organization')
+    } finally {
+      setRenamingOrganization(false)
+    }
+  }
 
   return (
     <PageLayout>
@@ -107,7 +143,26 @@ const OrganizationSettings: React.FC = () => {
                 <FieldDescription>The public name of your organization.</FieldDescription>
               </FieldContent>
 
-              <Input id="organization-name" value={selectedOrganization.name} readOnly className="flex-1" />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  id="organization-name"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  readOnly={!isOwner}
+                  disabled={renamingOrganization}
+                  className="flex-1"
+                />
+                {isOwner && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleRenameOrganization}
+                    disabled={!organizationNameChanged || renamingOrganization}
+                  >
+                    Save
+                  </Button>
+                )}
+              </div>
             </Field>
           </CardContent>
 

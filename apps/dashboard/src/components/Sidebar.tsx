@@ -18,47 +18,31 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BOXLITE_DOCS_URL, BOXLITE_SLACK_URL } from '@/constants/ExternalLinks'
 import { useTheme } from '@/contexts/ThemeContext'
-import { FeatureFlags } from '@/enums/FeatureFlags'
 import { RoutePath } from '@/enums/RoutePath'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
-import { useWebhookAppPortalAccessQuery } from '@/hooks/queries/useWebhookAppPortalAccessQuery'
-import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { useUserOrganizationInvitations } from '@/hooks/useUserOrganizationInvitations'
-import { useWebhooks } from '@/hooks/useWebhooks'
 import { cn, getMetaKey } from '@/lib/utils'
 import { usePylon, usePylonCommands } from '@/vendor/pylon'
-import { OrganizationRolePermissionsEnum, OrganizationUserRoleEnum } from '@boxlite-ai/api-client'
 import {
   ArrowRightIcon,
   BookOpen,
-  Box,
-  ChartColumn,
+  Check,
   Container,
-  CreditCard,
-  FlaskConical,
-  HardDrive,
-  Joystick,
-  KeyRound,
   LifeBuoyIcon,
   ListChecks,
-  LockKeyhole,
   LogOut,
   Mail,
-  MapPinned,
   Menu,
   MessageCircle,
+  Monitor,
   MoreHorizontal,
   MoonIcon,
-  PackageOpen,
   SearchIcon,
-  Server,
   Settings,
   SquareUserRound,
   SunIcon,
-  TextSearch,
-  Users,
 } from 'lucide-react'
-import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react'
+import { usePostHog } from 'posthog-js/react'
 import React, { useMemo } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -102,219 +86,46 @@ const useNavCommands = (items: { label: string; path: RoutePath | string; onClic
   useRegisterCommands(navCommands, { groupId: 'navigation', groupLabel: 'Navigation', groupOrder: 1 })
 }
 
-export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: SidebarProps) {
+export function Sidebar({ isBannerVisible }: SidebarProps) {
   const isCompactScreen = useIsCompactScreen()
   const posthog = usePostHog()
   const { theme, setTheme } = useTheme()
   const { user, signoutRedirect } = useAuth()
   const { pathname } = useLocation()
-  const { selectedOrganization, authenticatedUserOrganizationMember, authenticatedUserHasPermission } =
-    useSelectedOrganization()
   const { count: organizationInvitationsCount } = useUserOrganizationInvitations()
-  const { isInitialized: webhooksInitialized } = useWebhooks()
-  const webhooksAccess = useWebhookAppPortalAccessQuery(selectedOrganization?.id)
-  const orgInfraEnabled = useFeatureFlagEnabled(FeatureFlags.ORGANIZATION_INFRASTRUCTURE)
-  const organizationExperimentsEnabled = useFeatureFlagEnabled(FeatureFlags.ORGANIZATION_EXPERIMENTS)
-  const playgroundEnabled = useFeatureFlagEnabled(FeatureFlags.DASHBOARD_PLAYGROUND)
-  const webhooksEnabled = useFeatureFlagEnabled(FeatureFlags.DASHBOARD_WEBHOOKS)
 
-  const primaryItems = useMemo(() => {
-    const arr: SidebarItem[] = [
+  const primaryItems = useMemo<SidebarItem[]>(() => {
+    return [
       {
         icon: <Container size={16} strokeWidth={1.5} />,
         label: 'Sandboxes',
         path: RoutePath.SANDBOXES,
       },
-      {
-        icon: <Box size={16} strokeWidth={1.5} />,
-        label: 'Snapshots',
-        path: RoutePath.SNAPSHOTS,
-      },
-      {
-        icon: <PackageOpen size={16} strokeWidth={1.5} />,
-        label: 'Registries',
-        path: RoutePath.REGISTRIES,
-      },
     ]
+  }, [])
 
-    if (authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_VOLUMES)) {
-      arr.push({
-        icon: <HardDrive size={16} strokeWidth={1.5} />,
-        label: 'Volumes',
-        path: RoutePath.VOLUMES,
-      })
-    }
+  const secondaryGroups: SidebarGroup[] = useMemo(() => [], [])
 
-    if (authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_AUDIT_LOGS)) {
-      arr.push({
-        icon: <TextSearch size={16} strokeWidth={1.5} />,
-        label: 'Audit Logs',
-        path: RoutePath.AUDIT_LOGS,
-      })
-    }
-
-    return arr
-  }, [authenticatedUserHasPermission])
-
-  const settingsItems = useMemo(() => {
-    const arr: SidebarItem[] = [
+  const commandItems = useMemo<SidebarItem[]>(
+    () => [
+      ...primaryItems,
+      ...secondaryGroups.flatMap((group) => group.items),
       {
+        path: RoutePath.ACCOUNT_SETTINGS,
+        label: 'Account Settings',
         icon: <Settings size={16} strokeWidth={1.5} />,
-        label: 'Settings',
-        path: RoutePath.SETTINGS,
-      },
-      { icon: <KeyRound size={16} strokeWidth={1.5} />, label: 'API Keys', path: RoutePath.KEYS },
-    ]
-
-    if (webhooksInitialized) {
-      if (webhooksEnabled) {
-        arr.push({
-          icon: <Mail size={16} strokeWidth={1.5} />,
-          label: 'Webhooks',
-          path: RoutePath.WEBHOOKS,
-        })
-      } else {
-        arr.push({
-          icon: <Mail size={16} strokeWidth={1.5} />,
-          label: 'Webhooks',
-          path: '#webhooks' as RoutePath,
-          onClick: () => {
-            window.open(webhooksAccess.data?.url, '_blank', 'noopener,noreferrer')
-          },
-        })
-      }
-    }
-
-    if (authenticatedUserOrganizationMember?.role === OrganizationUserRoleEnum.OWNER) {
-      arr.push({
-        icon: <LockKeyhole size={16} strokeWidth={1.5} />,
-        label: 'Limits',
-        path: RoutePath.LIMITS,
-      })
-    }
-
-    if (!selectedOrganization?.personal) {
-      arr.push({
-        icon: <Users size={16} strokeWidth={1.5} />,
-        label: 'Members',
-        path: RoutePath.MEMBERS,
-      })
-    }
-
-    return arr
-  }, [
-    authenticatedUserOrganizationMember?.role,
-    selectedOrganization?.personal,
-    webhooksAccess.data?.url,
-    webhooksEnabled,
-    webhooksInitialized,
-  ])
-
-  const billingItems = useMemo(() => {
-    if (!billingEnabled || authenticatedUserOrganizationMember?.role !== OrganizationUserRoleEnum.OWNER) {
-      return []
-    }
-
-    return [
-      {
-        icon: <ChartColumn size={16} strokeWidth={1.5} />,
-        label: 'Spending',
-        path: RoutePath.BILLING_SPENDING,
       },
       {
-        icon: <CreditCard size={16} strokeWidth={1.5} />,
-        label: 'Wallet',
-        path: RoutePath.BILLING_WALLET,
+        path: RoutePath.USER_INVITATIONS,
+        label: 'Invitations',
+        icon: <Mail size={16} strokeWidth={1.5} />,
       },
-    ]
-  }, [authenticatedUserOrganizationMember?.role, billingEnabled])
-
-  const infrastructureItems = useMemo(() => {
-    if (!orgInfraEnabled) {
-      return []
-    }
-
-    const arr: SidebarItem[] = [
       {
-        icon: <MapPinned size={16} strokeWidth={1.5} />,
-        label: 'Regions',
-        path: RoutePath.REGIONS,
+        path: `${RoutePath.SANDBOXES}?onboarding=1`,
+        label: 'Onboarding',
+        icon: <ListChecks size={16} strokeWidth={1.5} />,
       },
-    ]
-
-    if (authenticatedUserHasPermission(OrganizationRolePermissionsEnum.READ_RUNNERS)) {
-      arr.push({
-        icon: <Server size={16} strokeWidth={1.5} />,
-        label: 'Runners',
-        path: RoutePath.RUNNERS,
-      })
-    }
-
-    return arr
-  }, [authenticatedUserHasPermission, orgInfraEnabled])
-
-  const experimentalItems = useMemo(() => {
-    if (
-      !organizationExperimentsEnabled ||
-      authenticatedUserOrganizationMember?.role !== OrganizationUserRoleEnum.OWNER
-    ) {
-      return []
-    }
-
-    return [
-      {
-        icon: <FlaskConical size={16} strokeWidth={1.5} />,
-        label: 'Experimental',
-        path: RoutePath.EXPERIMENTAL,
-      },
-    ]
-  }, [authenticatedUserOrganizationMember?.role, organizationExperimentsEnabled])
-
-  const miscItems = useMemo(() => {
-    if (!playgroundEnabled) {
-      return []
-    }
-
-    return [
-      {
-        icon: <Joystick size={16} strokeWidth={1.5} />,
-        label: 'Playground',
-        path: RoutePath.PLAYGROUND,
-      },
-    ]
-  }, [playgroundEnabled])
-
-  const secondaryGroups: SidebarGroup[] = useMemo(
-    () =>
-      [
-        { label: 'Misc', items: miscItems },
-        { label: 'Settings', items: settingsItems },
-        { label: 'Billing', items: billingItems },
-        { label: 'Infrastructure', items: infrastructureItems },
-        { label: 'Experimental', items: experimentalItems },
-      ].filter((group) => group.items.length > 0),
-    [billingItems, experimentalItems, infrastructureItems, miscItems, settingsItems],
-  )
-
-  const commandItems = useMemo(
-    () =>
-      primaryItems.concat(secondaryGroups.flatMap((group) => group.items)).concat(
-        {
-          path: RoutePath.ACCOUNT_SETTINGS,
-          label: 'Account Settings',
-          icon: <Settings size={16} strokeWidth={1.5} />,
-        },
-        {
-          path: RoutePath.USER_INVITATIONS,
-          label: 'Invitations',
-          icon: <Mail size={16} strokeWidth={1.5} />,
-        },
-        {
-          path: RoutePath.ONBOARDING,
-          label: 'Onboarding',
-          icon: <ListChecks size={16} strokeWidth={1.5} />,
-        },
-      ),
+    ],
     [primaryItems, secondaryGroups],
   )
 
@@ -428,6 +239,12 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
             <OrganizationPicker variant="header" />
           </div>
 
+          <Button variant="ghost" size="icon-sm" asChild>
+            <Link to={`${RoutePath.SANDBOXES}?onboarding=1`} aria-label="Open onboarding">
+              <ListChecks className="size-4" />
+            </Link>
+          </Button>
+
           {!isCompactScreen && secondaryGroups.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -492,12 +309,6 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
                   )}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link to={RoutePath.ONBOARDING}>
-                  <ListChecks className="size-4" />
-                  Onboarding
-                </Link>
-              </DropdownMenuItem>
               {pylonEnabled && (
                 <DropdownMenuItem className="cursor-pointer" onClick={() => togglePylon()}>
                   <LifeBuoyIcon className="size-4" />
@@ -518,12 +329,20 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
                   Discord
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              >
-                {theme === 'dark' ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
-                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('system')}>
+                <Monitor className="size-4" />
+                System Theme
+                {theme === 'system' && <Check className="ml-auto size-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('light')}>
+                <SunIcon className="size-4" />
+                Light Mode
+                {theme === 'light' && <Check className="ml-auto size-4" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('dark')}>
+                <MoonIcon className="size-4" />
+                Dark Mode
+                {theme === 'dark' && <Check className="ml-auto size-4" />}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>

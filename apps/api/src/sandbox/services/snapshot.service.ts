@@ -37,7 +37,6 @@ import { RedisLockProvider } from '../common/redis-lock.provider'
 import { SnapshotSortDirection, SnapshotSortField } from '../dto/list-snapshots-query.dto'
 import { PER_SANDBOX_LIMIT_MESSAGE } from '../../common/constants/error-messages'
 import { DockerRegistryService } from '../../docker-registry/services/docker-registry.service'
-import { DefaultRegionRequiredException } from '../../organization/exceptions/DefaultRegionRequiredException'
 import { Region } from '../../region/entities/region.entity'
 import { RunnerState } from '../enums/runner-state.enum'
 import { OnAsyncEvent } from '../../common/decorators/on-async-event.decorator'
@@ -140,10 +139,6 @@ export class SnapshotService {
   }
 
   async createFromPull(organization: Organization, createSnapshotDto: CreateSnapshotDto, general = false) {
-    if (!organization.defaultRegionId) {
-      throw new DefaultRegionRequiredException()
-    }
-
     const regionId = await this.getValidatedOrDefaultRegionId(organization, createSnapshotDto.regionId)
 
     let pendingSnapshotCountIncrement: number | undefined
@@ -219,10 +214,6 @@ export class SnapshotService {
   }
 
   async createFromBuildInfo(organization: Organization, createSnapshotDto: CreateSnapshotDto, general = false) {
-    if (!organization.defaultRegionId) {
-      throw new DefaultRegionRequiredException()
-    }
-
     const regionId = await this.getValidatedOrDefaultRegionId(organization, createSnapshotDto.regionId)
 
     let pendingSnapshotCountIncrement: number | undefined
@@ -413,6 +404,42 @@ export class SnapshotService {
       page: pageNum,
       totalPages: Math.ceil(total / limit),
     }
+  }
+
+  async getSystemEnvironments(organizationId: string): Promise<Snapshot[]> {
+    const snapshots = await this.snapshotRepository.find({
+      where: {
+        general: true,
+        hideFromUsers: false,
+        state: SnapshotState.ACTIVE,
+      },
+      relations: ['snapshotRegions'],
+      order: {
+        name: 'ASC',
+      },
+    })
+
+    const availableRegions = await this.organizationService.listAvailableRegions(organizationId)
+    const availableRegionIds = new Set(availableRegions.map((r) => r.id))
+    const defaultSnapshot = this.configService.get('defaultSnapshot')
+
+    const availableSnapshots = snapshots
+      .map((snapshot) => {
+        snapshot.snapshotRegions = snapshot.snapshotRegions?.filter((sr) => availableRegionIds.has(sr.regionId)) ?? []
+        return snapshot
+      })
+      .filter((snapshot) => snapshot.snapshotRegions.length > 0)
+
+    return availableSnapshots.sort((a, b) => {
+      if (defaultSnapshot) {
+        if (a.name === defaultSnapshot || a.id === defaultSnapshot) return -1
+        if (b.name === defaultSnapshot || b.id === defaultSnapshot) return 1
+      }
+
+      const aLabel = a.imageName || a.name
+      const bLabel = b.imageName || b.name
+      return aLabel.localeCompare(bLabel)
+    })
   }
 
   async getSnapshot(snapshotId: string): Promise<Snapshot> {
@@ -737,7 +764,7 @@ export class SnapshotService {
    */
   private async getValidatedOrDefaultRegionId(organization: Organization, regionId?: string): Promise<string> {
     if (!regionId) {
-      return organization.defaultRegionId
+      return organization.defaultRegionId || this.configService.getOrThrow('defaultRegion.id')
     }
 
     const region = await this.regionRepository.findOne({

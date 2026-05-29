@@ -63,9 +63,9 @@ function useDashboardCommands() {
     () => [
       {
         id: 'toggle-theme',
-        label: 'Toggle Theme',
+        label: 'Cycle Theme',
         icon: <SunMoon className="w-4 h-4" />,
-        onSelect: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+        onSelect: () => setTheme(theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'),
       },
     ],
     [theme, setTheme],

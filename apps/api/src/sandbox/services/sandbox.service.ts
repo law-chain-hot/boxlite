@@ -70,7 +70,6 @@ import { validateMountPaths, validateSubpaths } from '../utils/volume-mount-path
 import { SandboxRepository } from '../repositories/sandbox.repository'
 import { PortPreviewUrlDto, SignedPortPreviewUrlDto } from '../dto/port-preview-url.dto'
 import { RegionService } from '../../region/services/region.service'
-import { DefaultRegionRequiredException } from '../../organization/exceptions/DefaultRegionRequiredException'
 import { SnapshotService } from './snapshot.service'
 import { RegionType } from '../../region/enums/region-type.enum'
 import { SandboxCreatedEvent } from '../events/sandbox-create.event'
@@ -538,6 +537,48 @@ export class SandboxService {
 
       throw error
     }
+  }
+
+  async createFromEnvironment(createSandboxDto: CreateSandboxDto, organization: Organization): Promise<SandboxDto> {
+    const environmentId = createSandboxDto.environmentId?.trim()
+
+    if (!environmentId) {
+      throw new BadRequestError('Must specify an environment')
+    }
+
+    const where: FindOptionsWhere<Snapshot>[] = [
+      {
+        general: true,
+        hideFromUsers: false,
+        state: SnapshotState.ACTIVE,
+        name: environmentId,
+      },
+    ]
+
+    if (isValidUuid(environmentId)) {
+      where.push({
+        general: true,
+        hideFromUsers: false,
+        state: SnapshotState.ACTIVE,
+        id: environmentId,
+      })
+    }
+
+    const environmentSnapshot = await this.snapshotRepository.findOne({
+      where,
+    })
+
+    if (!environmentSnapshot) {
+      throw new BadRequestError(`Environment ${environmentId} is not available`)
+    }
+
+    return this.createFromSnapshot(
+      {
+        ...createSandboxDto,
+        snapshot: environmentSnapshot.id,
+      },
+      organization,
+    )
   }
 
   private async assignWarmPoolSandbox(
@@ -1749,14 +1790,11 @@ export class SandboxService {
   }
 
   private async getValidatedOrDefaultRegion(organization: Organization, regionIdOrName?: string): Promise<Region> {
-    if (!organization.defaultRegionId) {
-      throw new DefaultRegionRequiredException()
-    }
-
     regionIdOrName = regionIdOrName?.trim()
 
     if (!regionIdOrName) {
-      const region = await this.regionService.findOne(organization.defaultRegionId)
+      const defaultRegionId = organization.defaultRegionId || this.configService.getOrThrow('defaultRegion.id')
+      const region = await this.regionService.findOne(defaultRegionId)
       if (!region) {
         throw new NotFoundException('Default region not found')
       }

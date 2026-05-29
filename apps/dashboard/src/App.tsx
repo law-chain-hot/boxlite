@@ -5,7 +5,6 @@
  */
 
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
-import Onboarding from '@/pages/Onboarding'
 import OrganizationMembers from '@/pages/OrganizationMembers'
 import OrganizationSettings from '@/pages/OrganizationSettings'
 import UserOrganizationInvitations from '@/pages/UserOrganizationInvitations'
@@ -288,7 +287,10 @@ function App() {
           element={<AccountSettings linkedAccountsEnabled={config.linkedAccountsEnabled} />}
         />
         <Route path={getRouteSubPath(RoutePath.USER_INVITATIONS)} element={<UserOrganizationInvitations />} />
-        <Route path={getRouteSubPath(RoutePath.ONBOARDING)} element={<Onboarding />} />
+        <Route
+          path={getRouteSubPath(RoutePath.ONBOARDING)}
+          element={<Navigate to={`${getRouteSubPath(RoutePath.SANDBOXES)}?onboarding=1`} replace />}
+        />
         <Route
           path={getRouteSubPath(RoutePath.EXPERIMENTAL)}
           element={

@@ -7,6 +7,7 @@
 import { useTheme } from '@/contexts/ThemeContext'
 import { cn } from '@/lib/utils'
 import { Highlight, themes, type PrismTheme, type Token } from 'prism-react-renderer'
+import type { Key } from 'react'
 import { CopyButton } from './CopyButton'
 
 interface CodeBlockProps {
@@ -33,12 +34,12 @@ const oneDark = {
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, showCopy = true, codeAreaClassName, className }) => {
-  const { theme } = useTheme()
+  const { resolvedTheme } = useTheme()
 
   return (
     <div className={cn('relative rounded-lg', className)}>
       <Highlight
-        theme={(theme === 'dark' ? oneDark : themes.oneLight) as PrismTheme}
+        theme={(resolvedTheme === 'dark' ? oneDark : themes.oneLight) as PrismTheme}
         code={code.trim()}
         language={language}
       >
@@ -46,15 +47,13 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, showCopy = true, 
           <pre className={cn('p-4 rounded-lg overflow-x-auto', codeAreaClassName)} style={style}>
             {tokens.map((line, i) => {
               const props = getLineProps({ line, key: i })
-              // @ts-expect-error Workaround for the render error. Key should not be spread into JSX
-              const { key, ...rest } = props
+              const { key: lineKey, ...rest } = props as typeof props & { key?: Key }
               return (
-                <div key={i} {...rest}>
+                <div key={lineKey ?? i} {...rest}>
                   {line.map((token, key) => {
                     const tokenProps = getTokenProps({ token, key })
-                    // @ts-expect-error Workaround for the render error. Key should not be spread into JSX
-                    const { key: tokenKey, ...restTokenProps } = tokenProps
-                    return <span key={tokenKey} {...restTokenProps} />
+                    const { key: tokenKey, ...restTokenProps } = tokenProps as typeof tokenProps & { key?: Key }
+                    return <span key={tokenKey ?? key} {...restTokenProps} />
                   })}
                 </div>
               )

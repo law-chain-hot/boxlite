@@ -72,6 +72,10 @@ export const queryKeys = {
       ] as const
     },
   },
+  environments: {
+    all: ['environments'] as const,
+    list: (organizationId: string) => [...queryKeys.environments.all, organizationId, 'list'] as const,
+  },
   registries: {
     all: ['registries'] as const,
     list: (organizationId: string) => [...queryKeys.registries.all, organizationId, 'list'] as const,

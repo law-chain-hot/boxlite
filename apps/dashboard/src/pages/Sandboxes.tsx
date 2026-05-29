@@ -21,6 +21,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { BOXLITE_DOCS_URL } from '@/constants/ExternalLinks'
 import { DEFAULT_PAGE_SIZE } from '@/constants/Pagination'
@@ -44,7 +52,7 @@ import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { createBulkActionToast } from '@/lib/bulk-action-toast'
 import { handleApiError } from '@/lib/error-handling'
 import { getLocalStorageItem, setLocalStorageItem } from '@/lib/local-storage'
-import { formatDuration, pluralize } from '@/lib/utils'
+import { cn, formatDuration, pluralize } from '@/lib/utils'
 import {
   OrganizationUserRoleEnum,
   Sandbox,
@@ -55,18 +63,22 @@ import {
 import { QueryKey, useQueryClient } from '@tanstack/react-query'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 const Sandboxes: React.FC = () => {
-  const { sandboxApi, apiKeyApi, toolboxApi } = useApi()
+  const { sandboxApi, toolboxApi } = useApi()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { notificationSocket } = useNotificationSocket()
   const config = useConfig()
   const queryClient = useQueryClient()
   const { selectedOrganization, authenticatedUserOrganizationMember, authenticatedUserHasPermission } =
     useSelectedOrganization()
+  const [createSandboxOpen, setCreateSandboxOpen] = useState(false)
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
+  const [highlightCreateSandbox, setHighlightCreateSandbox] = useState(false)
 
   // Pagination
 
@@ -313,7 +325,7 @@ const Sandboxes: React.FC = () => {
   // Subscribe to Sandbox Events
 
   useEffect(() => {
-    const handleSandboxCreatedEvent = (sandbox: Sandbox) => {
+    const handleSandboxCreatedEvent = () => {
       const isFirstPage = paginationParams.pageIndex === 0
       const isDefaultFilters = Object.keys(filters).length === 0
       const isDefaultSorting =
@@ -331,7 +343,7 @@ const Sandboxes: React.FC = () => {
     }) => {
       // warm pool sandboxes
       if (data.oldState === data.newState && data.newState === SandboxState.STARTED) {
-        handleSandboxCreatedEvent(data.sandbox)
+        handleSandboxCreatedEvent()
         return
       }
 
@@ -887,37 +899,38 @@ const Sandboxes: React.FC = () => {
     }
   }
 
-  // Redirect user to the onboarding page if they haven't created an api key yet
-  // Perform only once per user
-
   useEffect(() => {
-    const onboardIfNeeded = async () => {
-      if (!selectedOrganization) {
-        return
-      }
-
-      const skipOnboardingKey = `${LocalStorageKey.SkipOnboardingPrefix}${user?.profile.sub}`
-      const shouldSkipOnboarding = getLocalStorageItem(skipOnboardingKey) === 'true'
-
-      if (shouldSkipOnboarding) {
-        return
-      }
-
-      try {
-        const keys = (await apiKeyApi.listApiKeys(selectedOrganization.id)).data
-        if (keys.length === 0) {
-          setLocalStorageItem(skipOnboardingKey, 'true')
-          navigate(RoutePath.ONBOARDING)
-        } else {
-          setLocalStorageItem(skipOnboardingKey, 'true')
-        }
-      } catch (error) {
-        console.error('Failed to check if user needs onboarding', error)
-      }
+    if (!selectedOrganization || !user?.profile.sub) {
+      return
     }
 
-    onboardIfNeeded()
-  }, [navigate, user, selectedOrganization, apiKeyApi])
+    const skipOnboardingKey = `${LocalStorageKey.SkipOnboardingPrefix}${user.profile.sub}`
+    const shouldOpenFromUrl = searchParams.get('onboarding') === '1'
+    const shouldSkipOnboarding = getLocalStorageItem(skipOnboardingKey) === 'true'
+
+    if (shouldOpenFromUrl || !shouldSkipOnboarding) {
+      setShowOnboardingDialog(true)
+    }
+  }, [searchParams, selectedOrganization, user?.profile.sub])
+
+  const closeOnboardingDialog = useCallback(() => {
+    if (user?.profile.sub) {
+      setLocalStorageItem(`${LocalStorageKey.SkipOnboardingPrefix}${user.profile.sub}`, 'true')
+    }
+    setShowOnboardingDialog(false)
+    setHighlightCreateSandbox(true)
+    if (searchParams.get('onboarding') === '1') {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('onboarding')
+      setSearchParams(nextParams, { replace: true })
+    }
+    window.setTimeout(() => setHighlightCreateSandbox(false), 3200)
+  }, [searchParams, setSearchParams, user?.profile.sub])
+
+  const startFromOnboardingDialog = useCallback(() => {
+    closeOnboardingDialog()
+    setCreateSandboxOpen(true)
+  }, [closeOnboardingDialog])
 
   return (
     <PageLayout>
@@ -926,7 +939,7 @@ const Sandboxes: React.FC = () => {
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           {!sandboxesDataIsLoading && (!sandboxesData?.items || sandboxesData.items.length === 0) && (
             <>
-              <Button variant="link" className="text-primary" onClick={() => navigate(RoutePath.ONBOARDING)} size="sm">
+              <Button variant="link" className="text-primary" onClick={() => setShowOnboardingDialog(true)} size="sm">
                 Onboarding guide
               </Button>
               <Button variant="link" className="text-primary" asChild size="sm">
@@ -937,10 +950,43 @@ const Sandboxes: React.FC = () => {
             </>
           )}
           {authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES) && (
-            <CreateSandboxSheet triggerClassName="w-auto" />
+            <CreateSandboxSheet
+              open={createSandboxOpen}
+              onOpenChange={setCreateSandboxOpen}
+              triggerClassName={cn(
+                'w-auto',
+                highlightCreateSandbox && 'animate-pulse ring-2 ring-primary ring-offset-2 ring-offset-background',
+              )}
+            />
           )}
         </div>
       </PageHeader>
+      <Dialog
+        open={showOnboardingDialog}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            closeOnboardingDialog()
+          } else {
+            setShowOnboardingDialog(true)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start with a Sandbox</DialogTitle>
+            <DialogDescription>
+              Create a sandbox, open the terminal, then stop or delete it when you are done. The environment, region,
+              resources, and network defaults are managed for you.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeOnboardingDialog}>
+              Later
+            </Button>
+            <Button onClick={startFromOnboardingDialog}>Create Sandbox</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <PageContent size="full" className="min-h-0 flex-1 gap-3 max-h-[calc(100vh-65px)]">
         <SandboxTable
           sandboxIsLoading={sandboxIsLoading}

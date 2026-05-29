@@ -12,6 +12,7 @@ import {
   OnModuleInit,
   OnApplicationShutdown,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { EntityManager, In, Not, Repository } from 'typeorm'
@@ -57,6 +58,8 @@ import { SandboxRepository } from '../../sandbox/repositories/sandbox.repository
 
 @Injectable()
 export class OrganizationService implements OnModuleInit, TrackableJobExecutions, OnApplicationShutdown {
+  private static readonly DEFAULT_ORGANIZATION_NAME = 'Default Organization'
+
   activeJobs = new Set<string>()
   private readonly logger = new Logger(OrganizationService.name)
   private defaultOrganizationQuota: CreateOrganizationQuotaDto
@@ -167,6 +170,22 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     }
 
     return this.removeWithEntityManager(this.organizationRepository.manager, organization)
+  }
+
+  async updateName(organizationId: string, name: string): Promise<Organization> {
+    const organization = await this.organizationRepository.findOne({ where: { id: organizationId } })
+    if (!organization) {
+      throw new NotFoundException(`Organization with ID ${organizationId} not found`)
+    }
+
+    const trimmedName = name.trim()
+    if (!trimmedName) {
+      throw new BadRequestException('Organization name is required')
+    }
+
+    organization.name = trimmedName
+
+    return this.organizationRepository.save(organization)
   }
 
   async updateQuota(organizationId: string, updateDto: UpdateOrganizationQuotaDto): Promise<void> {
@@ -700,7 +719,7 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     return this.createWithEntityManager(
       payload.entityManager,
       {
-        name: 'Personal',
+        name: OrganizationService.DEFAULT_ORGANIZATION_NAME,
         defaultRegionId: payload.personalOrganizationDefaultRegionId,
       },
       payload.user.id,

@@ -352,7 +352,7 @@ const rt = JsBoxlite.rest(new BoxliteRestOptions({
 // }))
 
 // Create a sandbox
-const box = await rt.create({ image: 'alpine:latest' }, 'my-sandbox')
+const box = await rt.create({ image: 'alpine:3.20' }, 'my-sandbox')
 await box.start()
 
 // Run a command securely inside the sandbox
@@ -382,7 +382,7 @@ async def main():
     # rt = Boxlite.rest(BoxliteRestOptions.from_env())
 
     # Create a sandbox
-    box = await rt.create(BoxOptions(image="alpine:latest"), name="my-sandbox")
+    box = await rt.create(BoxOptions(image="alpine:3.20"), name="my-sandbox")
     await box.start()
 
     # Run a command securely inside the sandbox
