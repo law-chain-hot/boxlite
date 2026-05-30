@@ -19,17 +19,17 @@ export class Migration1780200000000 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX IF EXISTS "public"."sandbox_snapshot_idx"`)
     await queryRunner.query(`DROP INDEX IF EXISTS "public"."warm_pool_find_idx"`)
 
-    await queryRunner.renameColumn('snapshot', 'ref', 'artifactRef')
-    await queryRunner.renameColumn('snapshot', 'buildInfoSnapshotRef', 'buildInfoArtifactRef')
-    await queryRunner.renameTable('snapshot', 'box_template')
-    await queryRunner.renameTable('snapshot_region', 'box_template_region')
-    await queryRunner.renameColumn('box_template_region', 'snapshotId', 'templateId')
-    await queryRunner.query(`ALTER TYPE "public"."snapshot_state_enum" RENAME TO "box_template_state_enum"`)
+    await this.renameColumnIfExists(queryRunner, 'snapshot', 'ref', 'artifactRef')
+    await this.renameColumnIfExists(queryRunner, 'snapshot', 'buildInfoSnapshotRef', 'buildInfoArtifactRef')
+    await this.renameTableIfExists(queryRunner, 'snapshot', 'box_template')
+    await this.renameTableIfExists(queryRunner, 'snapshot_region', 'box_template_region')
+    await this.renameColumnIfExists(queryRunner, 'box_template_region', 'snapshotId', 'templateId')
+    await this.renameEnumTypeForColumn(queryRunner, 'box_template', 'state', 'box_template_state_enum')
 
-    await queryRunner.renameColumn('build_info', 'snapshotRef', 'artifactRef')
-    await queryRunner.renameColumn('sandbox', 'buildInfoSnapshotRef', 'buildInfoArtifactRef')
-    await queryRunner.renameColumn('sandbox', 'snapshot', 'template')
-    await queryRunner.renameColumn('warm_pool', 'snapshot', 'template')
+    await this.renameColumnIfExists(queryRunner, 'build_info', 'snapshotRef', 'artifactRef')
+    await this.renameColumnIfExists(queryRunner, 'sandbox', 'buildInfoSnapshotRef', 'buildInfoArtifactRef')
+    await this.renameColumnIfExists(queryRunner, 'sandbox', 'snapshot', 'template')
+    await this.renameColumnIfExists(queryRunner, 'warm_pool', 'snapshot', 'template')
     if (await queryRunner.hasColumn('organization', 'max_snapshot_size')) {
       await queryRunner.renameColumn('organization', 'max_snapshot_size', 'max_template_size')
     }
@@ -50,37 +50,44 @@ export class Migration1780200000000 implements MigrationInterface {
       await queryRunner.renameColumn('runner', 'currentSnapshotCount', 'currentArtifactCount')
     }
 
-    await queryRunner.renameTable('snapshot_runner', 'runner_artifact_cache')
-    await queryRunner.renameColumn('runner_artifact_cache', 'snapshotRef', 'artifactRef')
-    await queryRunner.query(
-      `ALTER TYPE "public"."snapshot_runner_state_enum" RENAME TO "runner_artifact_cache_state_enum"`,
+    await this.renameTableIfExists(queryRunner, 'snapshot_runner', 'runner_artifact_cache')
+    await this.renameColumnIfExists(queryRunner, 'runner_artifact_cache', 'snapshotRef', 'artifactRef')
+    await this.renameEnumTypeForColumn(
+      queryRunner,
+      'runner_artifact_cache',
+      'state',
+      'runner_artifact_cache_state_enum',
     )
-    await queryRunner.query(
-      `ALTER TYPE "public"."runner_artifact_cache_state_enum" RENAME VALUE 'pulling_snapshot' TO 'pulling_artifact'`,
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'runner_artifact_cache_state_enum',
+      'pulling_snapshot',
+      'pulling_artifact',
     )
-    await queryRunner.query(
-      `ALTER TYPE "public"."runner_artifact_cache_state_enum" RENAME VALUE 'building_snapshot' TO 'building_artifact'`,
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'runner_artifact_cache_state_enum',
+      'building_snapshot',
+      'building_artifact',
     )
     await queryRunner.query(`ALTER TABLE "runner_artifact_cache" ALTER COLUMN "state" SET DEFAULT 'pulling_artifact'`)
-    await queryRunner.query(
-      `ALTER TYPE "public"."sandbox_state_enum" RENAME VALUE 'pulling_snapshot' TO 'pulling_artifact'`,
+    await this.renameEnumValueIfExists(queryRunner, 'sandbox_state_enum', 'pulling_snapshot', 'pulling_artifact')
+    await this.renameEnumValueIfExists(queryRunner, 'sandbox_state_enum', 'building_snapshot', 'building_artifact')
+    await this.renameEnumValueIfExists(queryRunner, 'job_resourcetype_enum', 'SNAPSHOT', 'ARTIFACT')
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'organization_role_permissions_enum',
+      'write:snapshots',
+      'write:templates',
     )
-    await queryRunner.query(
-      `ALTER TYPE "public"."sandbox_state_enum" RENAME VALUE 'building_snapshot' TO 'building_artifact'`,
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'organization_role_permissions_enum',
+      'delete:snapshots',
+      'delete:templates',
     )
-    await queryRunner.query(`ALTER TYPE "public"."job_resourcetype_enum" RENAME VALUE 'SNAPSHOT' TO 'ARTIFACT'`)
-    await queryRunner.query(
-      `ALTER TYPE "public"."organization_role_permissions_enum" RENAME VALUE 'write:snapshots' TO 'write:templates'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."organization_role_permissions_enum" RENAME VALUE 'delete:snapshots' TO 'delete:templates'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."api_key_permissions_enum" RENAME VALUE 'write:snapshots' TO 'write:templates'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."api_key_permissions_enum" RENAME VALUE 'delete:snapshots' TO 'delete:templates'`,
-    )
+    await this.renameEnumValueIfExists(queryRunner, 'api_key_permissions_enum', 'write:snapshots', 'write:templates')
+    await this.renameEnumValueIfExists(queryRunner, 'api_key_permissions_enum', 'delete:snapshots', 'delete:templates')
     await queryRunner.query(`
       UPDATE "organization_role"
       SET "name" = 'Templates Admin', "description" = 'Grants admin access to templates in the organization'
@@ -98,19 +105,23 @@ export class Migration1780200000000 implements MigrationInterface {
       WHERE "type" IN ('BUILD_SNAPSHOT', 'PULL_SNAPSHOT', 'REMOVE_SNAPSHOT', 'INSPECT_SNAPSHOT_IN_REGISTRY')
     `)
 
-    await queryRunner.query(`CREATE INDEX "runner_artifact_cache_state_idx" ON "runner_artifact_cache" ("state")`)
-    await queryRunner.query(`CREATE INDEX "runner_artifact_cache_runnerid_idx" ON "runner_artifact_cache" ("runnerId")`)
     await queryRunner.query(
-      `CREATE INDEX "runner_artifact_cache_runnerid_artifactref_idx" ON "runner_artifact_cache" ("runnerId", "artifactRef")`,
+      `CREATE INDEX IF NOT EXISTS "runner_artifact_cache_state_idx" ON "runner_artifact_cache" ("state")`,
     )
     await queryRunner.query(
-      `CREATE INDEX "runner_artifact_cache_artifactref_idx" ON "runner_artifact_cache" ("artifactRef")`,
+      `CREATE INDEX IF NOT EXISTS "runner_artifact_cache_runnerid_idx" ON "runner_artifact_cache" ("runnerId")`,
     )
-    await queryRunner.query(`CREATE INDEX "box_template_name_idx" ON "box_template" ("name")`)
-    await queryRunner.query(`CREATE INDEX "box_template_state_idx" ON "box_template" ("state")`)
-    await queryRunner.query(`CREATE INDEX "sandbox_template_idx" ON "sandbox" ("template")`)
     await queryRunner.query(
-      `CREATE INDEX "warm_pool_find_idx" ON "warm_pool" ("template", "target", "class", "cpu", "mem", "disk", "gpu", "osUser", "env")`,
+      `CREATE INDEX IF NOT EXISTS "runner_artifact_cache_runnerid_artifactref_idx" ON "runner_artifact_cache" ("runnerId", "artifactRef")`,
+    )
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "runner_artifact_cache_artifactref_idx" ON "runner_artifact_cache" ("artifactRef")`,
+    )
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "box_template_name_idx" ON "box_template" ("name")`)
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "box_template_state_idx" ON "box_template" ("state")`)
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "sandbox_template_idx" ON "sandbox" ("template")`)
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "warm_pool_find_idx" ON "warm_pool" ("template", "target", "class", "cpu", "mem", "disk", "gpu", "osUser", "env")`,
     )
   }
 
@@ -135,47 +146,49 @@ export class Migration1780200000000 implements MigrationInterface {
       END
       WHERE "type" IN ('BUILD_ARTIFACT', 'PULL_ARTIFACT', 'REMOVE_ARTIFACT', 'INSPECT_ARTIFACT_IN_REGISTRY')
     `)
-    await queryRunner.query(`ALTER TYPE "public"."job_resourcetype_enum" RENAME VALUE 'ARTIFACT' TO 'SNAPSHOT'`)
+    await this.renameEnumValueIfExists(queryRunner, 'job_resourcetype_enum', 'ARTIFACT', 'SNAPSHOT')
     await queryRunner.query(`
       UPDATE "organization_role"
       SET "name" = 'Snapshots Admin', "description" = 'Grants admin access to snapshots in the organization'
       WHERE "name" = 'Templates Admin'
     `)
-    await queryRunner.query(
-      `ALTER TYPE "public"."api_key_permissions_enum" RENAME VALUE 'delete:templates' TO 'delete:snapshots'`,
+    await this.renameEnumValueIfExists(queryRunner, 'api_key_permissions_enum', 'delete:templates', 'delete:snapshots')
+    await this.renameEnumValueIfExists(queryRunner, 'api_key_permissions_enum', 'write:templates', 'write:snapshots')
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'organization_role_permissions_enum',
+      'delete:templates',
+      'delete:snapshots',
     )
-    await queryRunner.query(
-      `ALTER TYPE "public"."api_key_permissions_enum" RENAME VALUE 'write:templates' TO 'write:snapshots'`,
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'organization_role_permissions_enum',
+      'write:templates',
+      'write:snapshots',
     )
-    await queryRunner.query(
-      `ALTER TYPE "public"."organization_role_permissions_enum" RENAME VALUE 'delete:templates' TO 'delete:snapshots'`,
+    await this.renameEnumValueIfExists(queryRunner, 'sandbox_state_enum', 'pulling_artifact', 'pulling_snapshot')
+    await this.renameEnumValueIfExists(queryRunner, 'sandbox_state_enum', 'building_artifact', 'building_snapshot')
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'runner_artifact_cache_state_enum',
+      'pulling_artifact',
+      'pulling_snapshot',
     )
-    await queryRunner.query(
-      `ALTER TYPE "public"."organization_role_permissions_enum" RENAME VALUE 'write:templates' TO 'write:snapshots'`,
+    await this.renameEnumValueIfExists(
+      queryRunner,
+      'runner_artifact_cache_state_enum',
+      'building_artifact',
+      'building_snapshot',
     )
     await queryRunner.query(`ALTER TABLE "runner_artifact_cache" ALTER COLUMN "state" SET DEFAULT 'pulling_snapshot'`)
-    await queryRunner.query(
-      `ALTER TYPE "public"."sandbox_state_enum" RENAME VALUE 'pulling_artifact' TO 'pulling_snapshot'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."sandbox_state_enum" RENAME VALUE 'building_artifact' TO 'building_snapshot'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."runner_artifact_cache_state_enum" RENAME VALUE 'pulling_artifact' TO 'pulling_snapshot'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."runner_artifact_cache_state_enum" RENAME VALUE 'building_artifact' TO 'building_snapshot'`,
-    )
-    await queryRunner.query(
-      `ALTER TYPE "public"."runner_artifact_cache_state_enum" RENAME TO "snapshot_runner_state_enum"`,
-    )
-    await queryRunner.renameColumn('runner_artifact_cache', 'artifactRef', 'snapshotRef')
-    await queryRunner.renameTable('runner_artifact_cache', 'snapshot_runner')
+    await this.renameEnumTypeForColumn(queryRunner, 'runner_artifact_cache', 'state', 'snapshot_runner_state_enum')
+    await this.renameColumnIfExists(queryRunner, 'runner_artifact_cache', 'artifactRef', 'snapshotRef')
+    await this.renameTableIfExists(queryRunner, 'runner_artifact_cache', 'snapshot_runner')
 
-    await queryRunner.renameColumn('build_info', 'artifactRef', 'snapshotRef')
-    await queryRunner.renameColumn('sandbox', 'buildInfoArtifactRef', 'buildInfoSnapshotRef')
-    await queryRunner.renameColumn('sandbox', 'template', 'snapshot')
-    await queryRunner.renameColumn('warm_pool', 'template', 'snapshot')
+    await this.renameColumnIfExists(queryRunner, 'build_info', 'artifactRef', 'snapshotRef')
+    await this.renameColumnIfExists(queryRunner, 'sandbox', 'buildInfoArtifactRef', 'buildInfoSnapshotRef')
+    await this.renameColumnIfExists(queryRunner, 'sandbox', 'template', 'snapshot')
+    await this.renameColumnIfExists(queryRunner, 'warm_pool', 'template', 'snapshot')
     if (await queryRunner.hasColumn('organization', 'max_template_size')) {
       await queryRunner.renameColumn('organization', 'max_template_size', 'max_snapshot_size')
     }
@@ -196,24 +209,151 @@ export class Migration1780200000000 implements MigrationInterface {
       await queryRunner.renameColumn('runner', 'currentArtifactCount', 'currentSnapshotCount')
     }
 
-    await queryRunner.query(`ALTER TYPE "public"."box_template_state_enum" RENAME TO "snapshot_state_enum"`)
-    await queryRunner.renameColumn('box_template_region', 'templateId', 'snapshotId')
-    await queryRunner.renameTable('box_template_region', 'snapshot_region')
-    await queryRunner.renameColumn('box_template', 'buildInfoArtifactRef', 'buildInfoSnapshotRef')
-    await queryRunner.renameColumn('box_template', 'artifactRef', 'ref')
-    await queryRunner.renameTable('box_template', 'snapshot')
+    await this.renameEnumTypeForColumn(queryRunner, 'box_template', 'state', 'snapshot_state_enum')
+    await this.renameColumnIfExists(queryRunner, 'box_template_region', 'templateId', 'snapshotId')
+    await this.renameTableIfExists(queryRunner, 'box_template_region', 'snapshot_region')
+    await this.renameColumnIfExists(queryRunner, 'box_template', 'buildInfoArtifactRef', 'buildInfoSnapshotRef')
+    await this.renameColumnIfExists(queryRunner, 'box_template', 'artifactRef', 'ref')
+    await this.renameTableIfExists(queryRunner, 'box_template', 'snapshot')
 
-    await queryRunner.query(`CREATE INDEX "snapshot_runner_state_idx" ON "snapshot_runner" ("state")`)
-    await queryRunner.query(`CREATE INDEX "snapshot_runner_runnerid_idx" ON "snapshot_runner" ("runnerId")`)
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "snapshot_runner_state_idx" ON "snapshot_runner" ("state")`)
     await queryRunner.query(
-      `CREATE INDEX "snapshot_runner_runnerid_snapshotref_idx" ON "snapshot_runner" ("runnerId", "snapshotRef")`,
+      `CREATE INDEX IF NOT EXISTS "snapshot_runner_runnerid_idx" ON "snapshot_runner" ("runnerId")`,
     )
-    await queryRunner.query(`CREATE INDEX "snapshot_runner_snapshotref_idx" ON "snapshot_runner" ("snapshotRef")`)
-    await queryRunner.query(`CREATE INDEX "snapshot_state_idx" ON "snapshot" ("state")`)
-    await queryRunner.query(`CREATE INDEX "snapshot_name_idx" ON "snapshot" ("name")`)
-    await queryRunner.query(`CREATE INDEX "sandbox_snapshot_idx" ON "sandbox" ("snapshot")`)
     await queryRunner.query(
-      `CREATE INDEX "warm_pool_find_idx" ON "warm_pool" ("snapshot", "target", "class", "cpu", "mem", "disk", "gpu", "osUser", "env")`,
+      `CREATE INDEX IF NOT EXISTS "snapshot_runner_runnerid_snapshotref_idx" ON "snapshot_runner" ("runnerId", "snapshotRef")`,
     )
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "snapshot_runner_snapshotref_idx" ON "snapshot_runner" ("snapshotRef")`,
+    )
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "snapshot_state_idx" ON "snapshot" ("state")`)
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "snapshot_name_idx" ON "snapshot" ("name")`)
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "sandbox_snapshot_idx" ON "sandbox" ("snapshot")`)
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "warm_pool_find_idx" ON "warm_pool" ("snapshot", "target", "class", "cpu", "mem", "disk", "gpu", "osUser", "env")`,
+    )
+  }
+
+  private async renameTableIfExists(queryRunner: QueryRunner, from: string, to: string): Promise<void> {
+    if ((await queryRunner.hasTable(from)) && !(await queryRunner.hasTable(to))) {
+      await queryRunner.renameTable(from, to)
+    }
+  }
+
+  private async renameColumnIfExists(
+    queryRunner: QueryRunner,
+    tableName: string,
+    from: string,
+    to: string,
+  ): Promise<void> {
+    if (!(await queryRunner.hasTable(tableName))) {
+      return
+    }
+
+    if ((await queryRunner.hasColumn(tableName, from)) && !(await queryRunner.hasColumn(tableName, to))) {
+      await queryRunner.renameColumn(tableName, from, to)
+    }
+  }
+
+  private async renameEnumTypeForColumn(
+    queryRunner: QueryRunner,
+    tableName: string,
+    columnName: string,
+    targetTypeName: string,
+  ): Promise<void> {
+    const currentTypeName = await this.getEnumTypeForColumn(queryRunner, tableName, columnName)
+    if (!currentTypeName || currentTypeName === targetTypeName) {
+      return
+    }
+
+    if (await this.enumTypeExists(queryRunner, targetTypeName)) {
+      return
+    }
+
+    await queryRunner.query(
+      `ALTER TYPE "public".${this.quoteIdentifier(currentTypeName)} RENAME TO ${this.quoteIdentifier(targetTypeName)}`,
+    )
+  }
+
+  private async getEnumTypeForColumn(
+    queryRunner: QueryRunner,
+    tableName: string,
+    columnName: string,
+  ): Promise<string | undefined> {
+    const result = await queryRunner.query(
+      `
+        SELECT t.typname
+        FROM pg_type t
+        JOIN pg_attribute a ON a.atttypid = t.oid
+        JOIN pg_class c ON c.oid = a.attrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public'
+          AND c.relname = $1
+          AND a.attname = $2
+          AND t.typtype = 'e'
+          AND NOT a.attisdropped
+        LIMIT 1
+      `,
+      [tableName, columnName],
+    )
+
+    return result[0]?.typname
+  }
+
+  private async enumTypeExists(queryRunner: QueryRunner, typeName: string): Promise<boolean> {
+    const result = await queryRunner.query(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM pg_type t
+          JOIN pg_namespace n ON n.oid = t.typnamespace
+          WHERE n.nspname = 'public'
+            AND t.typname = $1
+        ) AS "exists"
+      `,
+      [typeName],
+    )
+
+    return result[0]?.exists === true
+  }
+
+  private async renameEnumValueIfExists(
+    queryRunner: QueryRunner,
+    typeName: string,
+    from: string,
+    to: string,
+  ): Promise<void> {
+    const labels = await this.getEnumLabels(queryRunner, typeName)
+    if (!labels.includes(from) || labels.includes(to)) {
+      return
+    }
+
+    await queryRunner.query(
+      `ALTER TYPE "public".${this.quoteIdentifier(typeName)} RENAME VALUE '${this.escapeLiteral(from)}' TO '${this.escapeLiteral(to)}'`,
+    )
+  }
+
+  private async getEnumLabels(queryRunner: QueryRunner, typeName: string): Promise<string[]> {
+    const result = await queryRunner.query(
+      `
+        SELECT e.enumlabel
+        FROM pg_enum e
+        JOIN pg_type t ON t.oid = e.enumtypid
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public'
+          AND t.typname = $1
+      `,
+      [typeName],
+    )
+
+    return result.map((row: { enumlabel: string }) => row.enumlabel)
+  }
+
+  private quoteIdentifier(identifier: string): string {
+    return `"${identifier.replace(/"/g, '""')}"`
+  }
+
+  private escapeLiteral(value: string): string {
+    return value.replace(/'/g, "''")
   }
 }
