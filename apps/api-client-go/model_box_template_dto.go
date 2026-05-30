@@ -35,6 +35,10 @@ type BoxTemplateDto struct {
 	CreatedAt        time.Time                      `json:"createdAt"`
 	UpdatedAt        time.Time                      `json:"updatedAt"`
 	LastUsedAt       *time.Time                     `json:"lastUsedAt,omitempty"`
+	// Build information for this template
+	BuildInfo *BuildInfo `json:"buildInfo,omitempty"`
+	// The initial runner ID of the template
+	InitialRunnerId *string `json:"initialRunnerId,omitempty"`
 	// IDs of regions where the template is available to this organization
 	RegionIds            []string `json:"regionIds,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -419,6 +423,70 @@ func (o *BoxTemplateDto) SetLastUsedAt(v time.Time) {
 	o.LastUsedAt = &v
 }
 
+// GetBuildInfo returns the BuildInfo field value if set, zero value otherwise.
+func (o *BoxTemplateDto) GetBuildInfo() BuildInfo {
+	if o == nil || IsNil(o.BuildInfo) {
+		var ret BuildInfo
+		return ret
+	}
+	return *o.BuildInfo
+}
+
+// GetBuildInfoOk returns a tuple with the BuildInfo field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *BoxTemplateDto) GetBuildInfoOk() (*BuildInfo, bool) {
+	if o == nil || IsNil(o.BuildInfo) {
+		return nil, false
+	}
+	return o.BuildInfo, true
+}
+
+// HasBuildInfo returns a boolean if a field has been set.
+func (o *BoxTemplateDto) HasBuildInfo() bool {
+	if o != nil && !IsNil(o.BuildInfo) {
+		return true
+	}
+
+	return false
+}
+
+// SetBuildInfo gets a reference to the given BuildInfo and assigns it to the BuildInfo field.
+func (o *BoxTemplateDto) SetBuildInfo(v BuildInfo) {
+	o.BuildInfo = &v
+}
+
+// GetInitialRunnerId returns the InitialRunnerId field value if set, zero value otherwise.
+func (o *BoxTemplateDto) GetInitialRunnerId() string {
+	if o == nil || IsNil(o.InitialRunnerId) {
+		var ret string
+		return ret
+	}
+	return *o.InitialRunnerId
+}
+
+// GetInitialRunnerIdOk returns a tuple with the InitialRunnerId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *BoxTemplateDto) GetInitialRunnerIdOk() (*string, bool) {
+	if o == nil || IsNil(o.InitialRunnerId) {
+		return nil, false
+	}
+	return o.InitialRunnerId, true
+}
+
+// HasInitialRunnerId returns a boolean if a field has been set.
+func (o *BoxTemplateDto) HasInitialRunnerId() bool {
+	if o != nil && !IsNil(o.InitialRunnerId) {
+		return true
+	}
+
+	return false
+}
+
+// SetInitialRunnerId gets a reference to the given string and assigns it to the InitialRunnerId field.
+func (o *BoxTemplateDto) SetInitialRunnerId(v string) {
+	o.InitialRunnerId = &v
+}
+
 // GetRegionIds returns the RegionIds field value if set, zero value otherwise.
 func (o *BoxTemplateDto) GetRegionIds() []string {
 	if o == nil || IsNil(o.RegionIds) {
@@ -483,6 +551,12 @@ func (o BoxTemplateDto) ToMap() (map[string]interface{}, error) {
 	toSerialize["updatedAt"] = o.UpdatedAt
 	if !IsNil(o.LastUsedAt) {
 		toSerialize["lastUsedAt"] = o.LastUsedAt
+	}
+	if !IsNil(o.BuildInfo) {
+		toSerialize["buildInfo"] = o.BuildInfo
+	}
+	if !IsNil(o.InitialRunnerId) {
+		toSerialize["initialRunnerId"] = o.InitialRunnerId
 	}
 	if !IsNil(o.RegionIds) {
 		toSerialize["regionIds"] = o.RegionIds
@@ -550,6 +624,8 @@ func (o *BoxTemplateDto) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "updatedAt")
 		delete(additionalProperties, "lastUsedAt")
+		delete(additionalProperties, "buildInfo")
+		delete(additionalProperties, "initialRunnerId")
 		delete(additionalProperties, "regionIds")
 		o.AdditionalProperties = additionalProperties
 	}

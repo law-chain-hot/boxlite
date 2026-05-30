@@ -11863,7 +11863,7 @@ components:
       type: object
     UpdateSandboxStateDto:
       example:
-        errorReason: Failed to pull snapshot image
+        errorReason: Failed to pull artifact image
         recoverable: true
         state: started
       properties:
@@ -11891,7 +11891,7 @@ components:
           type: string
         errorReason:
           description: Optional error message when reporting an error state
-          example: Failed to pull snapshot image
+          example: Failed to pull artifact image
           type: string
         recoverable:
           description: Whether the sandbox is recoverable
@@ -14121,6 +14121,7 @@ components:
           memory: 1.4658129805029452
           cpu: 0.8008281904610115
           gpu: 6.027456183070403
+        buildInfo: ""
         displayName: displayName
         description: description
         regionIds:
@@ -14134,6 +14135,7 @@ components:
         name: name
         id: id
         state: ""
+        initialRunnerId: runner123
         updatedAt: 2000-01-23T04:56:07.000+00:00
       properties:
         id:
@@ -14165,6 +14167,14 @@ components:
           type: string
         lastUsedAt:
           format: date-time
+          type: string
+        buildInfo:
+          allOf:
+          - $ref: '#/components/schemas/BuildInfo'
+          description: Build information for this template
+        initialRunnerId:
+          description: The initial runner ID of the template
+          example: runner123
           type: string
         regionIds:
           description: IDs of regions where the template is available to this organization
