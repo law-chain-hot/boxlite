@@ -8,7 +8,7 @@ import { RoutePath } from '@/enums/RoutePath'
 import { useCommandPaletteAnalytics } from '@/hooks/useCommandPaletteAnalytics'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
-import { getEnvironmentDisplayName } from '@/lib/environment-display'
+import { getTemplateDisplayName } from '@/lib/template-display'
 import { cn } from '@/lib/utils'
 import {
   filterArchivable,
@@ -52,8 +52,8 @@ export function SandboxTable({
   sandboxIsLoading,
   sandboxStateIsTransitioning,
   loading,
-  environments,
-  environmentsDataIsLoading,
+  templates,
+  templatesDataIsLoading,
   getRegionName,
   handleStart,
   handleStop,
@@ -206,8 +206,8 @@ export function SandboxTable({
     <>
       <SandboxTableHeader
         table={table}
-        environments={environments}
-        environmentsDataIsLoading={environmentsDataIsLoading}
+        templates={templates}
+        templatesDataIsLoading={templatesDataIsLoading}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
         headerAction={headerAction}
@@ -257,8 +257,8 @@ export function SandboxTable({
                       </div>
 
                       <div className="grid grid-cols-1 gap-x-5 gap-y-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
-                        <CompactSandboxMeta label="Base image">
-                          {getEnvironmentDisplayName(sandbox.snapshot)}
+                        <CompactSandboxMeta label="Template">
+                          {getTemplateDisplayName(sandbox.template)}
                         </CompactSandboxMeta>
                         <CompactSandboxMeta label="Region">
                           {getRegionName(sandbox.target) ?? sandbox.target}

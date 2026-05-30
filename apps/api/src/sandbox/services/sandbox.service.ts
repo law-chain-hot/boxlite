@@ -18,8 +18,8 @@ import { SandboxError } from '../../exceptions/sandbox-error.exception'
 import { BadRequestError } from '../../exceptions/bad-request.exception'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { BackupState } from '../enums/backup-state.enum'
-import { Snapshot } from '../entities/snapshot.entity'
-import { SnapshotState } from '../enums/snapshot-state.enum'
+import { BoxTemplate } from '../entities/box-template.entity'
+import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { SANDBOX_WARM_POOL_UNASSIGNED_ORGANIZATION } from '../constants/sandbox.constants'
 import { SandboxWarmPoolService } from './sandbox-warm-pool.service'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter'
@@ -30,7 +30,7 @@ import { Organization } from '../../organization/entities/organization.entity'
 import { SandboxEvents } from '../constants/sandbox-events.constants'
 import { SandboxStateUpdatedEvent } from '../events/sandbox-state-updated.event'
 import { BuildInfo } from '../entities/build-info.entity'
-import { generateBuildInfoHash as generateBuildSnapshotRef } from '../entities/build-info.entity'
+import { generateBuildInfoHash as generateBuildArtifactRef } from '../entities/build-info.entity'
 import { SandboxBackupCreatedEvent } from '../events/sandbox-backup-created.event'
 import { SandboxDestroyedEvent } from '../events/sandbox-destroyed.event'
 import { SandboxStartedEvent } from '../events/sandbox-started.event'
@@ -70,7 +70,7 @@ import { validateMountPaths, validateSubpaths } from '../utils/volume-mount-path
 import { SandboxRepository } from '../repositories/sandbox.repository'
 import { PortPreviewUrlDto, SignedPortPreviewUrlDto } from '../dto/port-preview-url.dto'
 import { RegionService } from '../../region/services/region.service'
-import { SnapshotService } from './snapshot.service'
+import { BoxTemplateService } from './box-template.service'
 import { RegionType } from '../../region/enums/region-type.enum'
 import { SandboxCreatedEvent } from '../events/sandbox-create.event'
 import { InjectRedis } from '@nestjs-modules/ioredis'
@@ -100,8 +100,8 @@ export class SandboxService {
 
   constructor(
     private readonly sandboxRepository: SandboxRepository,
-    @InjectRepository(Snapshot)
-    private readonly snapshotRepository: Repository<Snapshot>,
+    @InjectRepository(BoxTemplate)
+    private readonly boxTemplateRepository: Repository<BoxTemplate>,
     @InjectRepository(Runner)
     private readonly runnerRepository: Repository<Runner>,
     @InjectRepository(BuildInfo)
@@ -119,7 +119,7 @@ export class SandboxService {
     private readonly redisLockProvider: RedisLockProvider,
     @InjectRedis() private readonly redis: Redis,
     private readonly regionService: RegionService,
-    private readonly snapshotService: SnapshotService,
+    private readonly boxTemplateService: BoxTemplateService,
     private readonly sandboxLookupCacheInvalidationService: SandboxLookupCacheInvalidationService,
     private readonly sandboxActivityService: SandboxActivityService,
   ) {}
@@ -307,7 +307,7 @@ export class SandboxService {
     sandbox.organizationId = SANDBOX_WARM_POOL_UNASSIGNED_ORGANIZATION
 
     sandbox.class = warmPoolItem.class
-    sandbox.snapshot = warmPoolItem.snapshot
+    sandbox.template = warmPoolItem.template
     //  TODO: default user should be configurable
     sandbox.osUser = 'boxlite'
     sandbox.env = warmPoolItem.env || {}
@@ -317,20 +317,20 @@ export class SandboxService {
     sandbox.mem = warmPoolItem.mem
     sandbox.disk = warmPoolItem.disk
 
-    const snapshot = await this.snapshotRepository.findOne({
+    const template = await this.boxTemplateRepository.findOne({
       where: [
-        { organizationId: sandbox.organizationId, name: sandbox.snapshot, state: SnapshotState.ACTIVE },
-        { general: true, name: sandbox.snapshot, state: SnapshotState.ACTIVE },
+        { organizationId: sandbox.organizationId, name: sandbox.template, state: BoxTemplateState.ACTIVE },
+        { general: true, name: sandbox.template, state: BoxTemplateState.ACTIVE },
       ],
     })
-    if (!snapshot) {
-      throw new BadRequestError(`Snapshot ${sandbox.snapshot} not found while creating warm pool sandbox`)
+    if (!template) {
+      throw new BadRequestError(`BoxTemplate ${sandbox.template} not found while creating warm pool sandbox`)
     }
 
     const runner = await this.runnerService.getRandomAvailableRunner({
       regions: [sandbox.region],
       sandboxClass: sandbox.class,
-      snapshotRef: snapshot.ref,
+      artifactRef: template.artifactRef,
     })
 
     sandbox.runnerId = runner.id
@@ -340,10 +340,10 @@ export class SandboxService {
     return sandbox
   }
 
-  async createFromSnapshot(
+  private async createFromBoxTemplate(
     createSandboxDto: CreateSandboxDto,
     organization: Organization,
-    useResourceOverrides = false,
+    templateIdOrName: string,
   ): Promise<SandboxDto> {
     let pendingCpuIncrement: number | undefined
     let pendingMemoryIncrement: number | undefined
@@ -354,70 +354,62 @@ export class SandboxService {
     try {
       const sandboxClass = this.getValidatedOrDefaultClass(createSandboxDto.class)
 
-      let snapshotIdOrName = createSandboxDto.snapshot
-
-      if (!createSandboxDto.snapshot?.trim()) {
-        snapshotIdOrName = this.configService.getOrThrow('defaultSnapshot')
-      }
-
-      const snapshotFilter: FindOptionsWhere<Snapshot>[] = [
-        { organizationId: organization.id, name: snapshotIdOrName },
-        { general: true, name: snapshotIdOrName },
+      const templateFilter: FindOptionsWhere<BoxTemplate>[] = [
+        { organizationId: organization.id, name: templateIdOrName },
+        { general: true, name: templateIdOrName },
       ]
 
-      if (isValidUuid(snapshotIdOrName)) {
-        snapshotFilter.push(
-          { organizationId: organization.id, id: snapshotIdOrName },
-          { general: true, id: snapshotIdOrName },
+      if (isValidUuid(templateIdOrName)) {
+        templateFilter.push(
+          { organizationId: organization.id, id: templateIdOrName },
+          { general: true, id: templateIdOrName },
         )
       }
 
-      const snapshots = await this.snapshotRepository.find({
-        where: snapshotFilter,
+      const templates = await this.boxTemplateRepository.find({
+        where: templateFilter,
       })
 
-      if (snapshots.length === 0) {
+      if (templates.length === 0) {
         throw new BadRequestError(
-          `Snapshot ${snapshotIdOrName} not found. Did you add it through the BoxLite Dashboard?`,
+          `Template ${templateIdOrName} not found. Did you add it through the BoxLite Dashboard?`,
         )
       }
 
-      let snapshot = snapshots.find((s) => s.state === SnapshotState.ACTIVE)
+      let template = templates.find((candidate) => candidate.state === BoxTemplateState.ACTIVE)
 
-      if (!snapshot) {
-        snapshot = snapshots[0]
+      if (!template) {
+        template = templates[0]
       }
 
-      if (!(await this.snapshotService.isAvailableInRegion(snapshot.id, region.id))) {
-        throw new BadRequestError(`Snapshot ${snapshotIdOrName} is not available in region ${region.id}`)
+      if (!(await this.boxTemplateService.isAvailableInRegion(template.id, region.id))) {
+        throw new BadRequestError(`Template ${templateIdOrName} is not available in region ${region.id}`)
       }
 
-      if (snapshot.state !== SnapshotState.ACTIVE) {
-        throw new BadRequestError(`Snapshot ${snapshotIdOrName} is ${snapshot.state}`)
+      if (template.state !== BoxTemplateState.ACTIVE) {
+        throw new BadRequestError(`Template ${templateIdOrName} is ${template.state}`)
       }
 
-      if (!snapshot.ref) {
-        throw new BadRequestError('Snapshot ref is not defined')
+      if (!template.artifactRef) {
+        throw new BadRequestError('Artifact ref is not defined')
       }
 
-      let cpu = snapshot.cpu
-      let mem = snapshot.mem
-      let disk = snapshot.disk
-      let gpu = snapshot.gpu
+      let cpu = template.cpu
+      let mem = template.mem
+      let disk = template.disk
+      let gpu = template.gpu
 
-      if (useResourceOverrides) {
-        if (createSandboxDto.cpu !== undefined) {
-          cpu = createSandboxDto.cpu
-        }
-        if (createSandboxDto.memory !== undefined) {
-          mem = createSandboxDto.memory
-        }
-        if (createSandboxDto.disk !== undefined) {
-          disk = createSandboxDto.disk
-        }
-        if (createSandboxDto.gpu !== undefined) {
-          gpu = createSandboxDto.gpu
-        }
+      if (createSandboxDto.cpu !== undefined) {
+        cpu = createSandboxDto.cpu
+      }
+      if (createSandboxDto.memory !== undefined) {
+        mem = createSandboxDto.memory
+      }
+      if (createSandboxDto.disk !== undefined) {
+        disk = createSandboxDto.disk
+      }
+      if (createSandboxDto.gpu !== undefined) {
+        gpu = createSandboxDto.gpu
       }
 
       this.organizationService.assertOrganizationIsNotSuspended(organization)
@@ -436,12 +428,12 @@ export class SandboxService {
       }
 
       if (!createSandboxDto.volumes || createSandboxDto.volumes.length === 0) {
-        const skipWarmPool = (await this.redis.exists(`warm-pool:skip:${snapshot.id}`)) === 1
+        const skipWarmPool = (await this.redis.exists(`warm-pool:skip:${template.id}`)) === 1
 
         if (!skipWarmPool) {
           const warmPoolSandbox = await this.warmPoolService.fetchWarmPoolSandbox({
             organizationId: organization.id,
-            snapshot,
+            template,
             target: region.id,
             class: createSandboxDto.class,
             cpu: cpu,
@@ -465,7 +457,7 @@ export class SandboxService {
       const runner = await this.runnerService.getRandomAvailableRunner({
         regions: [region.id],
         sandboxClass,
-        snapshotRef: snapshot.ref,
+        artifactRef: template.artifactRef,
       })
 
       const sandbox = new Sandbox(region.id, createSandboxDto.name)
@@ -474,7 +466,7 @@ export class SandboxService {
 
       //  TODO: make configurable
       sandbox.class = sandboxClass
-      sandbox.snapshot = snapshot.name
+      sandbox.template = template.name
       //  TODO: default user should be configurable
       sandbox.osUser = createSandboxDto.user || 'boxlite'
       sandbox.env = createSandboxDto.env || {}
@@ -538,47 +530,9 @@ export class SandboxService {
     }
   }
 
-  async createFromEnvironment(createSandboxDto: CreateSandboxDto, organization: Organization): Promise<SandboxDto> {
-    const environmentId = createSandboxDto.environmentId?.trim()
-
-    if (!environmentId) {
-      throw new BadRequestError('Must specify an environment')
-    }
-
-    const where: FindOptionsWhere<Snapshot>[] = [
-      {
-        general: true,
-        hideFromUsers: false,
-        state: SnapshotState.ACTIVE,
-        name: environmentId,
-      },
-    ]
-
-    if (isValidUuid(environmentId)) {
-      where.push({
-        general: true,
-        hideFromUsers: false,
-        state: SnapshotState.ACTIVE,
-        id: environmentId,
-      })
-    }
-
-    const environmentSnapshot = await this.snapshotRepository.findOne({
-      where,
-    })
-
-    if (!environmentSnapshot) {
-      throw new BadRequestError(`Environment ${environmentId} is not available`)
-    }
-
-    return this.createFromSnapshot(
-      {
-        ...createSandboxDto,
-        snapshot: environmentSnapshot.id,
-      },
-      organization,
-      true,
-    )
+  async createFromTemplate(createSandboxDto: CreateSandboxDto, organization: Organization): Promise<SandboxDto> {
+    const templateId = createSandboxDto.templateId?.trim() || this.configService.getOrThrow('defaultTemplate')
+    return this.createFromBoxTemplate(createSandboxDto, organization, templateId)
   }
 
   private async assignWarmPoolSandbox(
@@ -732,20 +686,20 @@ export class SandboxService {
         sandbox.volumes = this.resolveVolumes(createSandboxDto.volumes)
       }
 
-      const buildInfoSnapshotRef = generateBuildSnapshotRef(
+      const buildInfoArtifactRef = generateBuildArtifactRef(
         createSandboxDto.buildInfo.dockerfileContent,
         createSandboxDto.buildInfo.contextHashes,
       )
 
-      // Check if buildInfo with the same snapshotRef already exists
+      // Check if buildInfo with the same artifactRef already exists
       const existingBuildInfo = await this.buildInfoRepository.findOne({
-        where: { snapshotRef: buildInfoSnapshotRef },
+        where: { artifactRef: buildInfoArtifactRef },
       })
 
       if (existingBuildInfo) {
         sandbox.buildInfo = existingBuildInfo
-        if (await this.redisLockProvider.lock(`build-info:${existingBuildInfo.snapshotRef}:update`, 60)) {
-          await this.buildInfoRepository.update(sandbox.buildInfo.snapshotRef, { lastUsedAt: new Date() })
+        if (await this.redisLockProvider.lock(`build-info:${existingBuildInfo.artifactRef}:update`, 60)) {
+          await this.buildInfoRepository.update(sandbox.buildInfo.artifactRef, { lastUsedAt: new Date() })
         }
       } else {
         const buildInfoEntity = this.buildInfoRepository.create({
@@ -762,7 +716,7 @@ export class SandboxService {
         runner = await this.runnerService.getRandomAvailableRunner({
           regions: [sandbox.region],
           sandboxClass: sandbox.class,
-          snapshotRef: sandbox.buildInfo.snapshotRef,
+          artifactRef: sandbox.buildInfo.artifactRef,
           ...(declarativeBuildScoreThreshold !== undefined && {
             availabilityScoreThreshold: declarativeBuildScoreThreshold,
           }),
@@ -856,7 +810,7 @@ export class SandboxService {
       labels?: { [key: string]: string }
       includeErroredDestroyed?: boolean
       states?: SandboxState[]
-      snapshots?: string[]
+      templates?: string[]
       regionIds?: string[]
       minCpu?: number
       maxCpu?: number
@@ -881,7 +835,7 @@ export class SandboxService {
       labels,
       includeErroredDestroyed,
       states,
-      snapshots,
+      templates,
       regionIds,
       minCpu,
       maxCpu,
@@ -901,7 +855,7 @@ export class SandboxService {
       ...(id ? { id: ILike(`${id}%`) } : {}),
       ...(name ? { name: ILike(`${name}%`) } : {}),
       ...(labels ? { labels: JsonContains(labels) } : {}),
-      ...(snapshots ? { snapshot: In(snapshots) } : {}),
+      ...(templates ? { template: In(templates) } : {}),
       ...(regionIds ? { region: In(regionIds) } : {}),
     }
 
@@ -1772,7 +1726,7 @@ export class SandboxService {
   async getBuildLogsUrl(sandboxIdOrName: string, organizationId: string): Promise<string> {
     const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
 
-    if (!sandbox.buildInfo?.snapshotRef) {
+    if (!sandbox.buildInfo?.artifactRef) {
       throw new NotFoundException(`Sandbox ${sandboxIdOrName} has no build info`)
     }
 

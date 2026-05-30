@@ -83,12 +83,6 @@ import { FeatureFlags } from '../../common/constants/feature-flags'
 import { RegionSandboxAccessGuard } from '../guards/region-sandbox-access.guard'
 import { SystemRole } from '../../user/enums/system-role.enum'
 
-const hasSandboxResourceOverride = (createSandboxDto: CreateSandboxDto) =>
-  createSandboxDto.cpu !== undefined ||
-  createSandboxDto.gpu !== undefined ||
-  createSandboxDto.memory !== undefined ||
-  createSandboxDto.disk !== undefined
-
 @ApiTags('sandbox')
 @Controller('sandbox')
 @ApiHeader(CustomHeaders.ORGANIZATION_ID)
@@ -188,7 +182,7 @@ export class SandboxController {
       labels,
       includeErroredDeleted: includeErroredDestroyed,
       states,
-      snapshots,
+      templates,
       regions,
       minCpu,
       maxCpu,
@@ -212,7 +206,7 @@ export class SandboxController {
         labels: labels ? JSON.parse(labels) : undefined,
         includeErroredDestroyed,
         states,
-        snapshots,
+        templates,
         regionIds: regions,
         minCpu,
         maxCpu,
@@ -259,8 +253,7 @@ export class SandboxController {
     requestMetadata: {
       body: (req: TypedRequest<CreateSandboxDto>) => ({
         name: req.body?.name,
-        environmentId: req.body?.environmentId,
-        snapshot: req.body?.snapshot,
+        templateId: req.body?.templateId,
         user: req.body?.user,
         env: req.body?.env
           ? Object.fromEntries(Object.keys(req.body?.env).map((key) => [key, MASKED_AUDIT_VALUE]))
@@ -289,40 +282,28 @@ export class SandboxController {
   ): Promise<SandboxDto> {
     const organization = authContext.organization
     let sandbox: SandboxDto
-    const canUseLegacySandboxSource = authContext.role === SystemRole.ADMIN
+    const canUseBuildInfoSource = authContext.role === SystemRole.ADMIN
 
-    if (createSandboxDto.environmentId) {
-      if (createSandboxDto.snapshot) {
-        throw new BadRequestError('Cannot specify a snapshot when using an environment')
-      }
+    if (createSandboxDto.templateId) {
       if (createSandboxDto.buildInfo) {
-        throw new BadRequestError('Cannot specify build info when using an environment')
+        throw new BadRequestError('Cannot specify build info when using a template')
       }
       if (createSandboxDto.gpu !== undefined) {
-        throw new BadRequestError('Cannot specify GPU resources when using an environment')
+        throw new BadRequestError('Cannot specify GPU resources when using a template')
       }
-      sandbox = await this.sandboxService.createFromEnvironment(createSandboxDto, organization)
+      sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
       if (sandbox.state === SandboxState.STARTED) {
         return sandbox
       }
 
       await this.waitForSandboxStarted(sandbox, 30)
     } else if (createSandboxDto.buildInfo) {
-      if (createSandboxDto.snapshot) {
-        throw new BadRequestError('Cannot specify a snapshot when using a build info entry')
-      }
-      if (!canUseLegacySandboxSource) {
-        throw new BadRequestError('Choose one of the approved environments to create a box')
+      if (!canUseBuildInfoSource) {
+        throw new BadRequestError('Choose one of the approved templates to create a box')
       }
       sandbox = await this.sandboxService.createFromBuildInfo(createSandboxDto, organization)
     } else {
-      if (!canUseLegacySandboxSource) {
-        throw new BadRequestError('Choose one of the approved environments to create a box')
-      }
-      if (hasSandboxResourceOverride(createSandboxDto)) {
-        throw new BadRequestError('Cannot specify Sandbox resources when using a snapshot')
-      }
-      sandbox = await this.sandboxService.createFromSnapshot(createSandboxDto, organization)
+      sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
       if (sandbox.state === SandboxState.STARTED) {
         return sandbox
       }
@@ -1135,7 +1116,7 @@ export class SandboxController {
 
     const logProxy = new LogProxy(
       runner.apiUrl,
-      sandbox.buildInfo.snapshotRef.split(':')[0],
+      sandbox.buildInfo.artifactRef.split(':')[0],
       runner.apiKey,
       follow === true,
       req,

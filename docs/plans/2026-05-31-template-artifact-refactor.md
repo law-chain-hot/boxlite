@@ -99,7 +99,7 @@ Expected: either pass or reproduce known baseline failures. Save the failure tex
 
 **Files:**
 - Modify: `apps/api/src/sandbox/services/snapshot.service.spec.ts`
-- Modify: `apps/api/src/sandbox/constants/system-environments.spec.ts`
+- Modify: `apps/api/src/sandbox/constants/system-templates.spec.ts`
 - Modify: `apps/api/src/boxlite-rest/mappers/sandbox-to-box.mapper.spec.ts`
 - Create if needed: `apps/api/src/sandbox/dto/box-template.dto.spec.ts`
 
@@ -209,7 +209,7 @@ Do not duplicate business logic in the compatibility controller.
 Run:
 
 ```bash
-cd apps && yarn nx test api --runTestsByPath src/sandbox/constants/system-environments.spec.ts src/sandbox/services/snapshot.service.spec.ts
+cd apps && yarn nx test api --runTestsByPath src/sandbox/constants/system-templates.spec.ts src/sandbox/services/snapshot.service.spec.ts
 ```
 
 Expected: tests are updated to template names and pass.
@@ -257,7 +257,7 @@ Do not change files under:
 Run:
 
 ```bash
-cd apps && yarn nx test api --runTestsByPath src/sandbox/constants/system-environments.spec.ts
+cd apps && yarn nx test api --runTestsByPath src/sandbox/constants/system-templates.spec.ts
 ```
 
 Expected: import/name errors are fixed before moving on.
@@ -647,7 +647,7 @@ Run:
 make lint:apps
 make build:apps
 cd apps && yarn nx test api --runTestsByPath src/boxlite-rest/mappers/sandbox-to-box.mapper.spec.ts
-cd apps && yarn nx test api --runTestsByPath src/sandbox/constants/system-environments.spec.ts
+cd apps && yarn nx test api --runTestsByPath src/sandbox/constants/system-templates.spec.ts
 ```
 
 Expected: pass.

@@ -81,11 +81,11 @@ export class BoxliteBoxController {
   ): Promise<BoxResponseDto> {
     const organization = authContext.organization
     const createSandboxDto = createBoxToCreateSandbox(dto)
-    if (!createSandboxDto.environmentId) {
-      throw new BadRequestError('Choose one of the approved Linux base environments to create a box')
+    if (dto.image && !createSandboxDto.templateId) {
+      throw new BadRequestError('Choose one of the approved Linux templates to create a box')
     }
 
-    let sandbox = await this.sandboxService.createFromEnvironment(createSandboxDto, organization)
+    let sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
     if (sandbox.state !== SandboxState.STARTED) {
       sandbox = await this.sandboxStateWaiter.waitForStarted(sandbox.id, organization.id, 30)
     }
@@ -189,8 +189,8 @@ export class BoxliteBoxController {
         SandboxState.CREATING,
         SandboxState.STARTING,
         SandboxState.RESTORING,
-        SandboxState.PULLING_SNAPSHOT,
-        SandboxState.BUILDING_SNAPSHOT,
+        SandboxState.PULLING_ARTIFACT,
+        SandboxState.BUILDING_ARTIFACT,
         SandboxState.PENDING_BUILD,
       ].includes(sandbox.state)
     )

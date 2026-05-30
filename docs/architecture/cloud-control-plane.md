@@ -106,7 +106,7 @@ The product API should expose templates, not environments or snapshots:
 - `GET /templates` lists Box templates available to the organization.
 - `POST /templates` creates a Box template from a base image or build info.
 - `POST /boxes` or the existing compatibility route accepts `templateId` and optional resource overrides.
-- Legacy `/environments` and `/snapshots` can remain as compatibility shims only during the migration window.
+- Pre-launch control-plane routes should expose templates only; avoid adding `/environments` or `/snapshots` compatibility shims unless a future staged rollout explicitly needs them.
 
 ### L2 DTO And Mapping
 

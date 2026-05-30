@@ -22,8 +22,8 @@ var _ MappedNullable = &CreateSandbox{}
 type CreateSandbox struct {
 	// The name of the sandbox. If not provided, the sandbox ID will be used as the name
 	Name *string `json:"name,omitempty"`
-	// The ID or name of the snapshot used for the sandbox
-	Snapshot *string `json:"snapshot,omitempty"`
+	// The ID or name of the template used for the box
+	TemplateId *string `json:"templateId,omitempty"`
 	// The user associated with the project
 	User *string `json:"user,omitempty"`
 	// Environment variables for the sandbox
@@ -57,7 +57,7 @@ type CreateSandbox struct {
 	// Array of volumes to attach to the sandbox
 	Volumes []SandboxVolume `json:"volumes,omitempty"`
 	// Build information for the sandbox
-	BuildInfo *CreateBuildInfo `json:"buildInfo,omitempty"`
+	BuildInfo            *CreateBuildInfo `json:"buildInfo,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -112,36 +112,36 @@ func (o *CreateSandbox) SetName(v string) {
 	o.Name = &v
 }
 
-// GetSnapshot returns the Snapshot field value if set, zero value otherwise.
-func (o *CreateSandbox) GetSnapshot() string {
-	if o == nil || IsNil(o.Snapshot) {
+// GetTemplateId returns the TemplateId field value if set, zero value otherwise.
+func (o *CreateSandbox) GetTemplateId() string {
+	if o == nil || IsNil(o.TemplateId) {
 		var ret string
 		return ret
 	}
-	return *o.Snapshot
+	return *o.TemplateId
 }
 
-// GetSnapshotOk returns a tuple with the Snapshot field value if set, nil otherwise
+// GetTemplateIdOk returns a tuple with the TemplateId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateSandbox) GetSnapshotOk() (*string, bool) {
-	if o == nil || IsNil(o.Snapshot) {
+func (o *CreateSandbox) GetTemplateIdOk() (*string, bool) {
+	if o == nil || IsNil(o.TemplateId) {
 		return nil, false
 	}
-	return o.Snapshot, true
+	return o.TemplateId, true
 }
 
-// HasSnapshot returns a boolean if a field has been set.
-func (o *CreateSandbox) HasSnapshot() bool {
-	if o != nil && !IsNil(o.Snapshot) {
+// HasTemplateId returns a boolean if a field has been set.
+func (o *CreateSandbox) HasTemplateId() bool {
+	if o != nil && !IsNil(o.TemplateId) {
 		return true
 	}
 
 	return false
 }
 
-// SetSnapshot gets a reference to the given string and assigns it to the Snapshot field.
-func (o *CreateSandbox) SetSnapshot(v string) {
-	o.Snapshot = &v
+// SetTemplateId gets a reference to the given string and assigns it to the TemplateId field.
+func (o *CreateSandbox) SetTemplateId(v string) {
+	o.TemplateId = &v
 }
 
 // GetUser returns the User field value if set, zero value otherwise.
@@ -689,7 +689,7 @@ func (o *CreateSandbox) SetBuildInfo(v CreateBuildInfo) {
 }
 
 func (o CreateSandbox) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -701,8 +701,8 @@ func (o CreateSandbox) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
 	}
-	if !IsNil(o.Snapshot) {
-		toSerialize["snapshot"] = o.Snapshot
+	if !IsNil(o.TemplateId) {
+		toSerialize["templateId"] = o.TemplateId
 	}
 	if !IsNil(o.User) {
 		toSerialize["user"] = o.User
@@ -778,7 +778,7 @@ func (o *CreateSandbox) UnmarshalJSON(data []byte) (err error) {
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "name")
-		delete(additionalProperties, "snapshot")
+		delete(additionalProperties, "templateId")
 		delete(additionalProperties, "user")
 		delete(additionalProperties, "env")
 		delete(additionalProperties, "labels")

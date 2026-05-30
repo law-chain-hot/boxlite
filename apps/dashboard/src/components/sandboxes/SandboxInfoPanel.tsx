@@ -8,7 +8,7 @@ import { ResourceChip } from '@/components/ResourceChip'
 import { TimestampTooltip } from '@/components/TimestampTooltip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getEnvironmentDisplayName } from '@/lib/environment-display'
+import { getTemplateDisplayName } from '@/lib/template-display'
 import { cn, formatDuration, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox } from '@boxlite-ai/api-client'
 import { AlertCircle } from 'lucide-react'
@@ -54,7 +54,7 @@ interface SandboxInfoPanelProps {
 }
 
 export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
-  const environmentDisplayName = getEnvironmentDisplayName(sandbox.snapshot)
+  const templateDisplayName = getTemplateDisplayName(sandbox.template)
 
   return (
     <div className="flex flex-col">
@@ -68,16 +68,16 @@ export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
       )}
 
       <InfoSection title="General">
-        <InfoRow label="Base image" className="-mr-2">
-          {sandbox.snapshot ? (
+        <InfoRow label="Template" className="-mr-2">
+          {sandbox.template ? (
             <div className="flex min-w-0 items-center gap-1">
               <div className="min-w-0 text-right">
-                <div className="truncate text-sm">{environmentDisplayName}</div>
-                {environmentDisplayName !== sandbox.snapshot && (
-                  <div className="truncate text-xs text-muted-foreground">{sandbox.snapshot}</div>
+                <div className="truncate text-sm">{templateDisplayName}</div>
+                {templateDisplayName !== sandbox.template && (
+                  <div className="truncate text-xs text-muted-foreground">{sandbox.template}</div>
                 )}
               </div>
-              <CopyButton value={sandbox.snapshot} tooltipText="Copy" size="icon-xs" />
+              <CopyButton value={sandbox.template} tooltipText="Copy" size="icon-xs" />
             </div>
           ) : (
             <span className="text-muted-foreground font-normal">—</span>

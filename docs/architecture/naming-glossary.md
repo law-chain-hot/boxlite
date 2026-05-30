@@ -10,7 +10,7 @@ This glossary defines the naming boundary for BoxLite cloud and core runtime wor
 | `RuntimeArtifact` | Immutable runtime material that can be pulled by a runner. | Template metadata or Box state snapshots. | `snapshotRef` when it is an OCI/reference string; `SnapshotManager` if it manages artifact propagation. |
 | `artifactRef` | String reference to a runtime artifact in the registry. | Template id/name; Box snapshot id/name. | `snapshotRef` in `BuildInfo`, runner jobs, cache rows, and start payload mapping. |
 | `RunnerArtifactCache` | Per-runner cache state for a runtime artifact. | Template availability or Box lifecycle state. | `SnapshotRunner`. |
-| `ArtifactRegistry` | S3-backed OCI registry service storing runtime artifacts. | Product templates or core snapshots. | `apps/snapshot-manager` service name if renamed in this refactor. |
+| `ArtifactRegistry` | S3-backed OCI registry service storing runtime artifacts. | Product templates or core snapshots. | `apps/snapshot-manager` service name. |
 | `BoxSnapshot` | Future cloud/user concept for snapshotting a Box state. | Templates and artifact refs. | New future concept only. |
 | `Snapshot` | Existing BoxLite core snapshot/restore feature. | Cloud templates, image refs, prewarm cache, registry service. | No replacement inside core snapshot code. |
 
@@ -37,8 +37,4 @@ This glossary defines the naming boundary for BoxLite cloud and core runtime wor
 
 ## Transitional Compatibility
 
-Compatibility aliases may exist temporarily, but they should be named as aliases:
-
-- `EnvironmentController` can become a thin deprecated alias to `TemplateController` only if existing clients still call `/environments`.
-- `/snapshots` can become a deprecated alias only for pre-launch tooling that has not yet moved to `/templates`.
-- Runner payloads may serialize `snapshot` while code passes `artifactRef` if changing the runner API must be staged. Add a TODO with the compatibility boundary at the mapper, not throughout domain code.
+Compatibility aliases should not be introduced before launch. If a future staged rollout needs one, name it explicitly as a legacy alias at the boundary instead of letting `Snapshot` or `Environment` leak back into domain code.

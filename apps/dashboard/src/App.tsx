@@ -42,7 +42,7 @@ import { RegionsProvider } from './providers/RegionsProvider'
 import { SandboxSessionProvider } from './providers/SandboxSessionProvider'
 
 const MVP_HIDDEN_DASHBOARD_ROUTES = [
-  RoutePath.SNAPSHOTS,
+  RoutePath.TEMPLATES,
   RoutePath.REGISTRIES,
   RoutePath.VOLUMES,
   RoutePath.LIMITS,

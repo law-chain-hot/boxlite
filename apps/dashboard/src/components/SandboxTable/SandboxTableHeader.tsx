@@ -20,14 +20,14 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { LastEventFilter, LastEventFilterIndicator } from './filters/LastEventFilter'
-import { SnapshotFilter, SnapshotFilterIndicator } from './filters/SnapshotFilter'
 import { StateFilter, StateFilterIndicator } from './filters/StateFilter'
+import { TemplateFilter, TemplateFilterIndicator } from './filters/TemplateFilter'
 import { SandboxTableHeaderProps } from './types'
 
 export function SandboxTableHeader({
   table,
-  environments,
-  environmentsDataIsLoading,
+  templates,
+  templatesDataIsLoading,
   onRefresh,
   isRefreshing = false,
   headerAction,
@@ -36,11 +36,11 @@ export function SandboxTableHeader({
   const isCompactScreen = useIsCompactScreen()
 
   const stateFilterValue = (table.getColumn('state')?.getFilterValue() as string[]) || []
-  const snapshotFilterValue = (table.getColumn('snapshot')?.getFilterValue() as string[]) || []
+  const templateFilterValue = (table.getColumn('template')?.getFilterValue() as string[]) || []
   const lastEventFilterValue = (table.getColumn('lastEvent')?.getFilterValue() as Date[]) || []
 
   const hasActiveFilters =
-    stateFilterValue.length > 0 || snapshotFilterValue.length > 0 || lastEventFilterValue.length > 0
+    stateFilterValue.length > 0 || templateFilterValue.length > 0 || lastEventFilterValue.length > 0
 
   return (
     <div className="flex flex-col gap-3">
@@ -116,15 +116,15 @@ export function SandboxTableHeader({
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Package className="w-4 h-4" />
-                Base image
+                Template
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="p-0 w-64">
-                  <SnapshotFilter
-                    value={snapshotFilterValue}
-                    onFilterChange={(value) => table.getColumn('snapshot')?.setFilterValue(value)}
-                    environments={environments}
-                    isLoading={environmentsDataIsLoading}
+                  <TemplateFilter
+                    value={templateFilterValue}
+                    onFilterChange={(value) => table.getColumn('template')?.setFilterValue(value)}
+                    templates={templates}
+                    isLoading={templatesDataIsLoading}
                   />
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
@@ -163,12 +163,12 @@ export function SandboxTableHeader({
             />
           )}
 
-          {snapshotFilterValue.length > 0 && (
-            <SnapshotFilterIndicator
-              value={snapshotFilterValue}
-              onFilterChange={(value) => table.getColumn('snapshot')?.setFilterValue(value)}
-              environments={environments}
-              isLoading={environmentsDataIsLoading}
+          {templateFilterValue.length > 0 && (
+            <TemplateFilterIndicator
+              value={templateFilterValue}
+              onFilterChange={(value) => table.getColumn('template')?.setFilterValue(value)}
+              templates={templates}
+              isLoading={templatesDataIsLoading}
             />
           )}
 

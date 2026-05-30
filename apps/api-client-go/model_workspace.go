@@ -27,8 +27,8 @@ type Workspace struct {
 	OrganizationId string `json:"organizationId"`
 	// The name of the sandbox
 	Name string `json:"name"`
-	// The snapshot used for the sandbox
-	Snapshot *string `json:"snapshot,omitempty"`
+	// The template used for the sandbox
+	Template *string `json:"template,omitempty"`
 	// The user associated with the project
 	User string `json:"user"`
 	// Environment variables for the sandbox
@@ -93,7 +93,7 @@ type Workspace struct {
 	// The creation timestamp of the last snapshot
 	SnapshotCreatedAt *string `json:"snapshotCreatedAt,omitempty"`
 	// Additional information about the sandbox
-	Info *SandboxInfo `json:"info,omitempty"`
+	Info                 *SandboxInfo `json:"info,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -202,36 +202,36 @@ func (o *Workspace) SetName(v string) {
 	o.Name = v
 }
 
-// GetSnapshot returns the Snapshot field value if set, zero value otherwise.
-func (o *Workspace) GetSnapshot() string {
-	if o == nil || IsNil(o.Snapshot) {
+// GetTemplate returns the Template field value if set, zero value otherwise.
+func (o *Workspace) GetTemplate() string {
+	if o == nil || IsNil(o.Template) {
 		var ret string
 		return ret
 	}
-	return *o.Snapshot
+	return *o.Template
 }
 
-// GetSnapshotOk returns a tuple with the Snapshot field value if set, nil otherwise
+// GetTemplateOk returns a tuple with the Template field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Workspace) GetSnapshotOk() (*string, bool) {
-	if o == nil || IsNil(o.Snapshot) {
+func (o *Workspace) GetTemplateOk() (*string, bool) {
+	if o == nil || IsNil(o.Template) {
 		return nil, false
 	}
-	return o.Snapshot, true
+	return o.Template, true
 }
 
-// HasSnapshot returns a boolean if a field has been set.
-func (o *Workspace) HasSnapshot() bool {
-	if o != nil && !IsNil(o.Snapshot) {
+// HasTemplate returns a boolean if a field has been set.
+func (o *Workspace) HasTemplate() bool {
+	if o != nil && !IsNil(o.Template) {
 		return true
 	}
 
 	return false
 }
 
-// SetSnapshot gets a reference to the given string and assigns it to the Snapshot field.
-func (o *Workspace) SetSnapshot(v string) {
-	o.Snapshot = &v
+// SetTemplate gets a reference to the given string and assigns it to the Template field.
+func (o *Workspace) SetTemplate(v string) {
+	o.Template = &v
 }
 
 // GetUser returns the User field value
@@ -1174,7 +1174,7 @@ func (o *Workspace) SetInfo(v SandboxInfo) {
 }
 
 func (o Workspace) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -1186,8 +1186,8 @@ func (o Workspace) ToMap() (map[string]interface{}, error) {
 	toSerialize["id"] = o.Id
 	toSerialize["organizationId"] = o.OrganizationId
 	toSerialize["name"] = o.Name
-	if !IsNil(o.Snapshot) {
-		toSerialize["snapshot"] = o.Snapshot
+	if !IsNil(o.Template) {
+		toSerialize["template"] = o.Template
 	}
 	toSerialize["user"] = o.User
 	toSerialize["env"] = o.Env
@@ -1297,10 +1297,10 @@ func (o *Workspace) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -1322,7 +1322,7 @@ func (o *Workspace) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "id")
 		delete(additionalProperties, "organizationId")
 		delete(additionalProperties, "name")
-		delete(additionalProperties, "snapshot")
+		delete(additionalProperties, "template")
 		delete(additionalProperties, "user")
 		delete(additionalProperties, "env")
 		delete(additionalProperties, "labels")
