@@ -20,7 +20,7 @@ export default function SandboxVncFullscreen() {
   useSandboxWsSync({ sandboxId })
 
   const label = sandbox?.name || sandbox?.id || sandboxId
-  const backPath = sandboxId ? RoutePath.SANDBOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.SANDBOXES
+  const backPath = sandboxId ? RoutePath.BOX_DETAILS.replace(':sandboxId', sandboxId) : RoutePath.BOXES
 
   return (
     <SandboxFullscreenShell
@@ -31,7 +31,7 @@ export default function SandboxVncFullscreen() {
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
           <Spinner className="size-4" />
-          <span className="text-sm">Loading sandbox...</span>
+          <span className="text-sm">Loading box...</span>
         </div>
       ) : isError || !sandbox ? (
         <Empty>
@@ -39,7 +39,7 @@ export default function SandboxVncFullscreen() {
             <EmptyMedia variant="icon">
               <Container className="size-4" />
             </EmptyMedia>
-            <EmptyTitle>Sandbox not found</EmptyTitle>
+            <EmptyTitle>Box not found</EmptyTitle>
             <EmptyDescription>Are you sure you're in the right organization?</EmptyDescription>
           </EmptyHeader>
           <Button variant="outline" size="sm" asChild>

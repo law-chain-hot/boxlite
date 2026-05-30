@@ -8,42 +8,40 @@ import { LogoText } from '@/assets/Logo'
 import { OrganizationPicker } from '@/components/Organizations/OrganizationPicker'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BOXLITE_DOCS_URL, BOXLITE_SLACK_URL } from '@/constants/ExternalLinks'
-import { useTheme } from '@/contexts/ThemeContext'
+import { Theme, useTheme } from '@/contexts/ThemeContext'
 import { RoutePath } from '@/enums/RoutePath'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
-import { useUserOrganizationInvitations } from '@/hooks/useUserOrganizationInvitations'
 import { cn, getMetaKey } from '@/lib/utils'
-import { usePylon, usePylonCommands } from '@/vendor/pylon'
 import {
   ArrowRightIcon,
   BookOpen,
-  Check,
   Container,
-  LifeBuoyIcon,
+  KeyRound,
   ListChecks,
   LogOut,
-  Mail,
   Menu,
   MessageCircle,
   Monitor,
   MoreHorizontal,
   MoonIcon,
   SearchIcon,
-  Settings,
   SquareUserRound,
   SunIcon,
 } from 'lucide-react'
 import { usePostHog } from 'posthog-js/react'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CommandConfig, useCommandPaletteActions, useRegisterCommands } from './CommandPalette'
@@ -64,6 +62,32 @@ interface SidebarItem {
 interface SidebarGroup {
   label: string
   items: SidebarItem[]
+}
+
+const ONBOARDING_ENTRY_HIGHLIGHT_EVENT = 'boxlite:onboarding-entry-highlight'
+
+const themeOptions: { value: Theme; label: string; icon: React.ReactElement }[] = [
+  { value: 'system', label: 'System', icon: <Monitor className="size-4" /> },
+  { value: 'light', label: 'Light', icon: <SunIcon className="size-4" /> },
+  { value: 'dark', label: 'Dark', icon: <MoonIcon className="size-4" /> },
+]
+
+function ThemeMenuItems({ theme, setTheme }: { theme: Theme; setTheme: (theme: Theme) => void }) {
+  return (
+    <DropdownMenuRadioGroup
+      value={theme}
+      onValueChange={(value) => {
+        if (value) setTheme(value as Theme)
+      }}
+    >
+      {themeOptions.map((option) => (
+        <DropdownMenuRadioItem key={option.value} value={option.value} className="cursor-pointer gap-2">
+          {option.icon}
+          {option.label}
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  )
 }
 
 const useNavCommands = (items: { label: string; path: RoutePath | string; onClick?: () => void }[]) => {
@@ -92,14 +116,24 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
   const { theme, setTheme } = useTheme()
   const { user, signoutRedirect } = useAuth()
   const { pathname } = useLocation()
-  const { count: organizationInvitationsCount } = useUserOrganizationInvitations()
+  const [highlightOnboardingEntry, setHighlightOnboardingEntry] = useState(false)
+
+  useEffect(() => {
+    const handleHighlight = () => {
+      setHighlightOnboardingEntry(true)
+      window.setTimeout(() => setHighlightOnboardingEntry(false), 3200)
+    }
+
+    window.addEventListener(ONBOARDING_ENTRY_HIGHLIGHT_EVENT, handleHighlight)
+    return () => window.removeEventListener(ONBOARDING_ENTRY_HIGHLIGHT_EVENT, handleHighlight)
+  }, [])
 
   const primaryItems = useMemo<SidebarItem[]>(() => {
     return [
       {
         icon: <Container size={16} strokeWidth={1.5} />,
-        label: 'Sandboxes',
-        path: RoutePath.SANDBOXES,
+        label: 'Boxes',
+        path: RoutePath.BOXES,
       },
     ]
   }, [])
@@ -111,17 +145,12 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
       ...primaryItems,
       ...secondaryGroups.flatMap((group) => group.items),
       {
-        path: RoutePath.ACCOUNT_SETTINGS,
-        label: 'Account Settings',
-        icon: <Settings size={16} strokeWidth={1.5} />,
+        path: RoutePath.KEYS,
+        label: 'API Keys',
+        icon: <KeyRound size={16} strokeWidth={1.5} />,
       },
       {
-        path: RoutePath.USER_INVITATIONS,
-        label: 'Invitations',
-        icon: <Mail size={16} strokeWidth={1.5} />,
-      },
-      {
-        path: `${RoutePath.SANDBOXES}?onboarding=1`,
+        path: `${RoutePath.BOXES}?onboarding=1`,
         label: 'Onboarding',
         icon: <ListChecks size={16} strokeWidth={1.5} />,
       },
@@ -133,9 +162,6 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
     posthog?.reset()
     signoutRedirect()
   }
-
-  const { unreadCount: pylonUnreadCount, toggle: togglePylon, isEnabled: pylonEnabled } = usePylon()
-  usePylonCommands()
 
   const commandPaletteActions = useCommandPaletteActions()
   useNavCommands(commandItems)
@@ -176,10 +202,7 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
     >
       <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-3 px-4 sm:px-5 2xl:px-0">
         <div className="flex min-w-0 items-center gap-6">
-          <Link
-            to={RoutePath.SANDBOXES}
-            className="shrink-0 text-[1.15rem] font-semibold tracking-tight text-foreground"
-          >
+          <Link to={RoutePath.BOXES} className="shrink-0 text-[1.15rem] font-semibold tracking-tight text-foreground">
             <LogoText />
           </Link>
 
@@ -222,6 +245,10 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <div className="hidden md:block">
+            <OrganizationPicker variant="header" />
+          </div>
+
           {!isCompactScreen && (
             <Button
               variant="outline"
@@ -235,15 +262,32 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
             </Button>
           )}
 
-          <div className="hidden md:block">
-            <OrganizationPicker variant="header" />
-          </div>
-
-          <Button variant="ghost" size="icon-sm" asChild>
-            <Link to={`${RoutePath.SANDBOXES}?onboarding=1`} aria-label="Open onboarding">
-              <ListChecks className="size-4" />
+          <Button variant="ghost" size="sm" className="hidden xl:inline-flex" asChild>
+            <Link to={RoutePath.KEYS}>
+              <KeyRound className="size-4" />
+              API Keys
             </Link>
           </Button>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size={isCompactScreen ? 'icon-sm' : 'sm'}
+                className={cn(
+                  highlightOnboardingEntry &&
+                    'animate-[boxlite-guide-callout_1.1s_ease-in-out_3] ring-2 ring-primary ring-offset-2 ring-offset-background',
+                )}
+                asChild
+              >
+                <Link to={`${RoutePath.BOXES}?onboarding=1`} aria-label="Open onboarding guide">
+                  <ListChecks className="size-4" />
+                  {!isCompactScreen && <span>Guide</span>}
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open onboarding guide</TooltipContent>
+          </Tooltip>
 
           {!isCompactScreen && secondaryGroups.length > 0 && (
             <DropdownMenu>
@@ -294,28 +338,10 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[15rem]">
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link to={RoutePath.ACCOUNT_SETTINGS}>
-                  <Settings className="size-4" />
-                  Account Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link to={RoutePath.USER_INVITATIONS}>
-                  <Mail className="size-4" />
-                  Invitations
-                  {organizationInvitationsCount > 0 && (
-                    <span className="ml-auto text-xs text-muted-foreground">{organizationInvitationsCount}</span>
-                  )}
-                </Link>
-              </DropdownMenuItem>
-              {pylonEnabled && (
-                <DropdownMenuItem className="cursor-pointer" onClick={() => togglePylon()}>
-                  <LifeBuoyIcon className="size-4" />
-                  Support
-                  {pylonUnreadCount > 0 && <span className="ml-auto text-xs text-muted-foreground">new</span>}
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuLabel className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Appearance
+              </DropdownMenuLabel>
+              <ThemeMenuItems theme={theme} setTheme={setTheme} />
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild className="cursor-pointer">
                 <a href={BOXLITE_DOCS_URL} target="_blank" rel="noopener noreferrer">
@@ -328,21 +354,6 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
                   <MessageCircle className="size-4" />
                   Discord
                 </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('system')}>
-                <Monitor className="size-4" />
-                System Theme
-                {theme === 'system' && <Check className="ml-auto size-4" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('light')}>
-                <SunIcon className="size-4" />
-                Light Mode
-                {theme === 'light' && <Check className="ml-auto size-4" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('dark')}>
-                <MoonIcon className="size-4" />
-                Dark Mode
-                {theme === 'dark' && <Check className="ml-auto size-4" />}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
@@ -370,6 +381,12 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {primaryItems.map(renderMenuItem)}
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to={RoutePath.KEYS}>
+                    <KeyRound className="size-4" />
+                    API Keys
+                  </Link>
+                </DropdownMenuItem>
                 {secondaryGroups.map((group) => (
                   <React.Fragment key={group.label}>
                     <DropdownMenuSeparator />

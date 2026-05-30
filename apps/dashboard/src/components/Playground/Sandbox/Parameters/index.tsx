@@ -50,7 +50,7 @@ const SandboxParameters = ({ className }: { className?: string }) => {
   return (
     <div className={cn('flex flex-col gap-6', className)}>
       <div>
-        <h2>Sandbox Configuration</h2>
+        <h2>Box Configuration</h2>
         <p className="text-sm text-muted-foreground mt-1">Manage resources, lifecycle policies, and file systems.</p>
       </div>
       <Accordion

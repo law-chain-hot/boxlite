@@ -7,12 +7,12 @@ import { CopyButton } from '@/components/CopyButton'
 import { ResourceChip } from '@/components/ResourceChip'
 import { TimestampTooltip } from '@/components/TimestampTooltip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getEnvironmentDisplayName } from '@/lib/environment-display'
 import { cn, formatDuration, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox } from '@boxlite-ai/api-client'
-import { AlertCircle, Tag } from 'lucide-react'
-import React, { useMemo } from 'react'
+import { AlertCircle } from 'lucide-react'
+import React from 'react'
 
 export function InfoSection({
   title,
@@ -54,9 +54,7 @@ interface SandboxInfoPanelProps {
 }
 
 export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
-  const labelEntries = useMemo(() => {
-    return sandbox.labels ? Object.entries(sandbox.labels) : []
-  }, [sandbox.labels])
+  const environmentDisplayName = getEnvironmentDisplayName(sandbox.snapshot)
 
   return (
     <div className="flex flex-col">
@@ -70,10 +68,15 @@ export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
       )}
 
       <InfoSection title="General">
-        <InfoRow label="Environment" className="-mr-2">
+        <InfoRow label="Base image" className="-mr-2">
           {sandbox.snapshot ? (
-            <div className="flex items-center gap-1 min-w-0">
-              <span className="truncate font-mono text-sm">{sandbox.snapshot}</span>
+            <div className="flex min-w-0 items-center gap-1">
+              <div className="min-w-0 text-right">
+                <div className="truncate text-sm">{environmentDisplayName}</div>
+                {environmentDisplayName !== sandbox.snapshot && (
+                  <div className="truncate text-xs text-muted-foreground">{sandbox.snapshot}</div>
+                )}
+              </div>
               <CopyButton value={sandbox.snapshot} tooltipText="Copy" size="icon-xs" />
             </div>
           ) : (
@@ -116,33 +119,6 @@ export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
             <span className="text-muted-foreground font-normal">Disabled</span>
           )}
         </InfoRow>
-      </InfoSection>
-
-      <InfoSection title="Labels">
-        {labelEntries.length > 0 ? (
-          <div className="max-h-[250px] overflow-y-auto scrollbar-sm">
-            <div className="flex flex-wrap gap-2 py-1">
-              {labelEntries.map(([key, value]) => (
-                <code
-                  key={key}
-                  className="flex items-center gap-1 bg-muted border border-border rounded px-2 py-1 text-xs font-mono"
-                >
-                  <span className="text-muted-foreground">{key}:</span>
-                  <span>{value}</span>
-                </code>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Tag className="size-4" />
-              </EmptyMedia>
-              <EmptyDescription>No labels</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
       </InfoSection>
 
       <InfoSection title="Timestamps">
@@ -197,10 +173,6 @@ export function InfoPanelSkeleton() {
             <Skeleton className="h-4 w-16" />
           </div>
         </div>
-      </div>
-      <div className="px-5 py-4 border-b border-border">
-        <Skeleton className="h-2.5 w-14 mb-3" />
-        <Skeleton className="h-4 w-full" />
       </div>
       <div className="px-5 py-4">
         <Skeleton className="h-2.5 w-24 mb-3" />

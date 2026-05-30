@@ -6,20 +6,7 @@
 
 import { useIsCompactScreen, useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
-import {
-  ArrowUpDown,
-  Calendar,
-  Check,
-  Columns,
-  Cpu,
-  HardDrive,
-  ListFilter,
-  MemoryStick,
-  Package,
-  RefreshCw,
-  Square,
-  Tag,
-} from 'lucide-react'
+import { ArrowUpDown, Calendar, Check, Columns, ListFilter, Package, RefreshCw, Square } from 'lucide-react'
 import * as React from 'react'
 import { DebouncedInput } from '../DebouncedInput'
 import { TableColumnVisibilityToggle } from '../TableColumnVisibilityToggle'
@@ -43,27 +30,18 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
-import { LabelFilter, LabelFilterIndicator } from './filters/LabelFilter'
 import { LastEventFilter, LastEventFilterIndicator } from './filters/LastEventFilter'
-import { ResourceFilter, ResourceFilterIndicator, ResourceFilterValue } from './filters/ResourceFilter'
 import { SnapshotFilter, SnapshotFilterIndicator } from './filters/SnapshotFilter'
 import { StateFilter, StateFilterIndicator } from './filters/StateFilter'
 import { SandboxTableHeaderProps } from './types'
 
-const RESOURCE_FILTERS = [
-  { type: 'cpu' as const, label: 'CPU', icon: Cpu },
-  { type: 'memory' as const, label: 'Memory', icon: MemoryStick },
-  { type: 'disk' as const, label: 'Disk', icon: HardDrive },
-]
-
 export function SandboxTableHeader({
   table,
-  snapshots,
-  snapshotsDataIsLoading,
-  snapshotsDataHasMore,
-  onChangeSnapshotSearchValue,
+  environments,
+  environmentsDataIsLoading,
   onRefresh,
   isRefreshing = false,
+  headerAction,
 }: SandboxTableHeaderProps) {
   const isMobile = useIsMobile()
   const isCompactScreen = useIsCompactScreen()
@@ -72,23 +50,19 @@ export function SandboxTableHeader({
 
   const sortableColumns = [
     { id: 'name', label: 'Name' },
+    { id: 'id', label: 'UUID' },
     { id: 'state', label: 'State' },
-    { id: 'snapshot', label: 'Environment' },
+    { id: 'snapshot', label: 'Base image' },
+    { id: 'region', label: 'Region' },
     { id: 'lastEvent', label: 'Last Event' },
   ]
 
   const stateFilterValue = (table.getColumn('state')?.getFilterValue() as string[]) || []
   const snapshotFilterValue = (table.getColumn('snapshot')?.getFilterValue() as string[]) || []
-  const resourceFilterValue = (table.getColumn('resources')?.getFilterValue() as ResourceFilterValue) || {}
-  const labelFilterValue = (table.getColumn('labels')?.getFilterValue() as string[]) || []
   const lastEventFilterValue = (table.getColumn('lastEvent')?.getFilterValue() as Date[]) || []
 
   const hasActiveFilters =
-    stateFilterValue.length > 0 ||
-    snapshotFilterValue.length > 0 ||
-    RESOURCE_FILTERS.some((filter) => Boolean(resourceFilterValue[filter.type])) ||
-    labelFilterValue.length > 0 ||
-    lastEventFilterValue.length > 0
+    stateFilterValue.length > 0 || snapshotFilterValue.length > 0 || lastEventFilterValue.length > 0
 
   return (
     <div className="flex flex-col gap-3">
@@ -108,7 +82,7 @@ export function SandboxTableHeader({
           variant="outline"
           onClick={onRefresh}
           disabled={isRefreshing}
-          aria-label="Refresh sandboxes"
+          aria-label="Refresh boxes"
           className={cn('flex items-center gap-2', isCompactScreen && 'px-2')}
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -125,15 +99,11 @@ export function SandboxTableHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px] p-0">
               <TableColumnVisibilityToggle
-                columns={table.getAllColumns().filter((column) => ['name', 'id', 'labels'].includes(column.id))}
+                columns={table.getAllColumns().filter((column) => ['id'].includes(column.id))}
                 getColumnLabel={(id: string) => {
                   switch (id) {
-                    case 'name':
-                      return 'Name'
                     case 'id':
                       return 'UUID'
-                    case 'labels':
-                      return 'Labels'
                     default:
                       return id
                   }
@@ -236,48 +206,15 @@ export function SandboxTableHeader({
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Package className="w-4 h-4" />
-                Environment
+                Base image
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="p-0 w-64">
                   <SnapshotFilter
                     value={snapshotFilterValue}
                     onFilterChange={(value) => table.getColumn('snapshot')?.setFilterValue(value)}
-                    snapshots={snapshots}
-                    isLoading={snapshotsDataIsLoading}
-                    hasMore={snapshotsDataHasMore}
-                    onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
-                  />
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            {RESOURCE_FILTERS.map(({ type, label, icon: Icon }) => (
-              <DropdownMenuSub key={type}>
-                <DropdownMenuSubTrigger>
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="p-3 w-64">
-                    <ResourceFilter
-                      value={resourceFilterValue}
-                      onFilterChange={(value) => table.getColumn('resources')?.setFilterValue(value)}
-                      resourceType={type}
-                    />
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-            ))}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Tag className="w-4 h-4" />
-                Labels
-              </DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent className="p-0 w-64">
-                  <LabelFilter
-                    value={labelFilterValue}
-                    onFilterChange={(value) => table.getColumn('labels')?.setFilterValue(value)}
+                    environments={environments}
+                    isLoading={environmentsDataIsLoading}
                   />
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
@@ -298,6 +235,8 @@ export function SandboxTableHeader({
             </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {headerAction && <div className={cn('ml-auto', isMobile && 'w-full')}>{headerAction}</div>}
       </div>
 
       {hasActiveFilters && (
@@ -318,29 +257,8 @@ export function SandboxTableHeader({
             <SnapshotFilterIndicator
               value={snapshotFilterValue}
               onFilterChange={(value) => table.getColumn('snapshot')?.setFilterValue(value)}
-              snapshots={snapshots}
-              isLoading={snapshotsDataIsLoading}
-              hasMore={snapshotsDataHasMore}
-              onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
-            />
-          )}
-
-          {RESOURCE_FILTERS.map(({ type }) => {
-            const resourceValue = resourceFilterValue[type]
-            return resourceValue ? (
-              <ResourceFilterIndicator
-                key={type}
-                value={resourceFilterValue}
-                onFilterChange={(value) => table.getColumn('resources')?.setFilterValue(value)}
-                resourceType={type}
-              />
-            ) : null
-          })}
-
-          {labelFilterValue.length > 0 && (
-            <LabelFilterIndicator
-              value={labelFilterValue}
-              onFilterChange={(value) => table.getColumn('labels')?.setFilterValue(value)}
+              environments={environments}
+              isLoading={environmentsDataIsLoading}
             />
           )}
 

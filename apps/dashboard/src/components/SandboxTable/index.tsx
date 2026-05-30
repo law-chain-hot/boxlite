@@ -8,6 +8,7 @@ import { RoutePath } from '@/enums/RoutePath'
 import { useCommandPaletteAnalytics } from '@/hooks/useCommandPaletteAnalytics'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
+import { getEnvironmentDisplayName } from '@/lib/environment-display'
 import { cn } from '@/lib/utils'
 import {
   filterArchivable,
@@ -50,12 +51,8 @@ export function SandboxTable({
   sandboxIsLoading,
   sandboxStateIsTransitioning,
   loading,
-  snapshots,
-  snapshotsDataIsLoading,
-  snapshotsDataHasMore,
-  onChangeSnapshotSearchValue,
-  regionsData,
-  regionsDataIsLoading,
+  environments,
+  environmentsDataIsLoading,
   getRegionName,
   handleStart,
   handleStop,
@@ -82,6 +79,7 @@ export function SandboxTable({
   filters,
   onFiltersChange,
   handleRecover,
+  headerAction,
 }: SandboxTableProps) {
   const navigate = useNavigate()
   const isCompactScreen = useIsCompactScreen()
@@ -90,7 +88,7 @@ export function SandboxTable({
   const writePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES)
   const deletePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.DELETE_SANDBOXES)
 
-  const { table, regionOptions } = useSandboxTable({
+  const { table } = useSandboxTable({
     data,
     sandboxIsLoading,
     writePermitted,
@@ -111,7 +109,6 @@ export function SandboxTable({
     onSortingChange,
     filters,
     onFiltersChange,
-    regionsData,
     handleRecover,
     getRegionName,
   })
@@ -194,7 +191,7 @@ export function SandboxTable({
 
   const emptyStateDescription = (
     <div className="space-y-2">
-      <p>Spin up a Sandbox to run code in an isolated environment.</p>
+      <p>Spin up a Box to run code in an isolated environment.</p>
       <p>Use the BoxLite SDK or CLI to create one.</p>
       <p>
         <button onClick={() => navigate(RoutePath.ONBOARDING)} className="text-primary hover:underline font-medium">
@@ -209,14 +206,11 @@ export function SandboxTable({
     <>
       <SandboxTableHeader
         table={table}
-        regionOptions={regionOptions}
-        regionsDataIsLoading={regionsDataIsLoading}
-        snapshots={snapshots}
-        snapshotsDataIsLoading={snapshotsDataIsLoading}
-        snapshotsDataHasMore={snapshotsDataHasMore}
-        onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
+        environments={environments}
+        environmentsDataIsLoading={environmentsDataIsLoading}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
+        headerAction={headerAction}
       />
 
       {useCompactList ? (
@@ -263,7 +257,12 @@ export function SandboxTable({
                       </div>
 
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs md:grid-cols-4 md:gap-x-4">
-                        <CompactSandboxMeta label="Environment">{sandbox.snapshot || '-'}</CompactSandboxMeta>
+                        <CompactSandboxMeta label="Base image">
+                          {getEnvironmentDisplayName(sandbox.snapshot)}
+                        </CompactSandboxMeta>
+                        <CompactSandboxMeta label="Region">
+                          {getRegionName(sandbox.target) ?? sandbox.target}
+                        </CompactSandboxMeta>
                         <CompactSandboxMeta label="Resources">
                           {sandbox.cpu} vCPU • {sandbox.memory} GiB • {sandbox.disk} GiB
                         </CompactSandboxMeta>
@@ -304,7 +303,7 @@ export function SandboxTable({
         ) : (
           <div className="flex min-h-56 flex-col items-center justify-center rounded-sm border border-dashed border-border px-6 py-10 text-center">
             <Container className="mb-4 h-8 w-8 text-muted-foreground" />
-            <div className="text-sm font-medium">No Sandboxes yet.</div>
+            <div className="text-sm font-medium">No Boxes yet.</div>
             <div className="mt-2 max-w-sm text-sm text-muted-foreground">{emptyStateDescription}</div>
           </div>
         )
@@ -318,12 +317,9 @@ export function SandboxTable({
                     <TableHead
                       key={header.id}
                       data-state={header.column.getCanSort() && 'sortable'}
-                      onClick={() =>
-                        header.column.getCanSort() && header.column.toggleSorting(header.column.getIsSorted() === 'asc')
-                      }
                       className={cn(
                         'sticky top-0 z-[3] border-b border-border',
-                        header.column.getCanSort() ? 'hover:bg-muted cursor-pointer' : '',
+                        header.column.getCanSort() ? 'hover:bg-muted' : '',
                       )}
                       style={{
                         width: `${header.column.getSize()}px`,
@@ -380,7 +376,7 @@ export function SandboxTable({
             ) : (
               <TableEmptyState
                 colSpan={table.getAllColumns().length}
-                message="No Sandboxes yet."
+                message="No Boxes yet."
                 icon={<Container className="w-8 h-8" />}
                 description={emptyStateDescription}
               />
@@ -390,7 +386,7 @@ export function SandboxTable({
       )}
 
       <div className="flex items-center justify-end relative">
-        <Pagination className="pb-2 pt-4" table={table} entityName="Sandboxes" totalItems={totalItems} />
+        <Pagination className="pb-2 pt-4" table={table} entityName="Boxes" totalItems={totalItems} />
 
         <AnimatePresence>
           {!useCompactList && hasSelection && (

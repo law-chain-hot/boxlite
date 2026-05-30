@@ -36,6 +36,7 @@ import { sandboxToBoxResponse, createBoxToCreateSandbox } from './mappers/sandbo
 import { Audit, MASKED_AUDIT_VALUE, TypedRequest } from '../audit/decorators/audit.decorator'
 import { AuditAction } from '../audit/enums/audit-action.enum'
 import { AuditTarget } from '../audit/enums/audit-target.enum'
+import { BadRequestError } from '../exceptions/bad-request.exception'
 
 @ApiTags('BoxLite REST')
 @Controller('v1/:prefix/boxes')
@@ -80,7 +81,11 @@ export class BoxliteBoxController {
   ): Promise<BoxResponseDto> {
     const organization = authContext.organization
     const createSandboxDto = createBoxToCreateSandbox(dto)
-    let sandbox = await this.sandboxService.createFromSnapshot(createSandboxDto, organization)
+    if (!createSandboxDto.environmentId) {
+      throw new BadRequestError('Choose one of the approved Linux base environments to create a box')
+    }
+
+    let sandbox = await this.sandboxService.createFromEnvironment(createSandboxDto, organization)
     if (sandbox.state !== SandboxState.STARTED) {
       sandbox = await this.sandboxStateWaiter.waitForStarted(sandbox.id, organization.id, 30)
     }

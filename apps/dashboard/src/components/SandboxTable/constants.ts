@@ -9,11 +9,11 @@ import { CheckCircle, Circle, AlertTriangle, Timer, Archive } from 'lucide-react
 import { FacetedFilterOption } from './types'
 
 const STATE_LABEL_MAPPING: Record<SandboxState, string> = {
-  [SandboxState.STARTED]: 'Started',
+  [SandboxState.STARTED]: 'Running',
   [SandboxState.STOPPED]: 'Stopped',
   [SandboxState.ERROR]: 'Error',
   [SandboxState.BUILD_FAILED]: 'Build Failed',
-  [SandboxState.BUILDING_SNAPSHOT]: 'Building Snapshot',
+  [SandboxState.BUILDING_SNAPSHOT]: 'Preparing image',
   [SandboxState.PENDING_BUILD]: 'Pending Build',
   [SandboxState.RESTORING]: 'Restoring',
   [SandboxState.ARCHIVED]: 'Archived',
@@ -22,7 +22,7 @@ const STATE_LABEL_MAPPING: Record<SandboxState, string> = {
   [SandboxState.STOPPING]: 'Stopping',
   [SandboxState.DESTROYING]: 'Deleting',
   [SandboxState.DESTROYED]: 'Deleted',
-  [SandboxState.PULLING_SNAPSHOT]: 'Pulling Snapshot',
+  [SandboxState.PULLING_SNAPSHOT]: 'Loading image',
   [SandboxState.UNKNOWN]: 'Unknown',
   [SandboxState.ARCHIVING]: 'Archiving',
   [SandboxState.RESIZING]: 'Resizing',

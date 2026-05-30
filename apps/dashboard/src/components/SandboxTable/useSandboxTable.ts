@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { Sandbox, Region } from '@boxlite-ai/api-client'
+import { Sandbox } from '@boxlite-ai/api-client'
 import {
   useReactTable,
   getCoreRowModel,
@@ -14,7 +14,6 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 import { useMemo, useState, useEffect } from 'react'
-import { FacetedFilterOption } from './types'
 import { getColumns } from './columns'
 import {
   convertApiSortingToTableSorting,
@@ -25,7 +24,6 @@ import {
 import { SandboxFilters, SandboxSorting } from '@/hooks/useSandboxes'
 import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { getLocalStorageItem, setLocalStorageItem } from '@/lib/local-storage'
-import { getRegionFullDisplayName } from '@/lib/utils'
 
 interface UseSandboxTableProps {
   data: Sandbox[]
@@ -51,7 +49,6 @@ interface UseSandboxTableProps {
   onSortingChange: (sorting: SandboxSorting) => void
   filters: SandboxFilters
   onFiltersChange: (filters: SandboxFilters) => void
-  regionsData: Region[]
   handleRecover: (id: string) => void
   getRegionName: (regionId: string) => string | undefined
 }
@@ -77,7 +74,6 @@ export function useSandboxTable({
   onSortingChange,
   filters,
   onFiltersChange,
-  regionsData,
   handleRecover,
   getRegionName,
 }: UseSandboxTableProps) {
@@ -86,12 +82,12 @@ export function useSandboxTable({
     const saved = getLocalStorageItem(LocalStorageKey.SandboxTableColumnVisibility)
     if (saved) {
       try {
-        return { ...JSON.parse(saved), region: false }
+        return { ...JSON.parse(saved), id: false, region: true, labels: false }
       } catch {
-        return { id: false, labels: false, region: false }
+        return { id: false, region: true, labels: false }
       }
     }
-    return { id: false, labels: false, region: false }
+    return { id: false, region: true, labels: false }
   })
 
   useEffect(() => {
@@ -101,13 +97,6 @@ export function useSandboxTable({
   // Convert API sorting and filters to table format for internal use
   const tableSorting = useMemo(() => convertApiSortingToTableSorting(sorting), [sorting])
   const tableFilters = useMemo(() => convertApiFiltersToTableFilters(filters), [filters])
-
-  const regionOptions: FacetedFilterOption[] = useMemo(() => {
-    return regionsData.map((region) => ({
-      label: getRegionFullDisplayName(region),
-      value: region.id,
-    }))
-  }, [regionsData])
 
   const columns = useMemo(
     () =>
@@ -189,6 +178,5 @@ export function useSandboxTable({
 
   return {
     table,
-    regionOptions,
   }
 }

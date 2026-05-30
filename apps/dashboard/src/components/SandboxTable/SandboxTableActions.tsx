@@ -9,6 +9,7 @@ import { SandboxState } from '@boxlite-ai/api-client'
 import { Terminal, MoreVertical, Play, Square, Loader2, Wrench } from 'lucide-react'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { useMemo } from 'react'
+import TooltipButton from '../TooltipButton'
 import { Button } from '../ui/button'
 import {
   DropdownMenu,
@@ -76,8 +77,8 @@ export function SandboxTableActions({
 
     items.push({
       key: 'open',
-      label: 'Open',
-      onClick: () => navigate(generatePath(RoutePath.SANDBOX_DETAILS, { sandboxId: sandbox.id })),
+      label: 'View Details',
+      onClick: () => navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })),
       disabled: isLoading,
     })
 
@@ -245,10 +246,10 @@ export function SandboxTableActions({
 
   return (
     <div className="flex items-center justify-end gap-2">
-      <Button
+      <TooltipButton
         variant="outline"
-        size="icon-sm"
         className="text-muted-foreground"
+        tooltipText={primaryAction.label}
         disabled={isLoading || isTransitioning}
         onClick={(e) => {
           e.stopPropagation()
@@ -256,13 +257,13 @@ export function SandboxTableActions({
         }}
       >
         {primaryAction.icon}
-      </Button>
+      </TooltipButton>
 
       {sandbox.state === SandboxState.STARTED ? (
-        <Button
+        <TooltipButton
           variant="outline"
-          size="icon-sm"
           className="text-muted-foreground"
+          tooltipText="Open terminal"
           disabled={isLoading}
           onClick={(e) => {
             e.stopPropagation()
@@ -270,11 +271,16 @@ export function SandboxTableActions({
           }}
         >
           <Terminal className="w-4 h-4" />
-        </Button>
+        </TooltipButton>
       ) : (
-        <Button variant="outline" size="icon-sm" className="text-muted-foreground" disabled>
+        <TooltipButton
+          variant="outline"
+          className="text-muted-foreground"
+          tooltipText="Terminal available when running"
+          disabled
+        >
           <Terminal className="w-4 h-4" />
-        </Button>
+        </TooltipButton>
       )}
 
       <DropdownMenu>

@@ -14,42 +14,32 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { SnapshotDto } from '@boxlite-ai/api-client'
+import { Environment } from '@/hooks/queries/useEnvironmentsQuery'
+import { getEnvironmentDisplayName } from '@/lib/environment-display'
 import { Loader2, X } from 'lucide-react'
 import { useState } from 'react'
 
 interface SnapshotFilterProps {
   value: string[]
   onFilterChange: (value: string[] | undefined) => void
-  snapshots: SnapshotDto[]
+  environments: Environment[]
   isLoading: boolean
-  hasMore?: boolean
-  onChangeSnapshotSearchValue: (name?: string) => void
 }
 
-export function SnapshotFilterIndicator({
-  value,
-  onFilterChange,
-  snapshots,
-  isLoading,
-  hasMore,
-  onChangeSnapshotSearchValue,
-}: SnapshotFilterProps) {
+export function SnapshotFilterIndicator({ value, onFilterChange, environments, isLoading }: SnapshotFilterProps) {
   return (
     <div className="flex items-center h-6 gap-0.5 rounded-sm border border-border bg-muted/80 hover:bg-muted/50 text-sm">
       <Popover>
         <PopoverTrigger className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground px-2">
-          Environment: <span className="text-primary font-medium">{value.length} selected</span>
+          Base image: <span className="text-primary font-medium">{value.length} selected</span>
         </PopoverTrigger>
 
         <PopoverContent className="p-0 w-[240px]" align="start">
           <SnapshotFilter
             value={value}
             onFilterChange={onFilterChange}
-            snapshots={snapshots}
+            environments={environments}
             isLoading={isLoading}
-            hasMore={hasMore}
-            onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
           />
         </PopoverContent>
       </Popover>
@@ -61,72 +51,67 @@ export function SnapshotFilterIndicator({
   )
 }
 
-export function SnapshotFilter({
-  value,
-  onFilterChange,
-  snapshots,
-  isLoading,
-  hasMore,
-  onChangeSnapshotSearchValue,
-}: SnapshotFilterProps) {
+export function SnapshotFilter({ value, onFilterChange, environments, isLoading }: SnapshotFilterProps) {
   const [searchValue, setSearchValue] = useState('')
 
-  const handleSelect = (snapshotName: string) => {
-    const newValue = value.includes(snapshotName)
-      ? value.filter((name) => name !== snapshotName)
-      : [...value, snapshotName]
+  const filteredEnvironments = environments.filter((environment) => {
+    const search = searchValue.trim().toLowerCase()
+    if (!search) return true
+
+    return [environment.displayName, environment.name, environment.imageName, environment.description]
+      .filter(Boolean)
+      .some((field) => field?.toLowerCase().includes(search))
+  })
+
+  const handleSelect = (environmentName: string) => {
+    const newValue = value.includes(environmentName)
+      ? value.filter((name) => name !== environmentName)
+      : [...value, environmentName]
     onFilterChange(newValue.length > 0 ? newValue : undefined)
   }
 
   const handleSearchChange = (search: string | number) => {
-    const searchStr = String(search)
-    setSearchValue(searchStr)
-    if (onChangeSnapshotSearchValue) {
-      onChangeSnapshotSearchValue(searchStr || undefined)
-    }
+    setSearchValue(String(search))
   }
 
   return (
     <Command>
-      <CommandInput placeholder="Search..." className="" value={searchValue} onValueChange={setSearchValue}>
+      <CommandInput placeholder="Search..." className="" value={searchValue} onValueChange={handleSearchChange}>
         <CommandInputButton
           onClick={() => {
             onFilterChange(undefined)
             setSearchValue('')
-            if (onChangeSnapshotSearchValue) {
-              onChangeSnapshotSearchValue(undefined)
-            }
           }}
         >
           Clear
         </CommandInputButton>
       </CommandInput>
-      {hasMore && (
-        <div className="px-2 pb-2 mt-2">
-          <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
-            Please refine your search to see more environments.
-          </div>
-        </div>
-      )}
       <CommandList>
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            <span className="text-sm text-muted-foreground">Loading environments...</span>
+            <span className="text-sm text-muted-foreground">Loading base images...</span>
           </div>
         ) : (
           <>
-            <CommandEmpty>No environments found.</CommandEmpty>
+            <CommandEmpty>No base images found.</CommandEmpty>
             <CommandGroup>
-              {snapshots.map((snapshot) => (
+              {filteredEnvironments.map((environment) => (
                 <CommandCheckboxItem
-                  key={snapshot.id}
-                  onSelect={() => handleSelect(snapshot.name ?? '')}
-                  value={snapshot.name}
-                  className="cursor-pointer"
-                  checked={value.includes(snapshot.name ?? '')}
+                  key={environment.id}
+                  onSelect={() => handleSelect(environment.name)}
+                  value={environment.name}
+                  className="cursor-pointer items-start"
+                  checked={value.includes(environment.name)}
                 >
-                  {snapshot.name}
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="truncate text-sm">
+                      {environment.displayName || getEnvironmentDisplayName(environment.imageName ?? environment.name)}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {environment.imageName ?? environment.name}
+                    </div>
+                  </div>
                 </CommandCheckboxItem>
               ))}
             </CommandGroup>

@@ -26,6 +26,7 @@ import (
 type Client struct {
 	runtime            *boxlite.Runtime
 	logger             *slog.Logger
+	homeDir            string
 	insecureRegistries []string
 	mu                 sync.RWMutex
 	boxes              map[string]*boxlite.Box
@@ -36,6 +37,7 @@ type Client struct {
 	volumeMutexes      map[string]*sync.Mutex
 	volumeMutexesMutex sync.Mutex
 	volumeCleanupMutex sync.Mutex
+	toolboxPortMutex   sync.Mutex
 	lastVolumeCleanup  time.Time
 	volumeCleanup      volumeCleanupConfig
 }
@@ -105,6 +107,7 @@ func NewClient(ctx context.Context, config ClientConfig) (*Client, error) {
 	return &Client{
 		runtime:            rt,
 		logger:             logger,
+		homeDir:            config.HomeDir,
 		insecureRegistries: insecureRegistries,
 		boxes:              make(map[string]*boxlite.Box),
 		awsRegion:          config.AWSRegion,
@@ -193,6 +196,12 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 		}
 	}
 
+	toolboxHostPort, err := c.reserveToolboxHostPort(ctx, sandboxDto.Id)
+	if err != nil {
+		return "", "", err
+	}
+	opts = append(opts, boxlite.WithPort(ToolboxGuestPort, toolboxHostPort))
+
 	opts = append(opts, boxlite.WithNetwork(networkSpec(sandboxDto.NetworkBlockAll, sandboxDto.NetworkAllowList)))
 
 	bx, err := c.runtime.Create(ctx, sandboxDto.Snapshot, opts...)
@@ -201,6 +210,9 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 			if cleanupErr := c.removeSandboxVolumeMountRecord(ctx, sandboxDto.Id); cleanupErr != nil {
 				c.logger.WarnContext(ctx, "failed to remove sandbox volume mount record after create failure", "sandbox", sandboxDto.Id, "error", cleanupErr)
 			}
+		}
+		if cleanupErr := c.removeToolboxPortRecord(ctx, sandboxDto.Id); cleanupErr != nil {
+			c.logger.WarnContext(ctx, "failed to remove toolbox port record after create failure", "sandbox", sandboxDto.Id, "error", cleanupErr)
 		}
 		return "", "", fmt.Errorf("failed to create box: %w", err)
 	}
@@ -267,6 +279,9 @@ func (c *Client) Destroy(ctx context.Context, sandboxId string) error {
 
 	if err := c.removeSandboxVolumeMountRecord(ctx, sandboxId); err != nil {
 		c.logger.WarnContext(ctx, "failed to remove sandbox volume mount record", "sandbox", sandboxId, "error", err)
+	}
+	if err := c.removeToolboxPortRecord(ctx, sandboxId); err != nil {
+		c.logger.WarnContext(ctx, "failed to remove toolbox port record", "sandbox", sandboxId, "error", err)
 	}
 	c.CleanupOrphanedVolumeMounts(ctx)
 

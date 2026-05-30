@@ -55,12 +55,21 @@ func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.Res
 		boxlite.WithNetwork(boxlite.NetworkSpec{Mode: boxlite.NetworkModeEnabled}),
 	}
 
+	toolboxHostPort, err := c.reserveToolboxHostPort(ctx, sandboxId)
+	if err != nil {
+		return fmt.Errorf("failed to reserve toolbox port during resize: %w", err)
+	}
+	opts = append(opts, boxlite.WithPort(ToolboxGuestPort, toolboxHostPort))
+
 	if resizeDto.Disk > 0 {
 		opts = append(opts, boxlite.WithDiskSize(int(resizeDto.Disk)))
 	}
 
 	newBox, err := c.runtime.Create(ctx, info.Image, opts...)
 	if err != nil {
+		if cleanupErr := c.removeToolboxPortRecord(ctx, sandboxId); cleanupErr != nil {
+			c.logger.Warn("failed to remove toolbox port record after resize create failure", "sandbox", sandboxId, "error", cleanupErr)
+		}
 		return fmt.Errorf("failed to recreate box during resize: %w", err)
 	}
 

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
+import { getEnvironmentDisplayName } from '@/lib/environment-display'
 import { formatTimestamp, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox, SandboxDesiredState, SandboxState } from '@boxlite-ai/api-client'
 import { ColumnDef } from '@tanstack/react-table'
@@ -11,7 +12,6 @@ import { ArrowDown, ArrowUp } from 'lucide-react'
 import React from 'react'
 import { EllipsisWithTooltip } from '../EllipsisWithTooltip'
 import { Checkbox } from '../ui/checkbox'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { SandboxState as SandboxStateComponent } from './SandboxState'
 import { SandboxTableActions } from './SandboxTableActions'
 
@@ -23,10 +23,10 @@ interface SortableHeaderProps {
 
 const SortableHeader: React.FC<SortableHeaderProps> = ({ column, label, dataState }) => {
   return (
-    <div
-      role="button"
+    <button
+      type="button"
       onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      className="flex items-center"
+      className="flex h-11 w-full cursor-pointer items-center justify-start rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       {...(dataState && { 'data-state': dataState })}
     >
       {label}
@@ -37,7 +37,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ column, label, dataStat
       ) : (
         <div className="ml-2 w-4 h-4" />
       )}
-    </div>
+    </button>
   )
 }
 
@@ -124,7 +124,7 @@ export function getColumns({
       id: 'name',
       size: 320,
       enableSorting: true,
-      enableHiding: true,
+      enableHiding: false,
       header: ({ column }) => {
         return <SortableHeader column={column} label="Name" />
       },
@@ -141,10 +141,10 @@ export function getColumns({
     {
       id: 'id',
       size: 320,
-      enableSorting: false,
+      enableSorting: true,
       enableHiding: true,
-      header: () => {
-        return <span>UUID</span>
+      header: ({ column }) => {
+        return <SortableHeader column={column} label="UUID" />
       },
       accessorKey: 'id',
       cell: ({ row }) => {
@@ -180,13 +180,13 @@ export function getColumns({
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
-        return <SortableHeader column={column} label="Environment" />
+        return <SortableHeader column={column} label="Base image" />
       },
       cell: ({ row }) => {
         return (
           <div className="w-full truncate">
             {row.original.snapshot ? (
-              <EllipsisWithTooltip>{row.original.snapshot}</EllipsisWithTooltip>
+              <EllipsisWithTooltip>{getEnvironmentDisplayName(row.original.snapshot)}</EllipsisWithTooltip>
             ) : (
               <div className="truncate text-muted-foreground/50">-</div>
             )}
@@ -237,41 +237,6 @@ export function getColumns({
           </div>
         )
       },
-    },
-    {
-      id: 'labels',
-      size: 110,
-      enableSorting: false,
-      enableHiding: true,
-      header: () => {
-        return <span>Labels</span>
-      },
-      cell: ({ row }) => {
-        const labels = Object.entries(row.original.labels ?? {})
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ')
-
-        const labelCount = Object.keys(row.original.labels ?? {}).length
-        return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              {labelCount > 0 ? (
-                <div className="truncate w-fit bg-blue-100 rounded-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200 px-1">
-                  {labelCount > 0 ? (labelCount === 1 ? '1 label' : `${labelCount} labels`) : '/'}
-                </div>
-              ) : (
-                <div className="truncate max-w-md text-muted-foreground/50">-</div>
-              )}
-            </TooltipTrigger>
-            {labels && (
-              <TooltipContent>
-                <p className="max-w-[300px]">{labels}</p>
-              </TooltipContent>
-            )}
-          </Tooltip>
-        )
-      },
-      accessorFn: (row) => Object.entries(row.labels ?? {}).map(([key, value]) => `${key}: ${value}`),
     },
     {
       id: 'lastEvent',

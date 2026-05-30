@@ -63,8 +63,20 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
     (vncReady && sessionLoading)
 
   const unavailable = isMissingDeps || startMissingDeps
+  const initialError = !isMissingDeps ? initialStatusQuery.error?.message : undefined
   const pollError = pollStatusQuery.error?.message
-  const anyError = startError && !startMissingDeps ? startError : pollError
+  const anyError = initialError || (startError && !startMissingDeps ? startError : pollError)
+  const retryVncConnection = () => {
+    reset()
+    startMutation.reset()
+
+    if (alreadyActive) {
+      void initialStatusQuery.refetch()
+      return
+    }
+
+    startMutation.mutate()
+  }
 
   if (!running) {
     return renderPanel(
@@ -73,9 +85,9 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
           <EmptyMedia variant="icon">
             <Monitor className="size-4" />
           </EmptyMedia>
-          <EmptyTitle>Sandbox is not running</EmptyTitle>
+          <EmptyTitle>Box is not running</EmptyTitle>
           <EmptyDescription>
-            Start the sandbox to access the VNC desktop.{' '}
+            Start the box to access the VNC desktop.{' '}
             <a href={`${BOXLITE_DOCS_URL}/en/vnc-access`} target="_blank" rel="noopener noreferrer">
               Learn more
             </a>
@@ -105,38 +117,13 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
           </EmptyMedia>
           <EmptyTitle>VNC not available</EmptyTitle>
           <EmptyDescription>
-            Computer-use dependencies are not installed in this sandbox.{' '}
+            Computer-use dependencies are not installed in this box.{' '}
             <a href={`${BOXLITE_DOCS_URL}/en/vnc-access`} target="_blank" rel="noopener noreferrer">
               Read the setup guide
             </a>
             .
           </EmptyDescription>
         </EmptyHeader>
-      </Empty>,
-    )
-  }
-
-  // Not yet started - show start button
-  if (!vncReady && !isStarting) {
-    return renderPanel(
-      <Empty className="border-0">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Monitor className="size-4" />
-          </EmptyMedia>
-          <EmptyTitle>VNC Desktop</EmptyTitle>
-          <EmptyDescription>
-            Start the VNC server to access a graphical desktop.{' '}
-            <a href={`${BOXLITE_DOCS_URL}/en/vnc-access`} target="_blank" rel="noopener noreferrer">
-              Learn more
-            </a>
-            .
-          </EmptyDescription>
-        </EmptyHeader>
-        <Button onClick={() => startMutation.mutate()}>
-          <Play className="size-4" />
-          Start VNC
-        </Button>
       </Empty>,
     )
   }
@@ -166,7 +153,7 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
           <EmptyTitle>Failed to connect</EmptyTitle>
           <EmptyDescription>{anyError || 'Something went wrong while connecting to VNC.'}</EmptyDescription>
         </EmptyHeader>
-        <Button variant="outline" size="sm" onClick={reset}>
+        <Button variant="outline" size="sm" onClick={retryVncConnection}>
           <RefreshCw className="size-4" />
           Retry
         </Button>
@@ -174,9 +161,34 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
     )
   }
 
+  // Not yet started - show start button
+  if (!vncReady) {
+    return renderPanel(
+      <Empty className="border-0">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Monitor className="size-4" />
+          </EmptyMedia>
+          <EmptyTitle>VNC Desktop</EmptyTitle>
+          <EmptyDescription>
+            Start the VNC server to access a graphical desktop.{' '}
+            <a href={`${BOXLITE_DOCS_URL}/en/vnc-access`} target="_blank" rel="noopener noreferrer">
+              Learn more
+            </a>
+            .
+          </EmptyDescription>
+        </EmptyHeader>
+        <Button onClick={() => startMutation.mutate()}>
+          <Play className="size-4" />
+          Start VNC
+        </Button>
+      </Empty>,
+    )
+  }
+
   // Active session
   if (session) {
-    const fullscreenHref = RoutePath.SANDBOX_VNC.replace(':sandboxId', sandbox.id)
+    const fullscreenHref = RoutePath.BOX_VNC.replace(':sandboxId', sandbox.id)
     return renderPanel(
       <>
         <iframe

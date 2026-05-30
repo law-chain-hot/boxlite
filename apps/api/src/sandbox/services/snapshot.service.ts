@@ -53,6 +53,11 @@ import { SandboxRepository } from '../repositories/sandbox.repository'
 import { SnapshotActivatedEvent } from '../events/snapshot-activated.event'
 import { LogExecution } from '../../common/decorators/log-execution.decorator'
 import { WithInstrumentation } from '../../common/decorators/otel.decorator'
+import {
+  getSystemEnvironmentSortIndex,
+  SYSTEM_ENVIRONMENTS,
+  SystemEnvironmentDefinition,
+} from '../constants/system-environments'
 
 const IMAGE_NAME_REGEX = /^[a-zA-Z0-9_.\-:]+(\/[a-zA-Z0-9_.\-:]+)*(@sha256:[a-f0-9]{64})?$/
 @Injectable()
@@ -211,6 +216,72 @@ export class SnapshotService {
       await this.rollbackPendingUsage(organization.id, pendingSnapshotCountIncrement)
       throw error
     }
+  }
+
+  async ensureSystemEnvironment(
+    organization: Organization,
+    environment: SystemEnvironmentDefinition,
+  ): Promise<Snapshot> {
+    const regionId = await this.getValidatedOrDefaultRegionId(organization)
+    const existingSnapshot = await this.snapshotRepository.findOne({
+      where: { name: environment.name, general: true },
+      relations: ['snapshotRegions'],
+    })
+
+    if (!existingSnapshot) {
+      return await this.createFromPull(
+        organization,
+        {
+          name: environment.name,
+          imageName: environment.imageName,
+        },
+        true,
+      )
+    }
+
+    let shouldSaveSnapshot = false
+    const shouldReactivateSystemEnvironment = [
+      SnapshotState.INACTIVE,
+      SnapshotState.ERROR,
+      SnapshotState.BUILD_FAILED,
+    ].includes(existingSnapshot.state)
+    const activeSystemEnvironmentMissingRef =
+      existingSnapshot.state === SnapshotState.ACTIVE && !existingSnapshot.ref?.trim()
+
+    if (existingSnapshot.imageName !== environment.imageName) {
+      existingSnapshot.imageName = environment.imageName
+      shouldSaveSnapshot = true
+    }
+
+    if (existingSnapshot.hideFromUsers) {
+      existingSnapshot.hideFromUsers = false
+      shouldSaveSnapshot = true
+    }
+
+    if (shouldReactivateSystemEnvironment || activeSystemEnvironmentMissingRef) {
+      existingSnapshot.state = SnapshotState.PENDING
+      existingSnapshot.errorReason = undefined
+      shouldSaveSnapshot = true
+    }
+
+    const hasDefaultRegion = existingSnapshot.snapshotRegions?.some(
+      (snapshotRegion) => snapshotRegion.regionId === regionId,
+    )
+
+    if (!hasDefaultRegion) {
+      await this.snapshotRegionRepository.save({
+        snapshotId: existingSnapshot.id,
+        regionId,
+      })
+    }
+
+    const savedSnapshot = shouldSaveSnapshot ? await this.snapshotRepository.save(existingSnapshot) : existingSnapshot
+
+    if (shouldReactivateSystemEnvironment || activeSystemEnvironmentMissingRef) {
+      this.eventEmitter.emit(SnapshotEvents.ACTIVATED, new SnapshotActivatedEvent(savedSnapshot))
+    }
+
+    return savedSnapshot
   }
 
   async createFromBuildInfo(organization: Organization, createSnapshotDto: CreateSnapshotDto, general = false) {
@@ -422,8 +493,11 @@ export class SnapshotService {
     const availableRegions = await this.organizationService.listAvailableRegions(organizationId)
     const availableRegionIds = new Set(availableRegions.map((r) => r.id))
     const defaultSnapshot = this.configService.get('defaultSnapshot')
+    const systemEnvironmentNames = new Set(SYSTEM_ENVIRONMENTS.map((environment) => environment.name))
 
     const availableSnapshots = snapshots
+      .filter((snapshot) => systemEnvironmentNames.has(snapshot.name))
+      .filter((snapshot) => Boolean(snapshot.ref?.trim()))
       .map((snapshot) => {
         snapshot.snapshotRegions = snapshot.snapshotRegions?.filter((sr) => availableRegionIds.has(sr.regionId)) ?? []
         return snapshot
@@ -438,6 +512,9 @@ export class SnapshotService {
 
       const aLabel = a.imageName || a.name
       const bLabel = b.imageName || b.name
+      const order = getSystemEnvironmentSortIndex(aLabel) - getSystemEnvironmentSortIndex(bLabel)
+      if (order !== 0) return order
+
       return aLabel.localeCompare(bLabel)
     })
   }

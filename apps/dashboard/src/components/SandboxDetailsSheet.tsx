@@ -22,6 +22,7 @@ import { SandboxSpendingTab } from './spending'
 import { useFeatureFlagEnabled } from 'posthog-js/react'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { useConfig } from '@/hooks/useConfig'
+import { getEnvironmentDisplayName } from '@/lib/environment-display'
 
 interface SandboxDetailsSheetProps {
   sandbox: Sandbox | null
@@ -74,6 +75,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
   // }, [sandbox?.id, getWebTerminalUrl])
 
   if (!sandbox) return null
+  const environmentDisplayName = getEnvironmentDisplayName(sandbox.snapshot)
 
   const getLastEvent = (sandbox: Sandbox): { date: Date; relativeTimeString: string } => {
     return getRelativeTimeString(sandbox.updatedAt)
@@ -83,10 +85,10 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-dvw sm:w-[800px] p-0 flex flex-col gap-0 [&>button]:hidden">
         <SheetHeader className="space-y-0 flex flex-row justify-between items-center  p-4 px-5 border-b border-border">
-          <SheetTitle className="text-2xl font-medium">Sandbox Details</SheetTitle>
+          <SheetTitle className="text-2xl font-medium">Box Details</SheetTitle>
           <div className="flex gap-2 items-center">
             <Button variant="link" asChild>
-              <Link to={generatePath(RoutePath.SANDBOX_DETAILS, { sandboxId: sandbox.id })}>View</Link>
+              <Link to={generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })}>View</Link>
             </Button>
             {writePermitted && (
               <>
@@ -241,11 +243,16 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                 </div>
               </div>
               <div>
-                <h3 className="text-sm text-muted-foreground">Environment</h3>
+                <h3 className="text-sm text-muted-foreground">Base image</h3>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{sandbox.snapshot || '-'}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{sandbox.snapshot ? environmentDisplayName : '-'}</p>
+                    {sandbox.snapshot && environmentDisplayName !== sandbox.snapshot && (
+                      <p className="truncate text-xs text-muted-foreground">{sandbox.snapshot}</p>
+                    )}
+                  </div>
                   {sandbox.snapshot && (
-                    <CopyButton value={sandbox.snapshot} tooltipText="Copy environment" size="icon-xs" />
+                    <CopyButton value={sandbox.snapshot} tooltipText="Copy base image" size="icon-xs" />
                   )}
                 </div>
               </div>

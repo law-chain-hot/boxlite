@@ -15,6 +15,8 @@ export interface CreateSandboxFromEnvironmentParams {
   environmentId: string
   public?: boolean
   networkBlockAll?: boolean
+  autoStopInterval?: number
+  autoDeleteInterval?: number
 }
 
 export const useCreateSandboxFromEnvironmentMutation = () => {

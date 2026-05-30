@@ -4,18 +4,12 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { DeleteOrganizationDialog } from '@/components/Organizations/DeleteOrganizationDialog'
-import { LeaveOrganizationDialog } from '@/components/Organizations/LeaveOrganizationDialog'
-import { SetDefaultRegionDialog } from '@/components/Organizations/SetDefaultRegionDialog'
 import { PageContent, PageHeader, PageLayout, PageTitle } from '@/components/PageLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
-import { useDeleteOrganizationMutation } from '@/hooks/mutations/useDeleteOrganizationMutation'
-import { useLeaveOrganizationMutation } from '@/hooks/mutations/useLeaveOrganizationMutation'
-import { useSetOrganizationDefaultRegionMutation } from '@/hooks/mutations/useSetOrganizationDefaultRegionMutation'
 import { useApi } from '@/hooks/useApi'
 import { useOrganizations } from '@/hooks/useOrganizations'
 import { useRegions } from '@/hooks/useRegions'
@@ -23,15 +17,15 @@ import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { handleApiError } from '@/lib/error-handling'
 import { OrganizationUserRoleEnum } from '@boxlite-ai/api-client'
 import { CheckIcon, CopyIcon } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useCopyToClipboard } from 'usehooks-ts'
 
 const DEFAULT_ORGANIZATION_DISPLAY_NAME = 'Default Organization'
 
-const getOrganizationDisplayName = (name?: string, personal?: boolean) => {
+const getOrganizationDisplayName = (name?: string) => {
   if (!name) return DEFAULT_ORGANIZATION_DISPLAY_NAME
-  if (personal || name === 'Personal') return DEFAULT_ORGANIZATION_DISPLAY_NAME
+  if (name === 'Personal') return DEFAULT_ORGANIZATION_DISPLAY_NAME
   return name
 }
 
@@ -39,74 +33,32 @@ const OrganizationSettings: React.FC = () => {
   const { axiosInstance } = useApi()
   const { refreshOrganizations } = useOrganizations()
   const { selectedOrganization, authenticatedUserOrganizationMember } = useSelectedOrganization()
-  const { getRegionName, sharedRegions: regions, loadingSharedRegions: loadingRegions } = useRegions()
+  const { getRegionName, sharedRegions: regions } = useRegions()
 
-  const deleteOrganizationMutation = useDeleteOrganizationMutation()
-  const leaveOrganizationMutation = useLeaveOrganizationMutation()
-  const setDefaultRegionMutation = useSetOrganizationDefaultRegionMutation()
-  const [showSetDefaultRegionDialog, setSetDefaultRegionDialog] = useState(false)
   const [organizationName, setOrganizationName] = useState('')
   const [renamingOrganization, setRenamingOrganization] = useState(false)
   const [copied, copyToClipboard] = useCopyToClipboard()
-
-  useEffect(() => {
-    if (selectedOrganization && !selectedOrganization.defaultRegionId) {
-      setSetDefaultRegionDialog(true)
+  const defaultRegionLabel = useMemo(() => {
+    if (selectedOrganization?.defaultRegionId) {
+      return getRegionName(selectedOrganization.defaultRegionId) ?? selectedOrganization.defaultRegionId
     }
-  }, [selectedOrganization])
+
+    return regions[0]?.name ?? 'US'
+  }, [getRegionName, regions, selectedOrganization?.defaultRegionId])
 
   useEffect(() => {
-    setOrganizationName(getOrganizationDisplayName(selectedOrganization?.name, selectedOrganization?.personal))
-  }, [selectedOrganization?.name, selectedOrganization?.personal])
+    setOrganizationName(getOrganizationDisplayName(selectedOrganization?.name))
+  }, [selectedOrganization?.name])
 
   if (!selectedOrganization) {
     return null
   }
 
-  const handleSetDefaultRegion = async (defaultRegionId: string): Promise<boolean> => {
-    try {
-      await setDefaultRegionMutation.mutateAsync({
-        organizationId: selectedOrganization.id,
-        defaultRegionId,
-      })
-      toast.success('Default region set successfully')
-      await refreshOrganizations(selectedOrganization.id)
-      setSetDefaultRegionDialog(false)
-      return true
-    } catch (error) {
-      handleApiError(error, 'Failed to set default region')
-      return false
-    }
-  }
-
-  const handleDeleteOrganization = async () => {
-    try {
-      await deleteOrganizationMutation.mutateAsync({ organizationId: selectedOrganization.id })
-      toast.success('Organization deleted successfully')
-      await refreshOrganizations()
-      return true
-    } catch (error) {
-      handleApiError(error, 'Failed to delete organization')
-      return false
-    }
-  }
-
-  const handleLeaveOrganization = async () => {
-    try {
-      await leaveOrganizationMutation.mutateAsync({ organizationId: selectedOrganization.id })
-      toast.success('Organization left successfully')
-      await refreshOrganizations()
-      return true
-    } catch (error) {
-      handleApiError(error, 'Failed to leave organization')
-      return false
-    }
-  }
-
   const isOwner = authenticatedUserOrganizationMember?.role === OrganizationUserRoleEnum.OWNER
   const trimmedOrganizationName = organizationName.trim()
+  const currentOrganizationDisplayName = getOrganizationDisplayName(selectedOrganization.name)
   const organizationNameChanged =
-    trimmedOrganizationName.length > 0 && trimmedOrganizationName !== selectedOrganization.name
+    trimmedOrganizationName.length > 0 && trimmedOrganizationName !== currentOrganizationDisplayName
 
   const handleRenameOrganization = async () => {
     if (!isOwner || !organizationNameChanged) {
@@ -194,63 +146,17 @@ const OrganizationSettings: React.FC = () => {
             <Field className="grid sm:grid-cols-2 items-center">
               <FieldContent className="flex-1">
                 <FieldLabel htmlFor="organization-default-region">Default Region</FieldLabel>
-                <FieldDescription>The default target for creating sandboxes in this organization.</FieldDescription>
+                <FieldDescription>Used automatically when creating boxes.</FieldDescription>
               </FieldContent>
-              {selectedOrganization.defaultRegionId ? (
-                <Input
-                  id="organization-default-region"
-                  value={getRegionName(selectedOrganization.defaultRegionId) ?? selectedOrganization.defaultRegionId}
-                  readOnly
-                  className="flex-1 uppercase"
-                />
-              ) : isOwner ? (
-                <div className="flex sm:justify-end">
-                  <Button onClick={() => setSetDefaultRegionDialog(true)} variant="secondary">
-                    Set Region
-                  </Button>
-                </div>
-              ) : null}
+              <Input
+                id="organization-default-region"
+                value={defaultRegionLabel}
+                readOnly
+                className="flex-1 uppercase"
+              />
             </Field>
           </CardContent>
         </Card>
-
-        {!selectedOrganization.personal && authenticatedUserOrganizationMember !== null && (
-          <Card className="bg-destructive-background border-destructive-separator">
-            <CardContent>
-              <div className="flex sm:flex-row flex-col justify-between sm:items-center gap-2">
-                <div className="text-sm">
-                  <div className="text-muted-foreground">
-                    <p className="font-semibold text-destructive-foreground">Danger Zone</p>
-                    {isOwner ? (
-                      <>Delete the organization and all associated data.</>
-                    ) : (
-                      <>Remove yourself from the organization.</>
-                    )}
-                  </div>
-                </div>
-                {isOwner ? (
-                  <DeleteOrganizationDialog
-                    organizationName={selectedOrganization.name}
-                    onDeleteOrganization={handleDeleteOrganization}
-                    loading={deleteOrganizationMutation.isPending}
-                  />
-                ) : (
-                  <LeaveOrganizationDialog
-                    onLeaveOrganization={handleLeaveOrganization}
-                    loading={leaveOrganizationMutation.isPending}
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        <SetDefaultRegionDialog
-          open={showSetDefaultRegionDialog}
-          onOpenChange={setSetDefaultRegionDialog}
-          regions={regions}
-          loadingRegions={loadingRegions}
-          onSetDefaultRegion={handleSetDefaultRegion}
-        />
       </PageContent>
     </PageLayout>
   )

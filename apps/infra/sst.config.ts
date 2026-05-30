@@ -407,7 +407,10 @@ export default $config({
       image: { context: "../..", dockerfile: "apps/ssh-gateway/Dockerfile", cache: false },
       loadBalancer: { rules: [{ listen: `${PORTS.SSH_GATEWAY}/tcp`, forward: `${PORTS.SSH_GATEWAY}/tcp` }] },
       environment: {
-        API_URL: api.url,
+        // api-client-go composes paths like "/sandbox/ssh-access/validate" directly.
+        // The Nest control plane is globally mounted under /api, so the gateway
+        // must use the API base path rather than the raw ALB root.
+        API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
         API_KEY: envOr("SSH_GATEWAY_API_KEY", sshGatewayApiKey.result), // NB: not SSH_GATEWAY_API_KEY
         SSH_PRIVATE_KEY: envOr("SSH_PRIVATE_KEY_B64", ""),
         SSH_HOST_KEY: envOr("SSH_HOST_KEY_B64", ""),

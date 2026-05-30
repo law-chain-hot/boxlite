@@ -222,7 +222,7 @@ const RunnerDetailsSheet: React.FC<RunnerDetailsSheetProps> = ({
                   <QuotaLine current={runner.currentDiskUsagePercentage ?? 0} total={100} />
                 </div>
                 <div>
-                  <h4 className="text-muted-foreground text-xs">Active Sandboxes</h4>
+                  <h4 className="text-muted-foreground text-xs">Active Boxes</h4>
                   <p className="mt-1 text-2xl font-semibold">{runner.currentStartedSandboxes ?? 0}</p>
                 </div>
                 <div>

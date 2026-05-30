@@ -5,6 +5,7 @@
  */
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { getSystemEnvironmentDefinition } from '../constants/system-environments'
 import { Snapshot } from '../entities/snapshot.entity'
 
 export class EnvironmentDto {
@@ -16,6 +17,9 @@ export class EnvironmentDto {
 
   @ApiProperty()
   displayName: string
+
+  @ApiPropertyOptional()
+  description?: string
 
   @ApiPropertyOptional()
   imageName?: string
@@ -43,11 +47,13 @@ export class EnvironmentDto {
 
   static fromSnapshot(snapshot: Snapshot): EnvironmentDto {
     const imageName = snapshot.imageName || snapshot.name
+    const systemEnvironment = getSystemEnvironmentDefinition(imageName)
 
     return {
       id: snapshot.id,
       name: snapshot.name,
-      displayName: imageName,
+      displayName: systemEnvironment?.displayName ?? imageName,
+      description: systemEnvironment?.description,
       imageName,
       version: EnvironmentDto.extractVersion(imageName),
       cpu: snapshot.cpu,

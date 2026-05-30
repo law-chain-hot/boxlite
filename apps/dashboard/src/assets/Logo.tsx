@@ -4,18 +4,30 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import bboxLogoDark from './bbox-logo-dark.png'
-import bboxLogoLight from './bbox-logo-light.png'
+import boxliteLogoBlack from './boxlite-black.png'
+import boxliteLogoLight from './boxlite-light.png'
 
-export function Logo() {
+type LogoProps = {
+  className?: string
+  decorative?: boolean
+}
+
+export function Logo({ className = 'h-7 w-7', decorative = false }: LogoProps) {
+  const imageProps = decorative ? { alt: '', 'aria-hidden': true } : { alt: 'BoxLite' }
+
   return (
-    <span className="inline-flex items-center justify-center">
-      <img src={bboxLogoDark} alt="BoxLite" className="block h-7 w-7 dark:hidden" />
-      <img src={bboxLogoLight} alt="BoxLite" className="hidden h-7 w-7 dark:block" />
+    <span className={`inline-flex items-center justify-start overflow-hidden ${className}`}>
+      <img {...imageProps} src={boxliteLogoBlack} className="block h-full w-auto max-w-none dark:hidden" />
+      <img {...imageProps} src={boxliteLogoLight} className="hidden h-full w-auto max-w-none dark:block" />
     </span>
   )
 }
 
 export function LogoText() {
-  return <span className="text-lg font-semibold tracking-tight text-foreground">BoxLite</span>
+  return (
+    <span className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+      <Logo className="h-5 w-5" decorative />
+      <span>BoxLite</span>
+    </span>
+  )
 }

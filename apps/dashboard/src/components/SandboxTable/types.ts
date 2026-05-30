@@ -5,28 +5,24 @@
  */
 
 import { DEFAULT_SANDBOX_SORTING, SandboxFilters, SandboxSorting } from '@/hooks/useSandboxes'
+import { Environment } from '@/hooks/queries/useEnvironmentsQuery'
 import {
   ListSandboxesPaginatedOrderEnum,
   ListSandboxesPaginatedSortEnum,
   ListSandboxesPaginatedStatesEnum,
-  Region,
   Sandbox,
   SandboxState,
-  SnapshotDto,
 } from '@boxlite-ai/api-client'
 import { ColumnFiltersState, SortingState, Table } from '@tanstack/react-table'
+import type { ReactNode } from 'react'
 
 export interface SandboxTableProps {
   data: Sandbox[]
   sandboxIsLoading: Record<string, boolean>
   sandboxStateIsTransitioning: Record<string, boolean>
   loading: boolean
-  snapshots: SnapshotDto[]
-  snapshotsDataIsLoading: boolean
-  snapshotsDataHasMore?: boolean
-  onChangeSnapshotSearchValue: (name?: string) => void
-  regionsData: Region[]
-  regionsDataIsLoading: boolean
+  environments: Environment[]
+  environmentsDataIsLoading: boolean
   getRegionName: (regionId: string) => string | undefined
   handleStart: (id: string) => void
   handleStop: (id: string) => void
@@ -56,6 +52,7 @@ export interface SandboxTableProps {
   onFiltersChange: (filters: SandboxFilters) => void
   handleRecover: (id: string) => void
   handleScreenRecordings: (id: string) => void
+  headerAction?: ReactNode
 }
 
 export interface SandboxTableActionsProps {
@@ -78,14 +75,11 @@ export interface SandboxTableActionsProps {
 
 export interface SandboxTableHeaderProps {
   table: Table<Sandbox>
-  regionOptions: FacetedFilterOption[]
-  regionsDataIsLoading: boolean
-  snapshots: SnapshotDto[]
-  snapshotsDataIsLoading: boolean
-  snapshotsDataHasMore?: boolean
-  onChangeSnapshotSearchValue: (name?: string) => void
+  environments: Environment[]
+  environmentsDataIsLoading: boolean
   onRefresh: () => void
   isRefreshing?: boolean
+  headerAction?: ReactNode
 }
 
 export interface FacetedFilterOption {
@@ -103,6 +97,9 @@ export const convertTableSortingToApiSorting = (sorting: SortingState): SandboxS
   let field: ListSandboxesPaginatedSortEnum
 
   switch (sort.id) {
+    case 'id':
+      field = ListSandboxesPaginatedSortEnum.ID
+      break
     case 'name':
       field = ListSandboxesPaginatedSortEnum.NAME
       break
@@ -224,6 +221,9 @@ export const convertApiSortingToTableSorting = (sorting: SandboxSorting): Sortin
 
   let id: string
   switch (sorting.field) {
+    case ListSandboxesPaginatedSortEnum.ID:
+      id = 'id'
+      break
     case ListSandboxesPaginatedSortEnum.NAME:
       id = 'name'
       break

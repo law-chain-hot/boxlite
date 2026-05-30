@@ -81,6 +81,7 @@ import { SANDBOX_EVENT_CHANNEL } from '../../common/constants/constants'
 import { RequireFlagsEnabled } from '@openfeature/nestjs-sdk'
 import { FeatureFlags } from '../../common/constants/feature-flags'
 import { RegionSandboxAccessGuard } from '../guards/region-sandbox-access.guard'
+import { SystemRole } from '../../user/enums/system-role.enum'
 
 @ApiTags('sandbox')
 @Controller('sandbox')
@@ -282,6 +283,7 @@ export class SandboxController {
   ): Promise<SandboxDto> {
     const organization = authContext.organization
     let sandbox: SandboxDto
+    const canUseLegacySandboxSource = authContext.role === SystemRole.ADMIN
 
     if (createSandboxDto.environmentId) {
       if (createSandboxDto.snapshot) {
@@ -303,8 +305,14 @@ export class SandboxController {
       if (createSandboxDto.snapshot) {
         throw new BadRequestError('Cannot specify a snapshot when using a build info entry')
       }
+      if (!canUseLegacySandboxSource) {
+        throw new BadRequestError('Choose one of the approved environments to create a box')
+      }
       sandbox = await this.sandboxService.createFromBuildInfo(createSandboxDto, organization)
     } else {
+      if (!canUseLegacySandboxSource) {
+        throw new BadRequestError('Choose one of the approved environments to create a box')
+      }
       if (createSandboxDto.cpu || createSandboxDto.gpu || createSandboxDto.memory || createSandboxDto.disk) {
         throw new BadRequestError('Cannot specify Sandbox resources when using a snapshot')
       }

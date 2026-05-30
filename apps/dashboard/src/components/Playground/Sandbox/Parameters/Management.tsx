@@ -38,7 +38,7 @@ const SandboxManagementParameters: React.FC<SandboxManagementParametersProps> = 
   const languageFormData: ParameterFormItem = {
     label: 'Language',
     key: 'language',
-    placeholder: 'Select sandbox language',
+    placeholder: 'Select box language',
   }
 
   // const sandboxSnapshotFormData: ParameterFormItem = {

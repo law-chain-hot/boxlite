@@ -9,6 +9,7 @@ import { SandboxState } from '../../sandbox/enums/sandbox-state.enum'
 import { BoxResponseDto } from '../dto/box-response.dto'
 import { CreateBoxDto } from '../dto/create-box.dto'
 import { CreateSandboxDto } from '../../sandbox/dto/create-sandbox.dto'
+import { SYSTEM_ENVIRONMENTS, getSystemEnvironmentDefinition } from '../../sandbox/constants/system-environments'
 
 export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
   return {
@@ -26,8 +27,8 @@ export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
 
 export function createBoxToCreateSandbox(dto: CreateBoxDto, target?: string): CreateSandboxDto {
   const createDto = new CreateSandboxDto()
+  createDto.environmentId = resolveBoxEnvironmentId(dto.image)
   createDto.name = dto.name
-  createDto.snapshot = dto.image
   createDto.user = dto.user
   createDto.env = dto.env
   createDto.cpu = dto.cpus
@@ -35,6 +36,15 @@ export function createBoxToCreateSandbox(dto: CreateBoxDto, target?: string): Cr
   createDto.disk = dto.disk_size_gb
   createDto.target = target
   return createDto
+}
+
+export function resolveBoxEnvironmentId(image?: string): string | undefined {
+  const imageName = image?.trim()
+  if (!imageName) {
+    return SYSTEM_ENVIRONMENTS[0]?.name
+  }
+
+  return getSystemEnvironmentDefinition(imageName)?.name
 }
 
 function mapState(state: string | SandboxState | undefined): string {

@@ -13,6 +13,7 @@ export interface Environment {
   id: string
   name: string
   displayName: string
+  description?: string
   imageName?: string
   version?: string
   cpu: number

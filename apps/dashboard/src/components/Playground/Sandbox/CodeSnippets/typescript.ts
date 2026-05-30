@@ -65,13 +65,13 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       ...(p.config.createSandboxParamsExist
         ? [
             p.config.useAutoStopInterval
-              ? `${ind}autoStopInterval: ${p.state['createSandboxBaseParams']['autoStopInterval']}, // ${p.state['createSandboxBaseParams']['autoStopInterval'] == 0 ? 'Disables the auto-stop feature' : `Sandbox will be stopped after ${p.state['createSandboxBaseParams']['autoStopInterval']} minute${(p.state['createSandboxBaseParams']['autoStopInterval'] as number) > 1 ? 's' : ''}`}`
+              ? `${ind}autoStopInterval: ${p.state['createSandboxBaseParams']['autoStopInterval']}, // ${p.state['createSandboxBaseParams']['autoStopInterval'] == 0 ? 'Disables the auto-stop feature' : `Box will be stopped after ${p.state['createSandboxBaseParams']['autoStopInterval']} minute${(p.state['createSandboxBaseParams']['autoStopInterval'] as number) > 1 ? 's' : ''}`}`
               : '',
             p.config.useAutoArchiveInterval
-              ? `${ind}autoArchiveInterval: ${p.state['createSandboxBaseParams']['autoArchiveInterval']}, // Auto-archive after a Sandbox has been stopped for ${p.state['createSandboxBaseParams']['autoArchiveInterval'] == 0 ? '30 days' : `${p.state['createSandboxBaseParams']['autoArchiveInterval']} minutes`}`
+              ? `${ind}autoArchiveInterval: ${p.state['createSandboxBaseParams']['autoArchiveInterval']}, // Auto-archive after a Box has been stopped for ${p.state['createSandboxBaseParams']['autoArchiveInterval'] == 0 ? '30 days' : `${p.state['createSandboxBaseParams']['autoArchiveInterval']} minutes`}`
               : '',
             p.config.useAutoDeleteInterval
-              ? `${ind}autoDeleteInterval: ${p.state['createSandboxBaseParams']['autoDeleteInterval']}, // ${p.state['createSandboxBaseParams']['autoDeleteInterval'] == 0 ? 'Sandbox will be deleted immediately after stopping' : p.state['createSandboxBaseParams']['autoDeleteInterval'] == -1 ? 'Auto-delete functionality disabled' : `Auto-delete after a Sandbox has been stopped for ${p.state['createSandboxBaseParams']['autoDeleteInterval']} minutes`}`
+              ? `${ind}autoDeleteInterval: ${p.state['createSandboxBaseParams']['autoDeleteInterval']}, // ${p.state['createSandboxBaseParams']['autoDeleteInterval'] == 0 ? 'Box will be deleted immediately after stopping' : p.state['createSandboxBaseParams']['autoDeleteInterval'] == -1 ? 'Auto-delete functionality disabled' : `Auto-delete after a Box has been stopped for ${p.state['createSandboxBaseParams']['autoDeleteInterval']} minutes`}`
               : '',
           ]
         : []),
@@ -83,8 +83,8 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
 
   getSandboxCreate(p) {
     return [
-      '\t\t// Create the Sandbox instance',
-      `\t\tconst sandbox = await boxlite.create(${p.config.useSandboxCreateParams ? this.getSandboxParams(p) : ''})`,
+      '\t\t// Create the Box instance',
+      `\t\tconst box = await boxlite.create(${p.config.useSandboxCreateParams ? this.getSandboxParams(p) : ''})`,
     ].join('\n')
   },
 
@@ -92,8 +92,8 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
     if (!p.actions.codeToRunExists) return ''
     const ind = '\t\t'
     return [
-      `\n\n${ind}// Run code securely inside the Sandbox`,
-      `${ind}const codeRunResponse = await sandbox.process.codeRun(\``,
+      `\n\n${ind}// Run code securely inside the Box`,
+      `${ind}const codeRunResponse = await box.process.codeRun(\``,
       `${(p.state['codeRunParams'].languageCode ?? '').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}`, // Escape backticks and ${ to prevent breaking the template literal
       `${ind}\`)`,
       `${ind}if (codeRunResponse.exitCode !== 0) {`,
@@ -109,7 +109,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
     const ind = '\t\t'
     return [
       `\n\n${ind}// Execute shell commands`,
-      `${ind}const shellRunResponse = await sandbox.process.executeCommand('${p.state['shellCommandRunParams'].shellCommand}')`,
+      `${ind}const shellRunResponse = await box.process.executeCommand('${p.state['shellCommandRunParams'].shellCommand}')`,
       `${ind}console.log(shellRunResponse.result)`,
     ].join('\n')
   },
@@ -123,7 +123,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       sections.push(
         [
           `${base}// Create folder with specific permissions`,
-          `${base}await sandbox.fs.createFolder("${p.state['createFolderParams'].folderDestinationPath}", "${p.state['createFolderParams'].permissions}")`,
+          `${base}await box.fs.createFolder("${p.state['createFolderParams'].folderDestinationPath}", "${p.state['createFolderParams'].permissions}")`,
         ].join('\n'),
       )
     }
@@ -132,7 +132,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       sections.push(
         [
           `${base}// List files in a directory`,
-          `${base}const files = await sandbox.fs.listFiles("${p.state['listFilesParams'].directoryPath}")`,
+          `${base}const files = await box.fs.listFiles("${p.state['listFilesParams'].directoryPath}")`,
           `${base}files.forEach(file => {`,
           `${ind}console.log(\`Name: \${file.name}\`)`,
           `${ind}console.log(\`Is directory: \${file.isDir}\`)`,
@@ -147,7 +147,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       sections.push(
         [
           `${base}// Delete ${p.actions.useFileSystemDeleteFileRecursive ? 'directory' : 'file'}`,
-          `${base}await sandbox.fs.deleteFile("${p.state['deleteFileParams'].filePath}"${p.actions.useFileSystemDeleteFileRecursive ? ', true' : ''})`,
+          `${base}await box.fs.deleteFile("${p.state['deleteFileParams'].filePath}"${p.actions.useFileSystemDeleteFileRecursive ? ', true' : ''})`,
         ].join('\n'),
       )
     }
@@ -164,7 +164,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       sections.push(
         [
           `${base}// Clone git repository`,
-          `${base}await sandbox.git.clone(`,
+          `${base}await box.git.clone(`,
           `${ind}"${p.state['gitCloneParams'].repositoryURL}",`,
           `${ind}"${p.state['gitCloneParams'].cloneDestinationPath}",`,
           p.actions.useGitCloneBranch ? `${ind}"${p.state['gitCloneParams'].branchToClone}",` : '',
@@ -182,7 +182,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       sections.push(
         [
           `${base}// Get repository status`,
-          `${base}const status = await sandbox.git.status("${p.state['gitStatusParams'].repositoryPath}")`,
+          `${base}const status = await box.git.status("${p.state['gitStatusParams'].repositoryPath}")`,
           `${base}console.log(\`Current branch: \${status.currentBranch}\`)`,
           `${base}console.log(\`Commits ahead: \${status.ahead}\`)`,
           `${base}console.log(\`Commits behind: \${status.behind}\`)`,
@@ -197,7 +197,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       sections.push(
         [
           `${base}// List branches`,
-          `${base}const branchesResponse = await sandbox.git.branches("${p.state['gitBranchesParams'].repositoryPath}")`,
+          `${base}const branchesResponse = await box.git.branches("${p.state['gitBranchesParams'].repositoryPath}")`,
           `${base}branchesResponse.branches.forEach(branch => {`,
           `${ind}console.log(\`Branch: \${branch}\`)`,
           `${base}})`,
@@ -224,7 +224,7 @@ ${client}
 \ttry {
 ${create}${fsOps}${gitOps}${codeRun}${shell}
 \t} catch (error) {
-\t\tconsole.error("Sandbox flow error:", error)
+\t\tconsole.error("Box flow error:", error)
 \t}
 }
 main().catch(console.error)`

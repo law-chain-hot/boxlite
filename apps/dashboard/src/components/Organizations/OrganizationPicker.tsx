@@ -17,9 +17,9 @@ import { useRegisterCommands, type CommandConfig } from '../CommandPalette'
 
 const DEFAULT_ORGANIZATION_DISPLAY_NAME = 'Default Organization'
 
-const getOrganizationDisplayName = (name?: string, personal?: boolean) => {
+const getOrganizationDisplayName = (name?: string) => {
   if (!name) return DEFAULT_ORGANIZATION_DISPLAY_NAME
-  if (personal || name === 'Personal') return DEFAULT_ORGANIZATION_DISPLAY_NAME
+  if (name === 'Personal') return DEFAULT_ORGANIZATION_DISPLAY_NAME
   return name
 }
 
@@ -61,7 +61,7 @@ export const OrganizationPicker: React.FC<OrganizationPickerProps> = ({ variant 
     return null
   }
 
-  const displayName = getOrganizationDisplayName(selectedOrganization.name, selectedOrganization.personal)
+  const displayName = getOrganizationDisplayName(selectedOrganization.name)
   const Wrapper = variant === 'header' ? 'div' : SidebarMenuItem
 
   return (

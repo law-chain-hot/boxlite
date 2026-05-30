@@ -20,6 +20,7 @@ import { RunnerService } from './sandbox/services/runner.service'
 import { RunnerAdapterFactory } from './sandbox/runner-adapter/runnerAdapter'
 import { RegionType } from './region/enums/region-type.enum'
 import { RunnerState } from './sandbox/enums/runner-state.enum'
+import { SYSTEM_ENVIRONMENTS } from './sandbox/constants/system-environments'
 
 export const BOXLITE_ADMIN_USER_ID = 'boxlite-admin'
 
@@ -62,7 +63,7 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
 
     // Default runner init is not awaited because v2 runners depend on the API to be ready
     this.initializeDefaultRunner()
-      .then(() => this.initializeDefaultSnapshot())
+      .then(() => this.initializeSystemEnvironmentSnapshots())
       .catch((error) => {
         this.logger.error('Error initializing default runner', error)
       })
@@ -310,32 +311,19 @@ Admin user created with API key: ${value}
     this.logger.log('Default backup registry initialized successfully')
   }
 
-  private async initializeDefaultSnapshot(): Promise<void> {
+  private async initializeSystemEnvironmentSnapshots(): Promise<void> {
     const adminPersonalOrg = await this.organizationService.findPersonal(BOXLITE_ADMIN_USER_ID)
 
-    try {
-      const existingSnapshot = await this.snapshotService.getSnapshotByName(
-        this.configService.getOrThrow('defaultSnapshot'),
-        adminPersonalOrg.id,
-      )
-      if (existingSnapshot) {
-        return
-      }
-    } catch {
-      this.logger.log('Default snapshot not found, creating...')
+    const defaultSnapshot = this.configService.getOrThrow('defaultSnapshot')
+    if (!SYSTEM_ENVIRONMENTS.some((environment) => environment.name === defaultSnapshot)) {
+      this.logger.warn(`Configured default snapshot ${defaultSnapshot} is not in the MVP system environment list`)
     }
 
-    const defaultSnapshot = this.configService.getOrThrow('defaultSnapshot')
+    for (const environment of SYSTEM_ENVIRONMENTS) {
+      this.logger.log(`Ensuring system environment snapshot: ${environment.name}`)
+      await this.snapshotService.ensureSystemEnvironment(adminPersonalOrg, environment)
+    }
 
-    await this.snapshotService.createFromPull(
-      adminPersonalOrg,
-      {
-        name: defaultSnapshot,
-        imageName: defaultSnapshot,
-      },
-      true,
-    )
-
-    this.logger.log('Default snapshot created successfully')
+    this.logger.log('System environment snapshots initialized successfully')
   }
 }
