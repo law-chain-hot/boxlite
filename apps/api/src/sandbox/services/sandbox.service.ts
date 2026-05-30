@@ -343,7 +343,7 @@ export class SandboxService {
   async createFromSnapshot(
     createSandboxDto: CreateSandboxDto,
     organization: Organization,
-    useSandboxResourceParams_deprecated?: boolean,
+    useResourceOverrides = false,
   ): Promise<SandboxDto> {
     let pendingCpuIncrement: number | undefined
     let pendingMemoryIncrement: number | undefined
@@ -405,18 +405,17 @@ export class SandboxService {
       let disk = snapshot.disk
       let gpu = snapshot.gpu
 
-      // Remove the deprecated behavior in a future release
-      if (useSandboxResourceParams_deprecated) {
-        if (createSandboxDto.cpu) {
+      if (useResourceOverrides) {
+        if (createSandboxDto.cpu !== undefined) {
           cpu = createSandboxDto.cpu
         }
-        if (createSandboxDto.memory) {
+        if (createSandboxDto.memory !== undefined) {
           mem = createSandboxDto.memory
         }
-        if (createSandboxDto.disk) {
+        if (createSandboxDto.disk !== undefined) {
           disk = createSandboxDto.disk
         }
-        if (createSandboxDto.gpu) {
+        if (createSandboxDto.gpu !== undefined) {
           gpu = createSandboxDto.gpu
         }
       }
@@ -578,6 +577,7 @@ export class SandboxService {
         snapshot: environmentSnapshot.id,
       },
       organization,
+      true,
     )
   }
 

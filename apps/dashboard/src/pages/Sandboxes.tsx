@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { OrganizationRolePermissionsEnum } from '@boxlite-ai/api-client'
 import { OrganizationSuspendedError } from '@/api/errors'
-import { OnboardingGuideDialog } from '@/components/OnboardingGuideDialog'
+import { OnboardingGuideDialog, type OnboardingStepId } from '@/components/OnboardingGuideDialog'
 import { PageContent, PageLayout } from '@/components/PageLayout'
 import { CreateSandboxSheet } from '@/components/Sandbox/CreateSandboxSheet'
 import { SandboxTable } from '@/components/SandboxTable'
@@ -43,8 +42,15 @@ import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { createBulkActionToast } from '@/lib/bulk-action-toast'
 import { handleApiError } from '@/lib/error-handling'
 import { getLocalStorageItem, setLocalStorageItem } from '@/lib/local-storage'
+import {
+  mergeOnboardingProgress,
+  ONBOARDING_PROGRESS_EVENT,
+  readOnboardingProgress,
+  type OnboardingProgress,
+} from '@/lib/onboarding-progress'
 import { formatDuration, pluralize } from '@/lib/utils'
 import {
+  OrganizationRolePermissionsEnum,
   OrganizationUserRoleEnum,
   Sandbox,
   SandboxDesiredState,
@@ -52,14 +58,15 @@ import {
   SshAccessDto,
 } from '@boxlite-ai/api-client'
 import { QueryKey, useQueryClient } from '@tanstack/react-query'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
+import { createSearchParams, generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 const Sandboxes: React.FC = () => {
   const { sandboxApi } = useApi()
   const { user } = useAuth()
+  const userId = user?.profile.sub
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { notificationSocket } = useNotificationSocket()
@@ -69,6 +76,30 @@ const Sandboxes: React.FC = () => {
     useSelectedOrganization()
   const [createSandboxOpen, setCreateSandboxOpen] = useState(false)
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
+  const [onboardingInitialStep, setOnboardingInitialStep] = useState<OnboardingStepId | undefined>()
+  const resumeOnboardingAfterCreateRef = useRef(false)
+  const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>(() => readOnboardingProgress(userId))
+
+  const updateOnboardingProgress = useCallback(
+    (progress: OnboardingProgress) => {
+      setOnboardingProgress(mergeOnboardingProgress(userId, progress))
+    },
+    [userId],
+  )
+
+  useEffect(() => {
+    setOnboardingProgress(readOnboardingProgress(userId))
+  }, [userId])
+
+  useEffect(() => {
+    const handleOnboardingProgress = (event: Event) => {
+      const progress = (event as CustomEvent<OnboardingProgress>).detail
+      setOnboardingProgress(progress ?? readOnboardingProgress(userId))
+    }
+
+    window.addEventListener(ONBOARDING_PROGRESS_EVENT, handleOnboardingProgress)
+    return () => window.removeEventListener(ONBOARDING_PROGRESS_EVENT, handleOnboardingProgress)
+  }, [userId])
 
   // Pagination
 
@@ -127,6 +158,27 @@ const Sandboxes: React.FC = () => {
     error: sandboxesDataError,
     refetch: refetchSandboxesData,
   } = useSandboxes(queryKey, queryParams)
+  const hasBoxes = (sandboxesData?.items.length ?? 0) > 0 || (sandboxesData?.total ?? 0) > 0
+  const primarySandboxForOnboarding = useMemo(() => {
+    const items = sandboxesData?.items ?? []
+    const usableItems = items.filter(
+      (sandbox) =>
+        sandbox.state !== SandboxState.DESTROYED &&
+        sandbox.state !== SandboxState.DESTROYING &&
+        sandbox.state !== SandboxState.ARCHIVING &&
+        sandbox.state !== SandboxState.ERROR &&
+        sandbox.state !== SandboxState.BUILD_FAILED &&
+        sandbox.state !== SandboxState.UNKNOWN,
+    )
+
+    return (
+      usableItems.find((sandbox) => sandbox.state === SandboxState.STARTED) ??
+      usableItems.find(
+        (sandbox) => sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED,
+      ) ??
+      usableItems[0]
+    )
+  }, [sandboxesData?.items])
 
   useEffect(() => {
     if (sandboxesDataError) {
@@ -277,6 +329,8 @@ const Sandboxes: React.FC = () => {
 
   useEffect(() => {
     const handleSandboxCreatedEvent = () => {
+      updateOnboardingProgress({ boxCreated: true })
+
       const isFirstPage = paginationParams.pageIndex === 0
       const isDefaultFilters = Object.keys(filters).length === 0
       const isDefaultSorting =
@@ -359,7 +413,14 @@ const Sandboxes: React.FC = () => {
     removeSandboxFromCache,
     sorting.direction,
     sorting.field,
+    updateOnboardingProgress,
   ])
+
+  useEffect(() => {
+    if (hasBoxes && !onboardingProgress.boxCreated) {
+      updateOnboardingProgress({ boxCreated: true })
+    }
+  }, [hasBoxes, onboardingProgress.boxCreated, updateOnboardingProgress])
 
   // Sandbox Action Handlers
 
@@ -772,25 +833,62 @@ const Sandboxes: React.FC = () => {
     }
   }, [searchParams, selectedOrganization, user?.profile.sub])
 
+  const clearOnboardingUrlParam = useCallback(() => {
+    if (searchParams.get('onboarding') !== '1') {
+      return
+    }
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('onboarding')
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
   const closeOnboardingDialog = useCallback(() => {
-    if (user?.profile.sub) {
-      setLocalStorageItem(`${LocalStorageKey.SkipOnboardingPrefix}${user.profile.sub}`, 'true')
+    if (userId) {
+      setLocalStorageItem(`${LocalStorageKey.SkipOnboardingPrefix}${userId}`, 'true')
     }
     setShowOnboardingDialog(false)
-    const highlightEvent = document.createEvent('Event')
-    highlightEvent.initEvent('boxlite:onboarding-entry-highlight', false, false)
-    window.dispatchEvent(highlightEvent)
-    if (searchParams.get('onboarding') === '1') {
-      const nextParams = new URLSearchParams(searchParams)
-      nextParams.delete('onboarding')
-      setSearchParams(nextParams, { replace: true })
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event('boxlite:onboarding-entry-highlight'))
+      clearOnboardingUrlParam()
+    }, 220)
+  }, [clearOnboardingUrlParam, userId])
+
+  const handleCreateSandboxOpenChange = useCallback((isOpen: boolean) => {
+    setCreateSandboxOpen(isOpen)
+    if (!isOpen && resumeOnboardingAfterCreateRef.current) {
+      resumeOnboardingAfterCreateRef.current = false
+      setOnboardingInitialStep('create')
+      setShowOnboardingDialog(true)
     }
-  }, [searchParams, setSearchParams, user?.profile.sub])
+  }, [])
 
   const startFromOnboardingDialog = useCallback(() => {
-    closeOnboardingDialog()
+    resumeOnboardingAfterCreateRef.current = true
+    setShowOnboardingDialog(false)
     setCreateSandboxOpen(true)
-  }, [closeOnboardingDialog])
+    clearOnboardingUrlParam()
+  }, [clearOnboardingUrlParam])
+
+  const openTerminalFromOnboardingDialog = useCallback(() => {
+    if (!primarySandboxForOnboarding) {
+      startFromOnboardingDialog()
+      return
+    }
+
+    updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
+    setShowOnboardingDialog(false)
+    clearOnboardingUrlParam()
+    navigate({
+      pathname: generatePath(RoutePath.BOX_DETAILS, { sandboxId: primarySandboxForOnboarding.id }),
+      search: `${createSearchParams({ tab: 'terminal' })}`,
+    })
+  }, [
+    clearOnboardingUrlParam,
+    navigate,
+    primarySandboxForOnboarding,
+    startFromOnboardingDialog,
+    updateOnboardingProgress,
+  ])
 
   return (
     <PageLayout>
@@ -803,7 +901,13 @@ const Sandboxes: React.FC = () => {
             setShowOnboardingDialog(true)
           }
         }}
-        onStart={startFromOnboardingDialog}
+        onCreateBox={startFromOnboardingDialog}
+        onOpenTerminal={openTerminalFromOnboardingDialog}
+        onProgressChange={updateOnboardingProgress}
+        progress={onboardingProgress}
+        hasBoxes={hasBoxes}
+        initialStep={onboardingInitialStep}
+        onInitialStepConsumed={() => setOnboardingInitialStep(undefined)}
       />
       <PageContent size="full" className="min-h-0 flex-1 gap-3 max-h-[calc(100vh-65px)] pt-4">
         <SandboxTable
@@ -851,7 +955,12 @@ const Sandboxes: React.FC = () => {
             authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES) ? (
               <CreateSandboxSheet
                 open={createSandboxOpen}
-                onOpenChange={setCreateSandboxOpen}
+                onOpenChange={handleCreateSandboxOpenChange}
+                onCreated={() => {
+                  resumeOnboardingAfterCreateRef.current = false
+                  updateOnboardingProgress({ boxCreated: true })
+                  setShowOnboardingDialog(false)
+                }}
                 triggerClassName="w-full sm:w-auto"
               />
             ) : null

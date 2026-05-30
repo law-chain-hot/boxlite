@@ -11,6 +11,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import React from 'react'
 import { EllipsisWithTooltip } from '../EllipsisWithTooltip'
+import { ResourceChip } from '../ResourceChip'
 import { Checkbox } from '../ui/checkbox'
 import { SandboxState as SandboxStateComponent } from './SandboxState'
 import { SandboxTableActions } from './SandboxTableActions'
@@ -214,7 +215,7 @@ export function getColumns({
     },
     {
       id: 'resources',
-      size: 190,
+      size: 230,
       enableSorting: false,
       enableHiding: false,
       header: () => {
@@ -222,18 +223,10 @@ export function getColumns({
       },
       cell: ({ row }) => {
         return (
-          <div className="flex items-center gap-2 w-full truncate">
-            <div className="whitespace-nowrap">
-              {row.original.cpu} <span className="text-muted-foreground">vCPU</span>
-            </div>
-            <div className="w-[1px] h-6 bg-muted-foreground/20 rounded-full inline-block"></div>
-            <div className="whitespace-nowrap">
-              {row.original.memory} <span className="text-muted-foreground">GiB</span>
-            </div>
-            <div className="w-[1px] h-6 bg-muted-foreground/20 rounded-full inline-block"></div>
-            <div className="whitespace-nowrap">
-              {row.original.disk} <span className="text-muted-foreground">GiB</span>
-            </div>
+          <div className="flex w-full items-center gap-1.5 truncate">
+            <ResourceChip resource="cpu" value={row.original.cpu} />
+            <ResourceChip resource="memory" value={row.original.memory} />
+            <ResourceChip resource="disk" value={row.original.disk} />
           </div>
         )
       },

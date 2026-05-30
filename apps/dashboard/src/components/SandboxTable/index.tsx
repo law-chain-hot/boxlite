@@ -6,7 +6,7 @@
 
 import { RoutePath } from '@/enums/RoutePath'
 import { useCommandPaletteAnalytics } from '@/hooks/useCommandPaletteAnalytics'
-import { useIsCompactScreen } from '@/hooks/use-mobile'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { getEnvironmentDisplayName } from '@/lib/environment-display'
 import { cn } from '@/lib/utils'
@@ -25,6 +25,7 @@ import { type ReactNode, useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCommandPaletteActions } from '../CommandPalette'
 import { Pagination } from '../Pagination'
+import { ResourceChip } from '../ResourceChip'
 import { SelectionToast } from '../SelectionToast'
 import { TableEmptyState } from '../TableEmptyState'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
@@ -39,9 +40,9 @@ import { useSandboxTable } from './useSandboxTable'
 
 function CompactSandboxMeta({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="min-w-0 space-y-1 md:flex md:items-baseline md:gap-2 md:space-y-0">
+    <div className="min-w-0 space-y-1">
       <div className="shrink-0 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
-      <div className="min-w-0 truncate text-foreground">{children}</div>
+      <div className="min-w-0 text-foreground">{children}</div>
     </div>
   )
 }
@@ -82,8 +83,7 @@ export function SandboxTable({
   headerAction,
 }: SandboxTableProps) {
   const navigate = useNavigate()
-  const isCompactScreen = useIsCompactScreen()
-  const useCompactList = isCompactScreen
+  const useCompactList = useIsMobile()
   const { authenticatedUserHasPermission } = useSelectedOrganization()
   const writePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES)
   const deletePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.DELETE_SANDBOXES)
@@ -256,7 +256,7 @@ export function SandboxTable({
                         <div className="truncate text-xs text-muted-foreground">{sandbox.id}</div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs md:grid-cols-4 md:gap-x-4">
+                      <div className="grid grid-cols-1 gap-x-5 gap-y-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
                         <CompactSandboxMeta label="Base image">
                           {getEnvironmentDisplayName(sandbox.snapshot)}
                         </CompactSandboxMeta>
@@ -264,7 +264,11 @@ export function SandboxTable({
                           {getRegionName(sandbox.target) ?? sandbox.target}
                         </CompactSandboxMeta>
                         <CompactSandboxMeta label="Resources">
-                          {sandbox.cpu} vCPU • {sandbox.memory} GiB • {sandbox.disk} GiB
+                          <div className="flex flex-wrap gap-1">
+                            <ResourceChip resource="cpu" value={sandbox.cpu} />
+                            <ResourceChip resource="memory" value={sandbox.memory} />
+                            <ResourceChip resource="disk" value={sandbox.disk} />
+                          </div>
                         </CompactSandboxMeta>
                         <CompactSandboxMeta label="Last">{lastEvent.relativeTimeString}</CompactSandboxMeta>
                       </div>
@@ -308,81 +312,83 @@ export function SandboxTable({
           </div>
         )
       ) : (
-        <Table className="border-separate border-spacing-0" style={{ tableLayout: 'fixed', width: '100%' }}>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      data-state={header.column.getCanSort() && 'sortable'}
-                      className={cn(
-                        'sticky top-0 z-[3] border-b border-border',
-                        header.column.getCanSort() ? 'hover:bg-muted' : '',
-                      )}
-                      style={{
-                        width: `${header.column.getSize()}px`,
-                      }}
-                    >
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={table.getAllColumns().length} className="h-10 text-center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className={cn('group/table-row transition-all', {
-                    'opacity-80 pointer-events-none':
-                      sandboxIsLoading[row.original.id] || row.original.state === SandboxState.DESTROYED,
-                    'bg-muted animate-pulse': sandboxStateIsTransitioning[row.original.id],
-                    'cursor-pointer': onRowClick,
+        <div className="overflow-x-auto rounded-sm border border-border bg-card">
+          <Table className="min-w-[1320px] border-separate border-spacing-0" style={{ tableLayout: 'fixed' }}>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        data-state={header.column.getCanSort() && 'sortable'}
+                        className={cn(
+                          'sticky top-0 z-[3] border-b border-border bg-card',
+                          header.column.getCanSort() ? 'hover:bg-muted' : '',
+                        )}
+                        style={{
+                          width: `${header.column.getSize()}px`,
+                        }}
+                      >
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    )
                   })}
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      onClick={(e) => {
-                        if (cell.column.id === 'select' || cell.column.id === 'actions') {
-                          e.stopPropagation()
-                        }
-                      }}
-                      className={cn('border-b border-border', {
-                        'group-hover/table-row:underline': cell.column.id === 'name',
-                      })}
-                      style={{
-                        width: `${cell.column.getSize()}px`,
-                      }}
-                      sticky={cell.column.id === 'actions' ? 'right' : undefined}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableEmptyState
-                colSpan={table.getAllColumns().length}
-                message="No Boxes yet."
-                icon={<Container className="w-8 h-8" />}
-                description={emptyStateDescription}
-              />
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={table.getAllColumns().length} className="h-10 text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className={cn('group/table-row transition-all', {
+                      'opacity-80 pointer-events-none':
+                        sandboxIsLoading[row.original.id] || row.original.state === SandboxState.DESTROYED,
+                      'bg-muted animate-pulse': sandboxStateIsTransitioning[row.original.id],
+                      'cursor-pointer': onRowClick,
+                    })}
+                    onClick={() => onRowClick?.(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        onClick={(e) => {
+                          if (cell.column.id === 'select' || cell.column.id === 'actions') {
+                            e.stopPropagation()
+                          }
+                        }}
+                        className={cn('border-b border-border', {
+                          'group-hover/table-row:underline': cell.column.id === 'name',
+                        })}
+                        style={{
+                          width: `${cell.column.getSize()}px`,
+                        }}
+                        sticky={cell.column.id === 'actions' ? 'right' : undefined}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableEmptyState
+                  colSpan={table.getAllColumns().length}
+                  message="No Boxes yet."
+                  icon={<Container className="w-8 h-8" />}
+                  description={emptyStateDescription}
+                />
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       <div className="flex items-center justify-end relative">

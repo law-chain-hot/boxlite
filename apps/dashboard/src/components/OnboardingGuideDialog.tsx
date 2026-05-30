@@ -4,20 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
+import goIcon from '@/assets/go.svg'
 import pythonIcon from '@/assets/python.svg'
+import rustIcon from '@/assets/rust.svg'
 import typescriptIcon from '@/assets/typescript.svg'
 import CodeBlock from '@/components/CodeBlock'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CopyableValue } from '@/components/ui/copyable-value'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BOXLITE_DOCS_URL } from '@/constants/ExternalLinks'
@@ -26,12 +21,15 @@ import { useApi } from '@/hooks/useApi'
 import { useConfig } from '@/hooks/useConfig'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { handleApiError } from '@/lib/error-handling'
+import { getOnboardingCoreProgress, type OnboardingProgress } from '@/lib/onboarding-progress'
 import { cn, getMaskedToken } from '@/lib/utils'
-import { ApiKeyResponse, CreateApiKeyPermissionsEnum, OrganizationRolePermissionsEnum } from '@boxlite-ai/api-client'
 import {
-  ArrowLeft,
+  CreateApiKeyPermissionsEnum,
+  OrganizationRolePermissionsEnum,
+  type ApiKeyResponse,
+} from '@boxlite-ai/api-client'
+import {
   ArrowRight,
-  Box,
   Check,
   CheckCircle2,
   ClipboardIcon,
@@ -39,89 +37,93 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  ListChecks,
+  Layers3,
   Loader2,
-  LockKeyhole,
-  MapPin,
-  Package,
   Play,
   Plus,
+  Power,
   Terminal,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
 interface OnboardingGuideDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onStart: () => void
+  onCreateBox: () => void
+  onOpenTerminal: () => void
+  onProgressChange: (progress: OnboardingProgress) => void
+  progress: OnboardingProgress
+  hasBoxes: boolean
+  initialStep?: OnboardingStepId
+  onInitialStepConsumed?: () => void
+}
+
+type OnboardingLanguage = 'python' | 'typescript' | 'go' | 'rust' | 'cli'
+export type OnboardingStepId = 'create' | 'terminal' | 'sdk' | 'manage'
+type StepStatus = 'done' | 'active' | 'optional' | 'locked'
+
+interface OnboardingLanguageOption {
+  value: OnboardingLanguage
+  label: string
+  iconSrc?: string
+  Icon?: LucideIcon
 }
 
 interface OnboardingStep {
+  id: OnboardingStepId
+  number: number
   title: string
   description: string
-  icon: LucideIcon
+  Icon: LucideIcon
 }
 
-type OnboardingLanguage = 'python' | 'typescript' | 'go' | 'cli'
+const terminalExample = `$ echo "hello from boxlite"
+hello from boxlite
+
+$ uname -a
+Linux my-box 6.x`
+
+const stepOrder: OnboardingStepId[] = ['create', 'terminal', 'sdk', 'manage']
 
 const onboardingSteps: OnboardingStep[] = [
   {
-    title: 'Create a Box',
-    description: 'Name it, choose a Linux base image, and start from safe defaults.',
-    icon: Play,
+    id: 'create',
+    number: 1,
+    title: 'Create Box',
+    description: 'Start from a shared Linux base image.',
+    Icon: Play,
   },
   {
-    title: 'Use the terminal',
-    description: 'Open the Box detail page and run commands in the browser.',
-    icon: Terminal,
+    id: 'terminal',
+    number: 2,
+    title: 'Use Terminal',
+    description: 'Run the first command in the browser.',
+    Icon: Terminal,
   },
   {
-    title: 'Install the SDK',
-    description: 'Use Python, TypeScript, Go, or the CLI from the original onboarding path.',
-    icon: Package,
+    id: 'sdk',
+    number: 3,
+    title: 'Connect with SDK',
+    description: 'Optional API and code path.',
+    Icon: Code2,
   },
   {
-    title: 'Create an API Key',
-    description: 'Generate a scoped key for creating and cleaning up Boxes from code.',
-    icon: KeyRound,
-  },
-  {
-    title: 'Run the example',
-    description: 'Create a Box, execute a command, and remove it when finished.',
-    icon: Box,
+    id: 'manage',
+    number: 4,
+    title: 'Manage & Pricing',
+    description: 'Lifecycle controls and trial billing.',
+    Icon: Power,
   },
 ]
 
-const defaultSettings = [
-  {
-    label: 'Linux base image',
-    value: 'Ubuntu 24.04 LTS by default',
-    icon: Box,
-  },
-  {
-    label: 'Region',
-    value: 'Default Organization region',
-    icon: MapPin,
-  },
-  {
-    label: 'HTTP preview',
-    value: 'Private by default',
-    icon: LockKeyhole,
-  },
-]
-
-const languageOptions: {
-  value: OnboardingLanguage
-  label: string
-  icon?: string
-  Icon?: LucideIcon
-}[] = [
-  { value: 'python', label: 'Python', icon: pythonIcon },
-  { value: 'typescript', label: 'TypeScript', icon: typescriptIcon },
-  { value: 'go', label: 'Go', Icon: Code2 },
+const languageOptions: OnboardingLanguageOption[] = [
+  { value: 'python', label: 'Python', iconSrc: pythonIcon },
+  { value: 'typescript', label: 'TypeScript', iconSrc: typescriptIcon },
+  { value: 'go', label: 'Go', iconSrc: goIcon },
+  { value: 'rust', label: 'Rust', iconSrc: rustIcon },
   { value: 'cli', label: 'CLI', Icon: Terminal },
 ]
 
@@ -135,28 +137,18 @@ const codeExamples: Record<
     codeLanguage: 'typescript',
     example: `import { JsBoxlite, BoxliteRestOptions, ApiKeyCredential } from '@boxlite-ai/boxlite'
 
-// Connect to BoxLite Cloud with your API key
 const rt = JsBoxlite.rest(new BoxliteRestOptions({
   url: 'your-api-url',
   credential: new ApiKeyCredential('your-api-key'),
 }))
 
-// Or discover from the environment (reads BOXLITE_API_KEY):
-// const rt = JsBoxlite.rest(new BoxliteRestOptions({
-//   url: 'your-api-url',
-//   credential: ApiKeyCredential.fromEnv() ?? undefined,
-// }))
-
-// Create a Box from an approved Linux base image
 const box = await rt.create({ image: 'ubuntu:24.04' }, 'my-box')
 await box.start()
 
-// Run a command securely inside the Box
 const exec = await box.exec('echo', ['Hello World!'])
 const result = await exec.wait()
 console.log('Exit code:', result.exitCode)
 
-// Cleanup
 await rt.remove(box.id, true)`,
   },
   python: {
@@ -167,26 +159,18 @@ await rt.remove(box.id, true)`,
 from boxlite import Boxlite, BoxliteRestOptions, BoxOptions, ApiKeyCredential
 
 async def main():
-    # Connect to BoxLite Cloud with your API key
     rt = Boxlite.rest(BoxliteRestOptions(
         url="your-api-url",
         credential=ApiKeyCredential("your-api-key"),
     ))
 
-    # Or discover from the environment
-    # (reads BOXLITE_REST_URL + BOXLITE_API_KEY):
-    # rt = Boxlite.rest(BoxliteRestOptions.from_env())
-
-    # Create a Box from an approved Linux base image
     box = await rt.create(BoxOptions(image="ubuntu:24.04"), name="my-box")
     await box.start()
 
-    # Run a command securely inside the Box
     execution = await box.exec("echo", args=["Hello World!"])
     result = await execution.wait()
     print(f"Exit code: {result.exit_code}")
 
-    # Cleanup
     await rt.remove(box.id, force=True)
 
 asyncio.run(main())`,
@@ -208,8 +192,6 @@ import (
 
 func main() {
     ctx := context.Background()
-
-    // Connect to BoxLite Cloud with your API key
     rt, err := boxlite.NewRest(boxlite.BoxliteRestOptions{
         URL:        "your-api-url",
         Credential: boxlite.NewApiKeyCredential("your-api-key"),
@@ -219,17 +201,14 @@ func main() {
     }
     defer rt.Close()
 
-    // Create a Box from an approved Linux base image
     box, err := rt.Create(ctx, "ubuntu:24.04", boxlite.WithName("my-box"))
     if err != nil {
         log.Fatal(err)
     }
-
     if err := box.Start(ctx); err != nil {
         log.Fatal(err)
     }
 
-    // Run a command securely inside the Box
     result, err := box.Exec(ctx, "echo", "Hello World!")
     if err != nil {
         log.Fatal(err)
@@ -237,23 +216,49 @@ func main() {
     fmt.Println("Exit code:", result.ExitCode)
     fmt.Print(result.Stdout)
 
-    // Cleanup
     if err := rt.ForceRemove(ctx, box.ID()); err != nil {
         log.Fatal(err)
     }
+}`,
+  },
+  rust: {
+    install: `cargo add boxlite --features rest
+cargo add tokio --features macros,rt-multi-thread`,
+    run: 'cargo run',
+    codeLanguage: 'rust',
+    example: `use boxlite::{BoxCommand, BoxOptions, BoxliteRestOptions, BoxliteRuntime, RootfsSpec};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let rt = BoxliteRuntime::rest(
+        BoxliteRestOptions::new("your-api-url").with_api_key("your-api-key"),
+    )?;
+
+    let options = BoxOptions {
+        rootfs: RootfsSpec::Image("ubuntu:24.04".into()),
+        ..Default::default()
+    };
+    let box_handle = rt.create(options, Some("my-box".into())).await?;
+    box_handle.start().await?;
+
+    let mut exec = box_handle
+        .exec(BoxCommand::new("echo").arg("Hello World!"))
+        .await?;
+    let result = exec.wait().await?;
+    println!("Exit code: {}", result.exit_code);
+
+    rt.remove(&box_handle.id().to_string(), true).await?;
+    Ok(())
 }`,
   },
   cli: {
     install: 'curl -fsSL https://sh.boxlite.ai | sh',
     run: 'boxlite run --rm ubuntu:24.04 echo "Hello World!"',
     codeLanguage: 'bash',
-    example: `# Authenticate once with the API key created in the dashboard
-echo "your-api-key" | boxlite auth login --api-key-stdin --url "your-api-url"
+    example: `echo "your-api-key" | boxlite auth login --api-key-stdin --url "your-api-url"
 
-# Create a Box from an approved Linux base image, run a command, and clean up
 boxlite run --rm ubuntu:24.04 echo "Hello World!"
 
-# Or keep the Box around for later
 boxlite create --name my-box ubuntu:24.04
 boxlite start my-box
 boxlite exec my-box echo "Hello World!"
@@ -261,20 +266,87 @@ boxlite rm -f my-box`,
   },
 }
 
-export function OnboardingGuideDialog({ open, onOpenChange, onStart }: OnboardingGuideDialogProps) {
+function LanguageOptionIcon({ option }: { option: OnboardingLanguageOption }) {
+  return (
+    <span className="flex size-5 shrink-0 items-center justify-center">
+      {option.iconSrc ? (
+        <img src={option.iconSrc} alt="" className="size-3.5" />
+      ) : option.Icon ? (
+        <option.Icon className="size-3.5" strokeWidth={1.75} />
+      ) : null}
+    </span>
+  )
+}
+
+function getSuggestedStep(progress: OnboardingProgress, hasBoxes: boolean): OnboardingStepId {
+  if (!progress.boxCreated && !hasBoxes) return 'create'
+  if (!progress.terminalOpened) return 'terminal'
+  if (!progress.lifecycleSeen) return 'sdk'
+  return 'manage'
+}
+
+function getStepStatus(
+  stepId: OnboardingStepId,
+  activeStep: OnboardingStepId,
+  progress: OnboardingProgress,
+  hasBoxes: boolean,
+): StepStatus {
+  const boxReady = Boolean(progress.boxCreated || hasBoxes)
+
+  if (stepId === 'create') return boxReady ? 'done' : activeStep === stepId ? 'active' : 'locked'
+  if (stepId === 'terminal') {
+    if (progress.terminalOpened) return 'done'
+    if (!boxReady) return 'locked'
+    return activeStep === stepId ? 'active' : 'optional'
+  }
+  if (stepId === 'sdk') return activeStep === stepId ? 'active' : 'optional'
+  if (progress.lifecycleSeen) return 'done'
+  if (!progress.terminalOpened) return 'locked'
+  return activeStep === stepId ? 'active' : 'optional'
+}
+
+function StepStatusBadge({ status }: { status: StepStatus }) {
+  if (status === 'done') return <Badge variant="success">Done</Badge>
+  if (status === 'active') return <Badge variant="secondary">Current</Badge>
+  if (status === 'optional') return <Badge variant="outline">Optional</Badge>
+  return <Badge variant="outline">Locked</Badge>
+}
+
+function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm">
+      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <span className="shrink-0 font-medium">{label}</span>
+      <span className="min-w-0 truncate text-muted-foreground">{value}</span>
+    </div>
+  )
+}
+
+export function OnboardingGuideDialog({
+  open,
+  onOpenChange,
+  onCreateBox,
+  onOpenTerminal,
+  onProgressChange,
+  progress,
+  hasBoxes,
+  initialStep,
+  onInitialStepConsumed,
+}: OnboardingGuideDialogProps) {
   const { apiKeyApi } = useApi()
   const { apiUrl } = useConfig()
   const { selectedOrganization, authenticatedUserHasPermission } = useSelectedOrganization()
-  const [activeStep, setActiveStep] = useState(0)
+  const [activeStep, setActiveStep] = useState<OnboardingStepId>('create')
   const [language, setLanguage] = useState<OnboardingLanguage>('python')
   const [apiKeyName, setApiKeyName] = useState('')
   const [createdApiKey, setCreatedApiKey] = useState<ApiKeyResponse | null>(null)
   const [isApiKeyRevealed, setIsApiKeyRevealed] = useState(false)
   const [isApiKeyCopied, setIsApiKeyCopied] = useState(false)
   const [isLoadingCreateKey, setIsLoadingCreateKey] = useState(false)
-  const isLastStep = activeStep === onboardingSteps.length - 1
-
+  const wasOpenRef = useRef(false)
+  const coreProgress = getOnboardingCoreProgress(progress)
   const canCreateApiKey = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES)
+
   const apiKeyPermissions = useMemo(() => {
     if (!canCreateApiKey) return []
 
@@ -287,16 +359,30 @@ export function OnboardingGuideDialog({ open, onOpenChange, onStart }: Onboardin
   }, [authenticatedUserHasPermission, canCreateApiKey])
 
   const activeExample = codeExamples[language]
+  const activeStepIndex = stepOrder.indexOf(activeStep)
+  const activeStepConfig = onboardingSteps.find((step) => step.id === activeStep) ?? onboardingSteps[0]
   const renderedExample = useMemo(() => {
     const apiKey = createdApiKey && isApiKeyRevealed ? createdApiKey.value : 'your-api-key'
     return activeExample.example.replaceAll('your-api-url', apiUrl).replaceAll('your-api-key', apiKey)
   }, [activeExample.example, apiUrl, createdApiKey, isApiKeyRevealed])
 
   useEffect(() => {
-    if (open) {
-      setActiveStep(0)
+    if (open && !wasOpenRef.current) {
+      setActiveStep(initialStep ?? getSuggestedStep(progress, hasBoxes))
+      if (initialStep) {
+        onInitialStepConsumed?.()
+      }
     }
-  }, [open])
+    wasOpenRef.current = open
+  }, [
+    hasBoxes,
+    initialStep,
+    onInitialStepConsumed,
+    open,
+    progress.boxCreated,
+    progress.lifecycleSeen,
+    progress.terminalOpened,
+  ])
 
   useEffect(() => {
     setCreatedApiKey(null)
@@ -304,14 +390,6 @@ export function OnboardingGuideDialog({ open, onOpenChange, onStart }: Onboardin
     setIsApiKeyRevealed(false)
     setIsApiKeyCopied(false)
   }, [selectedOrganization?.id])
-
-  const goNext = () => setActiveStep((step) => Math.min(step + 1, onboardingSteps.length - 1))
-  const goBack = () => setActiveStep((step) => Math.max(step - 1, 0))
-
-  const handleStartCreate = () => {
-    onOpenChange(false)
-    window.setTimeout(onStart, 120)
-  }
 
   const handleCreateApiKey = async () => {
     if (!selectedOrganization || !canCreateApiKey || apiKeyPermissions.length === 0) {
@@ -331,6 +409,7 @@ export function OnboardingGuideDialog({ open, onOpenChange, onStart }: Onboardin
       ).data
       setCreatedApiKey(key)
       setApiKeyName('')
+      onProgressChange({ developerOpened: true })
       toast.success('API key created successfully')
     } catch (error) {
       handleApiError(error, 'Failed to create API key')
@@ -349,341 +428,371 @@ export function OnboardingGuideDialog({ open, onOpenChange, onStart }: Onboardin
     }
   }
 
+  const goToPreviousStep = () => {
+    if (activeStepIndex > 0) {
+      setActiveStep(stepOrder[activeStepIndex - 1])
+    }
+  }
+
+  const goToNextStep = () => {
+    if (activeStepIndex < stepOrder.length - 1) {
+      setActiveStep(stepOrder[activeStepIndex + 1])
+    }
+  }
+
+  const renderCreateStep = () => (
+    <div className="grid gap-5">
+      <div>
+        <h3 className="text-xl font-semibold">Create a Linux Box</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          For MVP, users only need a name. BoxLite keeps the base image, region, networking, and lifecycle defaults
+          controlled unless they intentionally open advanced options.
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <InfoRow icon={Layers3} label="Image" value="Ubuntu 24.04 LTS" />
+        <InfoRow icon={Power} label="HTTP" value="Private preview" />
+        <InfoRow icon={Play} label="Region" value="Default region" />
+      </div>
+
+      <div className="rounded-md border bg-muted/20 p-4">
+        <div className="text-sm font-medium">Start here</div>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+          Create Box opens the side panel. If you cancel, this guide resumes here. If you create a Box, the next step is
+          the terminal.
+        </p>
+        <Button className="mt-4" onClick={onCreateBox}>
+          <Plus className="size-4" />
+          Create Box
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderTerminalStep = () => (
+    <div className="grid gap-5">
+      <div>
+        <h3 className="text-xl font-semibold">Use the Box</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          The fastest activation moment is seeing a command run in the browser terminal.
+        </p>
+      </div>
+
+      <CodeBlock code={terminalExample} language="bash" showCopy codeAreaClassName="whitespace-pre-wrap" />
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button onClick={onOpenTerminal} disabled={!hasBoxes && !progress.boxCreated}>
+          Open Terminal
+          <ArrowRight className="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => onProgressChange({ terminalOpened: true })}
+          disabled={!hasBoxes && !progress.boxCreated}
+        >
+          I ran a command
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderSdkStep = () => (
+    <div className="grid min-w-0 gap-5">
+      <div className="grid gap-4">
+        <div>
+          <h3 className="text-xl font-semibold">Connect with SDK</h3>
+          <Badge variant="outline" className="mt-3">
+            Optional
+          </Badge>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Use this path when you want to create, run, and clean up Boxes from code.
+          </p>
+        </div>
+
+        <Tabs
+          value={language}
+          onValueChange={(value) => setLanguage(value as OnboardingLanguage)}
+          className="min-w-0 items-end"
+        >
+          <TabsList className="ml-auto flex h-auto w-fit max-w-full flex-wrap justify-end gap-1 rounded-md border bg-muted/40 p-1">
+            {languageOptions.map((option) => (
+              <TabsTrigger
+                key={option.value}
+                value={option.value}
+                className="h-9 gap-2 rounded-sm border border-transparent px-3 text-muted-foreground transition-all hover:bg-muted/70 hover:text-foreground data-[state=active]:bg-muted-foreground/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm dark:data-[state=active]:bg-muted-foreground/30"
+              >
+                <LanguageOptionIcon option={option} />
+                <span className="whitespace-nowrap">{option.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="grid min-w-0 gap-4 rounded-md border bg-muted/15 p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <KeyRound className="size-4 text-muted-foreground" />
+          API key
+        </div>
+        {createdApiKey ? (
+          <CopyableValue
+            className="p-4"
+            displayValue={isApiKeyRevealed ? createdApiKey.value : getMaskedToken(createdApiKey.value)}
+            actionsClassName="gap-3"
+            actions={
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={isApiKeyRevealed ? 'Hide API key' : 'Reveal API key'}
+                  className="h-6 w-6 text-current hover:bg-green-200/70 hover:text-current dark:hover:bg-green-800/70"
+                  onClick={() => setIsApiKeyRevealed(!isApiKeyRevealed)}
+                >
+                  {isApiKeyRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+                {isApiKeyCopied ? (
+                  <Check className="h-4 w-4 shrink-0" />
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Copy API key"
+                    className="h-6 w-6 text-current hover:bg-green-200/70 hover:text-current dark:hover:bg-green-800/70"
+                    onClick={() => copyToClipboard(createdApiKey.value)}
+                  >
+                    <ClipboardIcon className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            }
+          />
+        ) : canCreateApiKey ? (
+          <form
+            className="grid gap-3"
+            onSubmit={async (event) => {
+              event.preventDefault()
+              await handleCreateApiKey()
+            }}
+          >
+            <label htmlFor="onboarding-key-name" className="text-sm font-medium">
+              API Key Name
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="onboarding-key-name"
+                type="text"
+                value={apiKeyName}
+                onChange={(event) => setApiKeyName(event.target.value)}
+                required
+                placeholder="e.g. Onboarding"
+                disabled={isLoadingCreateKey}
+                className="flex-1"
+              />
+              <Button type="submit" disabled={isLoadingCreateKey}>
+                {isLoadingCreateKey ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                Create API Key
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
+            API key creation is not available for this user.
+          </div>
+        )}
+      </div>
+
+      <div className="grid min-w-0 gap-4">
+        <div>
+          <div className="mb-2 text-sm font-medium">Install</div>
+          <CodeBlock code={activeExample.install} language="bash" showCopy />
+        </div>
+        <div>
+          <div className="mb-2 text-sm font-medium">Example</div>
+          <CodeBlock
+            code={renderedExample}
+            language={activeExample.codeLanguage}
+            showCopy
+            codeAreaClassName="max-h-[280px] text-xs"
+          />
+        </div>
+        <div>
+          <div className="mb-2 text-sm font-medium">Run</div>
+          <CodeBlock code={activeExample.run} language="bash" showCopy />
+        </div>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        More examples are available in{' '}
+        <a href={BOXLITE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary">
+          Docs
+        </a>
+        .
+      </div>
+    </div>
+  )
+
+  const renderManageStep = () => (
+    <div className="grid gap-5">
+      <div>
+        <h3 className="text-xl font-semibold">Manage lifecycle</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Users should understand where Start, Stop, and Delete live before the guide is complete.
+        </p>
+      </div>
+
+      <div className="rounded-md border bg-muted/20 p-4">
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Badge variant="outline">Start</Badge>
+          <Badge variant="outline">Stop</Badge>
+          <Badge variant="outline">Delete</Badge>
+        </div>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          These controls appear on the Boxes table and the Box detail page. Stop pauses runtime usage; Delete removes
+          the Box.
+        </p>
+        <Button
+          className="mt-4"
+          variant="outline"
+          onClick={() => onProgressChange({ lifecycleSeen: true })}
+          disabled={!progress.terminalOpened}
+        >
+          I understand lifecycle
+        </Button>
+      </div>
+
+      <div className="rounded-md border bg-background p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="text-sm font-semibold">Pricing</div>
+          <Badge variant="secondary">Free trial now</Badge>
+        </div>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          BoxLite is free to try during the MVP. Pricing is coming soon and will be announced before billing starts.
+        </p>
+        <Button className="mt-4" variant="outline" asChild>
+          <Link to={RoutePath.PRICING}>
+            View Pricing
+            <ArrowRight className="size-4" />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderActiveStep = () => {
+    if (activeStep === 'create') return renderCreateStep()
+    if (activeStep === 'terminal') return renderTerminalStep()
+    if (activeStep === 'sdk') return renderSdkStep()
+    return renderManageStep()
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(840px,calc(100vh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-[980px]">
-        <DialogHeader className="shrink-0 border-b border-border px-5 py-4 pr-12 sm:px-6 sm:py-5 sm:pr-14">
-          <div className="grid gap-4">
+      <DialogContent className="flex h-[calc(100dvh-0.5rem)] max-h-[calc(100dvh-0.5rem)] w-[calc(100vw-0.5rem)] max-w-[980px] flex-col gap-0 overflow-hidden rounded-md p-0 duration-300 data-[state=closed]:duration-200 sm:h-[min(820px,calc(100vh-1rem))] sm:max-h-[calc(100vh-1rem)] sm:max-w-[980px] sm:rounded-lg">
+        <DialogHeader className="shrink-0 border-b border-border px-4 py-4 pr-11 sm:px-6 sm:py-5 sm:pr-14">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md border bg-muted text-foreground">
-                <ListChecks className="size-4" />
-              </div>
-              <div className="grid gap-1">
-                <DialogTitle className="text-2xl">Get Started</DialogTitle>
-                <DialogDescription>
-                  Create your first Box in the dashboard, then use the SDK or CLI path from the original onboarding when
-                  you are ready to consume it from code.
-                </DialogDescription>
-              </div>
+              <Badge variant="secondary">
+                {coreProgress.completed} of {coreProgress.total} core tasks
+              </Badge>
+              <DialogTitle className="mt-3 text-2xl">Get Started</DialogTitle>
+              <DialogDescription className="mt-2 max-w-2xl">
+                Create a Box, use it from the terminal, then connect from code when automation matters.
+              </DialogDescription>
             </div>
-
-            <Tabs
-              value={language}
-              onValueChange={(value) => setLanguage(value as OnboardingLanguage)}
-              className="w-full"
-            >
-              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:inline-grid sm:w-auto sm:grid-cols-4">
-                {languageOptions.map((option) => (
-                  <TabsTrigger key={option.value} value={option.value} className="h-8 gap-2 px-3">
-                    {option.icon ? (
-                      <img src={option.icon} alt="" className="size-4" />
-                    ) : option.Icon ? (
-                      <option.Icon className="size-4" />
-                    ) : null}
-                    <span>{option.label}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="rounded-md border bg-muted/20 px-3 py-2 text-sm">
+              <div className="font-medium">{coreProgress.isComplete ? 'Core journey complete' : 'MVP trial'}</div>
+              <div className="text-muted-foreground">Free trial during MVP</div>
+            </div>
           </div>
         </DialogHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col md:grid md:grid-cols-[18rem_minmax(0,1fr)]">
-          <aside className="max-h-56 shrink-0 overflow-auto border-b border-border bg-muted/25 p-3 sm:p-4 md:max-h-none md:border-b-0 md:border-r">
-            <div className="grid gap-2">
-              {onboardingSteps.map((step, index) => {
-                const Icon = step.icon
-                const isActive = index === activeStep
-                const isComplete = index < activeStep
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[16rem_minmax(0,1fr)] md:grid-rows-1">
+          <aside className="border-b border-border bg-muted/15 p-3 md:border-b-0 md:border-r md:p-4">
+            <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:flex md:flex-col">
+              {onboardingSteps.map((step) => {
+                const status = getStepStatus(step.id, activeStep, progress, hasBoxes)
+                const isActive = activeStep === step.id
+                const isLocked = status === 'locked'
 
                 return (
-                  <button
-                    key={step.title}
-                    type="button"
-                    onClick={() => setActiveStep(index)}
-                    className={cn(
-                      'grid grid-cols-[2rem_minmax(0,1fr)] gap-3 rounded-md p-3 text-left transition-colors',
-                      isActive ? 'bg-background shadow-sm ring-1 ring-border' : 'hover:bg-background/70',
-                    )}
-                  >
-                    <span
+                  <li key={step.id} className="min-w-0">
+                    <button
+                      type="button"
+                      disabled={isLocked}
+                      onClick={() => setActiveStep(step.id)}
                       className={cn(
-                        'flex size-8 items-center justify-center rounded-full border bg-background text-xs font-medium',
-                        isActive && 'border-foreground text-foreground',
-                        isComplete && 'border-success bg-success text-background',
+                        'flex h-full w-full items-start gap-2 rounded-md border p-2.5 text-left transition-colors md:gap-3 md:p-3',
+                        isActive
+                          ? 'border-foreground bg-accent shadow-sm'
+                          : 'border-transparent hover:border-border hover:bg-muted/50',
+                        isLocked && 'cursor-not-allowed opacity-55 hover:border-transparent hover:bg-transparent',
                       )}
                     >
-                      {isComplete ? <CheckCircle2 className="size-4" /> : <Icon className="size-4" />}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold">{step.title}</span>
-                      <span className="mt-1 block text-xs leading-5 text-muted-foreground">{step.description}</span>
-                    </span>
-                  </button>
+                      <span
+                        className={cn(
+                          'flex size-7 shrink-0 items-center justify-center rounded-full border bg-background text-xs font-semibold',
+                          status === 'done' && 'border-success bg-success text-background',
+                          isActive && status !== 'done' && 'border-foreground text-foreground',
+                        )}
+                      >
+                        {status === 'done' ? <CheckCircle2 className="size-4" /> : step.number}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-semibold leading-5">{step.title}</span>
+                        </span>
+                        <span className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:block md:block">
+                          {step.description}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
                 )
               })}
-            </div>
+            </ol>
           </aside>
 
-          <section className="min-h-0 flex-1 overflow-auto px-5 py-4 sm:px-6 sm:py-5">
-            <div key={activeStep} className="animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-              {activeStep === 0 && (
-                <div className="grid gap-5">
-                  <div>
-                    <Badge variant="secondary">Step 1</Badge>
-                    <h3 className="mt-3 text-xl font-semibold">Create a Linux Box</h3>
-                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                      For the MVP, users only choose a name and one approved Linux base image. Region, networking, and
-                      lifecycle defaults stay controlled by the system.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {defaultSettings.map((item) => {
-                      const Icon = item.icon
-                      return (
-                        <div key={item.label} className="rounded-md border bg-background p-4">
-                          <div className="mb-3 flex size-8 items-center justify-center rounded-md border bg-muted">
-                            <Icon className="size-4 text-muted-foreground" />
-                          </div>
-                          <div className="text-sm font-medium">{item.label}</div>
-                          <div className="mt-1 text-sm text-muted-foreground">{item.value}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className="rounded-md border bg-muted/30 p-4">
-                    <div className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                      Create form
-                    </div>
-                    <div className="mt-3 grid gap-3 text-sm sm:grid-cols-[1fr_1fr]">
-                      <div className="rounded-md border bg-background p-3">
-                        <div className="text-muted-foreground">Name</div>
-                        <div className="mt-1 font-medium">my-box</div>
-                      </div>
-                      <div className="rounded-md border bg-background p-3">
-                        <div className="text-muted-foreground">Base image</div>
-                        <div className="mt-1 font-medium">Ubuntu 24.04 LTS</div>
-                      </div>
-                    </div>
-                  </div>
+          <section className="flex min-h-0 min-w-0 flex-col">
+            <div className="flex shrink-0 items-start gap-3 border-b border-border px-4 py-3 sm:px-6">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground">
+                <activeStepConfig.Icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-semibold">
+                    {activeStepConfig.number}. {activeStepConfig.title}
+                  </h2>
+                  <StepStatusBadge status={getStepStatus(activeStep, activeStep, progress, hasBoxes)} />
                 </div>
-              )}
+                <p className="mt-1 text-sm text-muted-foreground">{activeStepConfig.description}</p>
+              </div>
+            </div>
 
-              {activeStep === 1 && (
-                <div className="grid gap-5">
-                  <div>
-                    <Badge variant="secondary">Step 2</Badge>
-                    <h3 className="mt-3 text-xl font-semibold">Use the terminal</h3>
-                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                      After creation, the user lands on the Box detail page with Terminal selected. This is the fastest
-                      way to prove the Box is running and usable.
-                    </p>
-                  </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">{renderActiveStep()}</div>
 
-                  <div className="rounded-md border bg-code-background p-4 text-sm">
-                    <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-                      <Terminal className="size-4" />
-                      box terminal
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap text-foreground">
-                      {`$ uname -a
-Linux my-box 6.x
-
-$ echo "hello from boxlite"
-hello from boxlite`}
-                    </pre>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-md border bg-background p-4">
-                      <div className="text-sm font-medium">Expected action</div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Run commands, inspect files, and verify output.
-                      </p>
-                    </div>
-                    <div className="rounded-md border bg-background p-4">
-                      <div className="text-sm font-medium">Expected state</div>
-                      <p className="mt-1 text-sm text-muted-foreground">The Box should be running.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeStep === 2 && (
-                <div className="grid gap-5">
-                  <div>
-                    <Badge variant="secondary">Step 3</Badge>
-                    <h3 className="mt-3 text-xl font-semibold">Install the SDK</h3>
-                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                      Run the following command in your terminal to install the BoxLite SDK.
-                    </p>
-                  </div>
-
-                  <CodeBlock code={activeExample.install} language="bash" showCopy />
-
-                  <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">
-                    The language switcher in the header updates the install command and example code.
-                  </div>
-                </div>
-              )}
-
-              {activeStep === 3 && (
-                <div className="grid gap-5">
-                  <div>
-                    <Badge variant="secondary">Step 4</Badge>
-                    <h3 className="mt-3 text-xl font-semibold">Create an API Key</h3>
-                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                      This API key will have permissions to only{' '}
-                      {apiKeyPermissions.includes(CreateApiKeyPermissionsEnum.DELETE_SANDBOXES) ? 'manage' : 'create'}{' '}
-                      Boxes. For full API permissions, head to the{' '}
-                      <Link to={RoutePath.KEYS} className="underline underline-offset-4 hover:text-foreground">
-                        API Keys
-                      </Link>{' '}
-                      page.
-                    </p>
-                  </div>
-
-                  {createdApiKey ? (
-                    <CopyableValue
-                      className="p-4"
-                      displayValue={isApiKeyRevealed ? createdApiKey.value : getMaskedToken(createdApiKey.value)}
-                      actionsClassName="gap-3"
-                      actions={
-                        <>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label={isApiKeyRevealed ? 'Hide API key' : 'Reveal API key'}
-                            className="h-6 w-6 text-current hover:bg-green-200/70 hover:text-current dark:hover:bg-green-800/70"
-                            onClick={() => setIsApiKeyRevealed(!isApiKeyRevealed)}
-                          >
-                            {isApiKeyRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                          {isApiKeyCopied ? (
-                            <Check className="h-4 w-4 shrink-0" />
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-xs"
-                              aria-label="Copy API key"
-                              className="h-6 w-6 text-current hover:bg-green-200/70 hover:text-current dark:hover:bg-green-800/70"
-                              onClick={() => copyToClipboard(createdApiKey.value)}
-                            >
-                              <ClipboardIcon className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </>
-                      }
-                    />
-                  ) : canCreateApiKey ? (
-                    <form
-                      className="grid gap-3 rounded-md border bg-background p-4"
-                      onSubmit={async (event) => {
-                        event.preventDefault()
-                        await handleCreateApiKey()
-                      }}
-                    >
-                      <label htmlFor="onboarding-key-name" className="text-sm font-medium">
-                        API Key Name
-                      </label>
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <Input
-                          id="onboarding-key-name"
-                          type="text"
-                          value={apiKeyName}
-                          onChange={(event) => setApiKeyName(event.target.value)}
-                          required
-                          placeholder="e.g. Onboarding"
-                          disabled={isLoadingCreateKey}
-                          className="flex-1"
-                        />
-                        <Button type="submit" disabled={isLoadingCreateKey}>
-                          {isLoadingCreateKey ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Plus className="size-4" />
-                          )}
-                          Create API Key
-                        </Button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="rounded-md border bg-muted/30 p-4">
-                      <div className="text-sm font-medium">API key creation is not available for this user.</div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        You need permission to create Boxes before generating this onboarding key.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeStep === 4 && (
-                <div className="grid gap-5">
-                  <div>
-                    <Badge variant="secondary">Step 5</Badge>
-                    <h3 className="mt-3 text-xl font-semibold">Create a Box and run the example</h3>
-                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                      The example below creates a Box, runs a simple command, and cleans it up when finished.
-                    </p>
-                  </div>
-
-                  <CodeBlock
-                    code={renderedExample}
-                    language={activeExample.codeLanguage}
-                    showCopy
-                    codeAreaClassName="max-h-[320px] text-xs"
-                  />
-
-                  <div>
-                    <div className="mb-2 text-sm font-medium">Run the example</div>
-                    <CodeBlock code={activeExample.run} language="bash" showCopy />
-                  </div>
-
-                  <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">
-                    That's it. For more examples, check out{' '}
-                    <a href={BOXLITE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary">
-                      Docs
-                    </a>
-                    .
-                  </div>
-                </div>
-              )}
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Later
+              </Button>
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row">
+                <Button variant="outline" onClick={goToPreviousStep} disabled={activeStepIndex === 0}>
+                  Back
+                </Button>
+                {activeStepIndex < stepOrder.length - 1 && (
+                  <Button onClick={goToNextStep}>{activeStep === 'sdk' ? 'Skip to Manage' : 'Next'}</Button>
+                )}
+                {activeStepIndex === stepOrder.length - 1 && (
+                  <Button onClick={() => onOpenChange(false)} disabled={!coreProgress.isComplete}>
+                    Done
+                  </Button>
+                )}
+              </div>
             </div>
           </section>
         </div>
-
-        <DialogFooter className="shrink-0 border-t border-border px-5 py-3 sm:px-6 sm:py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Later
-          </Button>
-          <div className="flex flex-1 items-center justify-end gap-2">
-            <Button variant="ghost" onClick={goBack} disabled={activeStep === 0}>
-              <ArrowLeft className="size-4" />
-              Back
-            </Button>
-            {activeStep === 0 ? (
-              <>
-                <Button variant="outline" onClick={goNext}>
-                  Next
-                  <ArrowRight className="size-4" />
-                </Button>
-                <Button onClick={handleStartCreate}>Create Box</Button>
-              </>
-            ) : isLastStep ? (
-              <Button onClick={() => onOpenChange(false)}>Done</Button>
-            ) : (
-              <Button onClick={goNext}>
-                Next
-                <ArrowRight className="size-4" />
-              </Button>
-            )}
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

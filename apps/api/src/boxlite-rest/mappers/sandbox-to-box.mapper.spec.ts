@@ -17,6 +17,18 @@ describe('sandbox-to-box mapper', () => {
     expect(createBoxToCreateSandbox({ name: 'my-box' }).environmentId).toBe('ubuntu:24.04')
   })
 
+  it('maps SDK resource settings to environment create overrides', () => {
+    const dto = createBoxToCreateSandbox({
+      cpus: 2,
+      memory_mib: 1536,
+      disk_size_gb: 8,
+    })
+
+    expect(dto.cpu).toBe(2)
+    expect(dto.memory).toBe(2)
+    expect(dto.disk).toBe(8)
+  })
+
   it('leaves unsupported images unresolved so the controller can reject them', () => {
     expect(createBoxToCreateSandbox({ image: 'node:22' }).environmentId).toBeUndefined()
   })

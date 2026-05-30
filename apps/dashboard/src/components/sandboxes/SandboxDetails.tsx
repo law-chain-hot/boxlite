@@ -33,13 +33,21 @@ import { useRegions } from '@/hooks/useRegions'
 import { useSandboxWsSync } from '@/hooks/useSandboxWsSync'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { handleApiError } from '@/lib/error-handling'
+import {
+  getOnboardingCoreProgress,
+  mergeOnboardingProgress,
+  ONBOARDING_PROGRESS_EVENT,
+  readOnboardingProgress,
+  type OnboardingProgress,
+} from '@/lib/onboarding-progress'
 import { isStoppable, isTransitioning } from '@/lib/utils/sandbox'
 import { OrganizationRolePermissionsEnum, OrganizationUserRoleEnum } from '@boxlite-ai/api-client'
 import { isAxiosError } from 'axios'
-import { Container, GripVertical, RefreshCw } from 'lucide-react'
+import { CheckCircle2, Container, GripVertical, ListChecks, Power, RefreshCw, Terminal } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { useFeatureFlagEnabled } from 'posthog-js/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useAuth } from 'react-oidc-context'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -54,6 +62,8 @@ export default function SandboxDetails() {
   const { sandboxId } = useParams<{ sandboxId: string }>()
   const navigate = useNavigate()
   const config = useConfig()
+  const { user } = useAuth()
+  const userId = user?.profile.sub
   const { sandboxApi } = useApi()
   const { authenticatedUserOrganizationMember, selectedOrganization, authenticatedUserHasPermission } =
     useSelectedOrganization()
@@ -64,8 +74,30 @@ export default function SandboxDetails() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createSshDialogOpen, setCreateSshDialogOpen] = useState(false)
   const [revokeSshDialogOpen, setRevokeSshDialogOpen] = useState(false)
+  const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>(() => readOnboardingProgress(userId))
   const [tab, setTab] = useQueryState('tab', tabParser)
   const isDesktop = useMatchMedia('(min-width: 1024px)')
+
+  const updateOnboardingProgress = useCallback(
+    (progress: OnboardingProgress) => {
+      setOnboardingProgress(mergeOnboardingProgress(userId, progress))
+    },
+    [userId],
+  )
+
+  useEffect(() => {
+    setOnboardingProgress(readOnboardingProgress(userId))
+  }, [userId])
+
+  useEffect(() => {
+    const handleOnboardingProgress = (event: Event) => {
+      const progress = (event as CustomEvent<OnboardingProgress>).detail
+      setOnboardingProgress(progress ?? readOnboardingProgress(userId))
+    }
+
+    window.addEventListener(ONBOARDING_PROGRESS_EVENT, handleOnboardingProgress)
+    return () => window.removeEventListener(ONBOARDING_PROGRESS_EVENT, handleOnboardingProgress)
+  }, [userId])
 
   // On desktop (lg+), the overview tab is hidden in the sidebar, so switch to a content tab
   useEffect(() => {
@@ -83,8 +115,31 @@ export default function SandboxDetails() {
 
   const { data: sandbox, isLoading, isError, error, refetch, isFetching } = useSandboxQuery(sandboxId ?? '')
   const isNotFound = isError && isAxiosError(error.cause) && error.cause?.status === 404
+  const onboardingCoreProgress = getOnboardingCoreProgress(onboardingProgress)
+  const showOnboardingNudge = Boolean(sandbox && !onboardingCoreProgress.isComplete)
 
   useSandboxWsSync({ sandboxId })
+
+  useEffect(() => {
+    if (sandbox && !onboardingProgress.boxCreated) {
+      updateOnboardingProgress({ boxCreated: true })
+    }
+  }, [onboardingProgress.boxCreated, sandbox, updateOnboardingProgress])
+
+  useEffect(() => {
+    if (sandbox && tab === 'terminal' && !onboardingProgress.terminalOpened) {
+      updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
+    }
+  }, [onboardingProgress.terminalOpened, sandbox, tab, updateOnboardingProgress])
+
+  const openTerminalFromNudge = () => {
+    updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
+    setTab('terminal')
+  }
+
+  const markLifecycleSeen = () => {
+    updateOnboardingProgress({ boxCreated: true, terminalOpened: true, lifecycleSeen: true })
+  }
 
   const startMutation = useStartSandboxMutation()
   const stopMutation = useStopSandboxMutation()
@@ -205,6 +260,50 @@ export default function SandboxDetails() {
         }}
       />
 
+      {showOnboardingNudge && (
+        <div className="shrink-0 border-b border-border bg-card px-4 py-3 sm:px-5">
+          <div className="mx-auto flex max-w-[1440px] flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                <ListChecks className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">Continue setup</div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <CheckCircle2 className="size-3.5" />
+                    Box created
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Terminal className="size-3.5" />
+                    {onboardingProgress.terminalOpened ? 'Terminal opened' : 'Open terminal'}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Power className="size-3.5" />
+                    {onboardingProgress.lifecycleSeen ? 'Lifecycle reviewed' : 'Review lifecycle controls'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              {!onboardingProgress.terminalOpened && (
+                <Button type="button" size="sm" onClick={openTerminalFromNudge}>
+                  Open Terminal
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant={onboardingProgress.lifecycleSeen ? 'secondary' : 'outline'}
+                onClick={markLifecycleSeen}
+              >
+                {onboardingProgress.lifecycleSeen ? 'Lifecycle done' : 'I understand lifecycle'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isNotFound ? (
         <div className="flex flex-1 min-h-0 items-center justify-center">
           <Empty>
@@ -229,7 +328,7 @@ export default function SandboxDetails() {
                 minSize={250}
                 maxSize={550}
                 defaultSize={320}
-                className="flex flex-col overflow-hidden"
+                className="flex flex-col overflow-hidden bg-card"
               >
                 <div className="flex items-center px-5 border-b border-border shrink-0 h-[41px]">
                   <span className="text-sm font-medium">Overview</span>

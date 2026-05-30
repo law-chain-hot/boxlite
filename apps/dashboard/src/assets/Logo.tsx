@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import boxliteLogoBlack from './boxlite-black.png'
-import boxliteLogoLight from './boxlite-light.png'
+import boxliteIconBlack from './boxlite-icon-black.png'
+import boxliteIconLight from './boxlite-icon-light.png'
 
 type LogoProps = {
   className?: string
@@ -16,9 +16,9 @@ export function Logo({ className = 'h-7 w-7', decorative = false }: LogoProps) {
   const imageProps = decorative ? { alt: '', 'aria-hidden': true } : { alt: 'BoxLite' }
 
   return (
-    <span className={`inline-flex items-center justify-start overflow-hidden ${className}`}>
-      <img {...imageProps} src={boxliteLogoBlack} className="block h-full w-auto max-w-none dark:hidden" />
-      <img {...imageProps} src={boxliteLogoLight} className="hidden h-full w-auto max-w-none dark:block" />
+    <span className="inline-flex items-center justify-center">
+      <img {...imageProps} src={boxliteIconBlack} className={`block ${className} object-contain dark:hidden`} />
+      <img {...imageProps} src={boxliteIconLight} className={`hidden ${className} object-contain dark:block`} />
     </span>
   )
 }
@@ -26,8 +26,8 @@ export function Logo({ className = 'h-7 w-7', decorative = false }: LogoProps) {
 export function LogoText() {
   return (
     <span className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
-      <Logo className="h-5 w-5" decorative />
-      <span>BoxLite</span>
+      <Logo className="h-6 w-6" decorative />
+      <span className="hidden sm:inline">BoxLite</span>
     </span>
   )
 }

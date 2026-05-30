@@ -17,6 +17,9 @@ export interface CreateSandboxFromEnvironmentParams {
   networkBlockAll?: boolean
   autoStopInterval?: number
   autoDeleteInterval?: number
+  cpu?: number
+  memory?: number
+  disk?: number
 }
 
 export const useCreateSandboxFromEnvironmentMutation = () => {

@@ -14,6 +14,10 @@ export function isStoppable(sandbox: Sandbox): boolean {
   return sandbox.state === SandboxState.STARTED
 }
 
+export function isSshAccessible(sandbox: Sandbox): boolean {
+  return sandbox.state === SandboxState.STARTED
+}
+
 export function isArchivable(sandbox: Sandbox): boolean {
   return sandbox.state === SandboxState.STOPPED
 }

@@ -34,6 +34,7 @@ import Keys from './pages/Keys'
 import LandingPage from './pages/LandingPage'
 import Logout from './pages/Logout'
 import NotFound from './pages/NotFound'
+import Pricing from './pages/Pricing'
 import Sandboxes from './pages/Sandboxes'
 import { SandboxDetails, SandboxTerminalFullscreen, SandboxVncFullscreen } from './components/sandboxes'
 import { ApiProvider } from './providers/ApiProvider'
@@ -193,6 +194,7 @@ function App() {
         <Route index element={<Navigate to={boxesRedirect} replace />} />
         <Route path={getRouteSubPath(RoutePath.KEYS)} element={<Keys />} />
         <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Sandboxes />} />
+        <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Pricing />} />
         <Route path={getRouteSubPath(RoutePath.LEGACY_SANDBOXES)} element={<Navigate to={boxesRedirect} replace />} />
         {/* Pathless layout route: a single SandboxSessionProvider fiber
             persists across the three sandbox routes, so activation state

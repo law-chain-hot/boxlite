@@ -83,6 +83,12 @@ import { FeatureFlags } from '../../common/constants/feature-flags'
 import { RegionSandboxAccessGuard } from '../guards/region-sandbox-access.guard'
 import { SystemRole } from '../../user/enums/system-role.enum'
 
+const hasSandboxResourceOverride = (createSandboxDto: CreateSandboxDto) =>
+  createSandboxDto.cpu !== undefined ||
+  createSandboxDto.gpu !== undefined ||
+  createSandboxDto.memory !== undefined ||
+  createSandboxDto.disk !== undefined
+
 @ApiTags('sandbox')
 @Controller('sandbox')
 @ApiHeader(CustomHeaders.ORGANIZATION_ID)
@@ -292,8 +298,8 @@ export class SandboxController {
       if (createSandboxDto.buildInfo) {
         throw new BadRequestError('Cannot specify build info when using an environment')
       }
-      if (createSandboxDto.cpu || createSandboxDto.gpu || createSandboxDto.memory || createSandboxDto.disk) {
-        throw new BadRequestError('Cannot specify Sandbox resources when using an environment')
+      if (createSandboxDto.gpu !== undefined) {
+        throw new BadRequestError('Cannot specify GPU resources when using an environment')
       }
       sandbox = await this.sandboxService.createFromEnvironment(createSandboxDto, organization)
       if (sandbox.state === SandboxState.STARTED) {
@@ -313,7 +319,7 @@ export class SandboxController {
       if (!canUseLegacySandboxSource) {
         throw new BadRequestError('Choose one of the approved environments to create a box')
       }
-      if (createSandboxDto.cpu || createSandboxDto.gpu || createSandboxDto.memory || createSandboxDto.disk) {
+      if (hasSandboxResourceOverride(createSandboxDto)) {
         throw new BadRequestError('Cannot specify Sandbox resources when using a snapshot')
       }
       sandbox = await this.sandboxService.createFromSnapshot(createSandboxDto, organization)

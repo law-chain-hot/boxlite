@@ -236,6 +236,7 @@ fn serve(sock: OwnedFd) -> ! {
 /// moved here to run in the zygote's single-threaded context where clone3() is safe.
 fn do_build(spec: BuildSpec, fds: Option<[RawFd; 3]>) -> BuildResult {
     let build_fn = || -> Result<Pid, String> {
+        let detach = build_detach_mode(&spec);
         let mut builder = ContainerBuilder::new(spec.container_id.clone(), SyscallType::default())
             .with_root_path(spec.state_root.clone())
             .map_err(|e| format!("Failed to set container root path: {e}"))?
@@ -258,14 +259,14 @@ fn do_build(spec: BuildSpec, fds: Option<[RawFd; 3]>) -> BuildResult {
             .as_tenant()
             .with_capabilities(capability_names())
             .with_no_new_privs(false)
-            .with_detach(false)
+            .with_detach(detach)
             .with_cwd(Some(spec.cwd))
             .with_env(spec.env)
             .with_container_args(spec.args)
             .with_user(Some(spec.uid))
             .with_group(Some(spec.gid))
             .build()
-            .map_err(|e| format!("build failed: {e}"))?;
+            .map_err(|e| format!("build failed: {e:?}"))?;
 
         Ok(pid)
     };
@@ -274,6 +275,10 @@ fn do_build(spec: BuildSpec, fds: Option<[RawFd; 3]>) -> BuildResult {
         Ok(pid) => BuildResult::Spawned { pid: pid.as_raw() },
         Err(error) => BuildResult::Failed { error },
     }
+}
+
+fn build_detach_mode(spec: &BuildSpec) -> bool {
+    spec.console_socket.is_some()
 }
 
 /// Check if a container process has exited (non-blocking).
@@ -551,6 +556,22 @@ mod tests {
         assert!(decoded.console_socket.is_none());
         assert!(decoded.env.is_empty());
         assert!(decoded.args.is_empty());
+    }
+
+    #[test]
+    fn pty_builds_with_console_socket_run_detached() {
+        let mut spec = sample_spec();
+        spec.console_socket = Some("/tmp/console.sock".to_string());
+
+        assert!(build_detach_mode(&spec));
+    }
+
+    #[test]
+    fn pipe_builds_without_console_socket_run_attached() {
+        let mut spec = sample_spec();
+        spec.console_socket = None;
+
+        assert!(!build_detach_mode(&spec));
     }
 
     // ========================================================================

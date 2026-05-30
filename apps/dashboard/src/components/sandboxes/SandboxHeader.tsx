@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { isArchivable, isRecoverable, isStartable, isStoppable } from '@/lib/utils/sandbox'
+import { isArchivable, isRecoverable, isSshAccessible, isStartable, isStoppable } from '@/lib/utils/sandbox'
 import { Sandbox } from '@boxlite-ai/api-client'
-import { ArrowLeft, MoreHorizontal, Play, RefreshCw, Square, Wrench } from 'lucide-react'
+import { ArrowLeft, MoreHorizontal, Play, RefreshCw, Square, Terminal, Wrench } from 'lucide-react'
 
 interface SandboxHeaderProps {
   sandbox: Sandbox | undefined
@@ -120,6 +120,12 @@ export function SandboxHeader({
                       Recover
                     </Button>
                   )}
+                  {isSshAccessible(sandbox) && (
+                    <Button variant="outline" size="sm" onClick={onCreateSshAccess} disabled={actionsDisabled}>
+                      <Terminal className="size-4" />
+                      SSH
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="icon-sm" aria-label="More actions">
@@ -134,9 +140,6 @@ export function SandboxHeader({
                         <DropdownMenuSeparator />
                       </DropdownMenuGroup>
                       <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={onCreateSshAccess} disabled={actionsDisabled}>
-                          Create SSH Access
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={onRevokeSshAccess} disabled={actionsDisabled}>
                           Revoke SSH Access
                         </DropdownMenuItem>

@@ -6,20 +6,10 @@
 
 import { useIsCompactScreen, useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
-import { ArrowUpDown, Calendar, Check, Columns, ListFilter, Package, RefreshCw, Square } from 'lucide-react'
-import * as React from 'react'
+import { Calendar, Columns, ListFilter, Package, RefreshCw, Square } from 'lucide-react'
 import { DebouncedInput } from '../DebouncedInput'
 import { TableColumnVisibilityToggle } from '../TableColumnVisibilityToggle'
 import { Button } from '../ui/button'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandInputButton,
-  CommandItem,
-  CommandList,
-} from '../ui/command'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +19,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { LastEventFilter, LastEventFilterIndicator } from './filters/LastEventFilter'
 import { SnapshotFilter, SnapshotFilterIndicator } from './filters/SnapshotFilter'
 import { StateFilter, StateFilterIndicator } from './filters/StateFilter'
@@ -45,17 +34,6 @@ export function SandboxTableHeader({
 }: SandboxTableHeaderProps) {
   const isMobile = useIsMobile()
   const isCompactScreen = useIsCompactScreen()
-  const [open, setOpen] = React.useState(false)
-  const currentSort = table.getState().sorting[0]?.id || ''
-
-  const sortableColumns = [
-    { id: 'name', label: 'Name' },
-    { id: 'id', label: 'UUID' },
-    { id: 'state', label: 'State' },
-    { id: 'snapshot', label: 'Base image' },
-    { id: 'region', label: 'Region' },
-    { id: 'lastEvent', label: 'Last Event' },
-  ]
 
   const stateFilterValue = (table.getColumn('state')?.getFilterValue() as string[]) || []
   const snapshotFilterValue = (table.getColumn('snapshot')?.getFilterValue() as string[]) || []
@@ -112,74 +90,6 @@ export function SandboxTableHeader({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className={cn('justify-between', {
-                'min-w-[180px] flex-1': isMobile,
-                'w-[200px]': !isMobile && isCompactScreen,
-                'w-[240px]': !isMobile && !isCompactScreen,
-              })}
-            >
-              {currentSort ? (
-                <div className="flex items-center gap-2">
-                  <div className="text-muted-foreground font-normal">
-                    {isCompactScreen ? 'Sort:' : 'Sorted by:'}{' '}
-                    <span className="font-medium text-primary">
-                      {sortableColumns.find((column) => column.id === currentSort)?.label}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="w-4 h-4" />
-                  <span>Sort</span>
-                </div>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[240px] p-0" align="start">
-            <Command>
-              <CommandInput placeholder="Search...">
-                <CommandInputButton
-                  aria-expanded={open}
-                  className="justify-between"
-                  onClick={() => {
-                    table.resetSorting()
-                    setOpen(false)
-                  }}
-                >
-                  Reset
-                </CommandInputButton>
-              </CommandInput>
-              <CommandList>
-                <CommandEmpty>No column found.</CommandEmpty>
-                <CommandGroup>
-                  {sortableColumns.map((column) => (
-                    <CommandItem
-                      key={column.id}
-                      value={column.id}
-                      onSelect={(currentValue) => {
-                        const col = table.getColumn(currentValue)
-                        if (col) {
-                          col.toggleSorting(false)
-                        }
-                        setOpen(false)
-                      }}
-                    >
-                      <Check className={cn('mr-2 h-4 w-4', currentSort === column.id ? 'opacity-100' : 'opacity-0')} />
-                      {column.label}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
 
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>

@@ -8,6 +8,47 @@
 
 Compute substrate for AI agents: lightweight enough to live on your laptop, elastic enough to scale into the cloud and unleash unlimited resources.
 
+## Dashboard Development
+
+For day-to-day dashboard work, run the local frontend from the repository root:
+
+```bash
+npm run start
+```
+
+This starts the dashboard at `http://localhost:3000` and connects it to the dev Auth0/dev API environment by default.
+
+| Command | Purpose |
+| --- | --- |
+| `npm run start` | Local dashboard on port 3000 with dev Auth0/dev API |
+| `npm run start:dev` | Explicit alias for the default dev-backed dashboard |
+| `npm run start:mock` | Local dashboard with the existing MSW billing mocks enabled |
+| `npm run start:local` | Local dashboard through the Vite `/api` proxy; start the local API separately |
+| `npm run start:dex` | Alias for local API/Dex-oriented development |
+| `npm run start:storybook` | Component-level dashboard development |
+| `npm run dev:dex` | Full local Dex development environment: Docker Postgres/Redis/Dex plus API, runner, proxy, and dashboard |
+| `npm run e2e:local` | Local browser E2E entrypoint; starts the same Dex environment and prints the deterministic test login contract |
+
+Use `npm run start` for quick dashboard work against the shared dev API. Use `npm run dev:dex` when you need the
+local API to trust the local Dex issuer. Use `npm run e2e:local` as the only local browser E2E entrypoint; agents
+and scripts should not choose between `start`, `start:dex`, or `serve-slim` for E2E.
+
+The local Dex account is:
+
+```text
+admin@boxlite.dev / password
+```
+
+The E2E command deliberately does not depend on existing browser cookies. Browser login state is per profile, so
+tests should open the dashboard, follow the Dex redirect if needed, fill the account above, and continue after the
+dashboard loads. To run a one-shot test command after the environment is ready, pass it after `--`:
+
+```bash
+npm run e2e:local -- -- <your-e2e-command>
+```
+
+Both Dex commands require Docker Desktop. They create/reuse local containers named `boxlite-local-postgres`,
+`boxlite-local-redis`, and `boxlite-local-dex`, plus local Docker volumes for persistent development data.
 
 ## What is BoxLite?
 
