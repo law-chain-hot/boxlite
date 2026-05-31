@@ -87,9 +87,9 @@ import boxlite
 
 
 async def main():
-    async with boxlite.SimpleBox(image="python:slim") as box:
-        result = await box.exec("python", "-c", "print('Hello from BoxLite!')")
-        print(result.stdout)
+    async with boxlite.SimpleBox(image="busybox:1.36.1") as box:
+        result = await box.exec("echo", "Hello from BoxLite!")
+        print(result.stdout, end="")
 
 
 asyncio.run(main())
@@ -117,9 +117,9 @@ Requires Node.js 18+.
 import { SimpleBox } from '@boxlite-ai/boxlite';
 
 async function main() {
-  const box = new SimpleBox({ image: 'python:slim' });
+  const box = new SimpleBox({ image: 'busybox:1.36.1' });
   try {
-    const result = await box.exec('python', '-c', "print('Hello from BoxLite!')");
+    const result = await box.exec('echo', 'Hello from BoxLite!');
     console.log(result.stdout);
   } finally {
     await box.stop();
@@ -153,7 +153,7 @@ use futures::StreamExt;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let runtime = BoxliteRuntime::default_runtime();
     let options = BoxOptions {
-        rootfs: RootfsSpec::Image("alpine:latest".into()),
+        rootfs: RootfsSpec::Image("busybox:1.36.1".into()),
         ..Default::default()
     };
 
@@ -167,6 +167,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{}", line);
     }
 
+    litebox.stop().await?;
     Ok(())
 }
 ```
@@ -209,11 +210,17 @@ func main() {
 	defer rt.Close()
 
 	ctx := context.Background()
-	box, err := rt.Create(ctx, "alpine:latest", boxlite.WithName("my-box"))
+	box, err := rt.Create(ctx, "busybox:1.36.1", boxlite.WithName("my-box"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer box.Close()
+	defer func() {
+		_ = rt.ForceRemove(ctx, box.ID())
+	}()
+
+	if err := box.Start(ctx); err != nil {
+		log.Fatal(err)
+	}
 
 	result, err := box.Exec(ctx, "echo", "Hello from BoxLite!")
 	if err != nil {
@@ -245,7 +252,7 @@ see the [CLI Reference's Installation & Verification section](./docs/reference/c
 ### Run
 
 ```bash
-boxlite run python:slim python -c "print('Hello from BoxLite!')"
+boxlite run busybox:1.36.1 echo "Hello from BoxLite!"
 ```
 
 </details>
@@ -275,7 +282,7 @@ boxlite serve
 # Create a box
 curl -s -X POST http://localhost:8100/v1/boxes \
   -H 'Content-Type: application/json' \
-  -d '{"image": "alpine:latest"}'
+  -d '{"image": "busybox:1.36.1"}'
 
 # Run a command (replace BOX_ID from the response above)
 curl -s -X POST http://localhost:8100/v1/boxes/BOX_ID/exec \

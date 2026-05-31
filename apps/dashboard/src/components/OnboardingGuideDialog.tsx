@@ -144,8 +144,15 @@ const box = await rt.create({ image: 'ubuntu:24.04' }, 'my-box')
 await box.start()
 
 const exec = await box.exec('echo', ['Hello World!'])
+const stdout = await exec.stdout()
+let output = ''
+let chunk: string | null
+while ((chunk = await stdout.next()) !== null) {
+  output += chunk
+}
 const result = await exec.wait()
 console.log('Exit code:', result.exitCode)
+console.log(output)
 
 await rt.remove(box.id, true)`,
   },
@@ -166,8 +173,12 @@ async def main():
     await box.start()
 
     execution = await box.exec("echo", args=["Hello World!"])
+    output = ""
+    async for line in execution.stdout():
+        output += line
     result = await execution.wait()
     print(f"Exit code: {result.exit_code}")
+    print(output)
 
     await rt.remove(box.id, force=True)
 
@@ -221,10 +232,12 @@ func main() {
   },
   rust: {
     install: `cargo add boxlite --features rest
-cargo add tokio --features macros,rt-multi-thread`,
+cargo add tokio --features macros,rt-multi-thread
+cargo add futures`,
     run: 'cargo run',
     codeLanguage: 'rust',
     example: `use boxlite::{BoxCommand, BoxOptions, BoxliteRestOptions, BoxliteRuntime, RootfsSpec};
+use futures::StreamExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -242,8 +255,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let exec = box_handle
         .exec(BoxCommand::new("echo").arg("Hello World!"))
         .await?;
+    let mut stdout = exec.stdout().expect("stdout stream should be available");
+    let mut output = String::new();
+    while let Some(line) = stdout.next().await {
+        output.push_str(&line);
+    }
     let result = exec.wait().await?;
     println!("Exit code: {}", result.exit_code);
+    print!("{output}");
 
     rt.remove(&box_handle.id().to_string(), true).await?;
     Ok(())
