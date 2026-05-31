@@ -7,11 +7,12 @@
 import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common'
 import { DockerRegistryService } from './docker-registry/services/docker-registry.service'
 import { RegistryType } from './docker-registry/enums/registry-type.enum'
+import { DockerRegistry } from './docker-registry/entities/docker-registry.entity'
 import { OrganizationService } from './organization/services/organization.service'
 import { UserService } from './user/user.service'
 import { ApiKeyService } from './api-key/api-key.service'
 import { EventEmitterReadinessWatcher } from '@nestjs/event-emitter'
-import { SnapshotService } from './sandbox/services/snapshot.service'
+import { BoxTemplateService } from './sandbox/services/box-template.service'
 import { SystemRole } from './user/enums/system-role.enum'
 import { TypedConfigService } from './config/typed-config.service'
 import { SchedulerRegistry } from '@nestjs/schedule'
@@ -20,7 +21,7 @@ import { RunnerService } from './sandbox/services/runner.service'
 import { RunnerAdapterFactory } from './sandbox/runner-adapter/runnerAdapter'
 import { RegionType } from './region/enums/region-type.enum'
 import { RunnerState } from './sandbox/enums/runner-state.enum'
-import { SYSTEM_ENVIRONMENTS } from './sandbox/constants/system-environments'
+import { SYSTEM_TEMPLATES } from './sandbox/constants/system-templates'
 
 export const BOXLITE_ADMIN_USER_ID = 'boxlite-admin'
 
@@ -35,7 +36,7 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
     private readonly organizationService: OrganizationService,
     private readonly apiKeyService: ApiKeyService,
     private readonly eventEmitterReadinessWatcher: EventEmitterReadinessWatcher,
-    private readonly snapshotService: SnapshotService,
+    private readonly boxTemplateService: BoxTemplateService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly regionService: RegionService,
     private readonly runnerService: RunnerService,
@@ -63,7 +64,7 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
 
     // Default runner init is not awaited because v2 runners depend on the API to be ready
     this.initializeDefaultRunner()
-      .then(() => this.initializeSystemEnvironmentSnapshots())
+      .then(() => this.initializeSystemTemplates())
       .catch((error) => {
         this.logger.error('Error initializing default runner', error)
       })
@@ -182,8 +183,8 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
         maxCpuPerSandbox: this.configService.getOrThrow('admin.maxCpuPerSandbox'),
         maxMemoryPerSandbox: this.configService.getOrThrow('admin.maxMemoryPerSandbox'),
         maxDiskPerSandbox: this.configService.getOrThrow('admin.maxDiskPerSandbox'),
-        snapshotQuota: this.configService.getOrThrow('admin.snapshotQuota'),
-        maxSnapshotSize: this.configService.getOrThrow('admin.maxSnapshotSize'),
+        templateQuota: this.configService.getOrThrow('admin.templateQuota'),
+        maxTemplateSize: this.configService.getOrThrow('admin.maxTemplateSize'),
         volumeQuota: this.configService.getOrThrow('admin.volumeQuota'),
       },
       personalOrganizationDefaultRegionId: this.configService.getOrThrow('defaultRegion.id'),
@@ -212,118 +213,126 @@ Admin user created with API key: ${value}
     const existingRegistry = await this.dockerRegistryService.getAvailableTransientRegistry(
       this.configService.getOrThrow('defaultRegion.id'),
     )
-    if (existingRegistry) {
-      return
-    }
-
-    const registryUrl = this.configService.getOrThrow('transientRegistry.url')
-    const registryAdmin = this.configService.getOrThrow('transientRegistry.admin')
-    const registryPassword = this.configService.getOrThrow('transientRegistry.password')
-    const registryProjectId = this.configService.getOrThrow('transientRegistry.projectId')
-
-    if (!registryUrl || !registryAdmin || !registryPassword || !registryProjectId) {
-      this.logger.warn('Registry configuration not found, skipping transient registry setup')
-      return
-    }
-
-    this.logger.log('Initializing default transient registry...')
-
-    await this.dockerRegistryService.create({
+    await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Transient Registry',
-      url: registryUrl,
-      username: registryAdmin,
-      password: registryPassword,
-      project: registryProjectId,
+      url: this.configService.getOrThrow('transientRegistry.url'),
+      username: this.configService.getOrThrow('transientRegistry.admin'),
+      password: this.configService.getOrThrow('transientRegistry.password'),
+      project: this.configService.getOrThrow('transientRegistry.projectId'),
       registryType: RegistryType.TRANSIENT,
-      isDefault: true,
     })
-
-    this.logger.log('Default transient registry initialized successfully')
   }
 
   private async initializeInternalRegistry(): Promise<void> {
     const existingRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(
       this.configService.getOrThrow('defaultRegion.id'),
     )
-    if (existingRegistry) {
-      return
-    }
-
-    const registryUrl = this.configService.getOrThrow('internalRegistry.url')
-    const registryAdmin = this.configService.getOrThrow('internalRegistry.admin')
-    const registryPassword = this.configService.getOrThrow('internalRegistry.password')
-    const registryProjectId = this.configService.getOrThrow('internalRegistry.projectId')
-
-    if (!registryUrl || !registryAdmin || !registryPassword || !registryProjectId) {
-      this.logger.warn('Registry configuration not found, skipping internal registry setup')
-      return
-    }
-
-    this.logger.log('Initializing default internal registry...')
-
-    await this.dockerRegistryService.create({
+    await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Internal Registry',
-      url: registryUrl,
-      username: registryAdmin,
-      password: registryPassword,
-      project: registryProjectId,
+      url: this.configService.getOrThrow('internalRegistry.url'),
+      username: this.configService.getOrThrow('internalRegistry.admin'),
+      password: this.configService.getOrThrow('internalRegistry.password'),
+      project: this.configService.getOrThrow('internalRegistry.projectId'),
       registryType: RegistryType.INTERNAL,
-      isDefault: true,
     })
-
-    this.logger.log('Default internal registry initialized successfully')
   }
 
   private async initializeBackupRegistry(): Promise<void> {
     const existingRegistry = await this.dockerRegistryService.getAvailableBackupRegistry(
       this.configService.getOrThrow('defaultRegion.id'),
     )
+    await this.ensureConfiguredDefaultRegistry(existingRegistry, {
+      name: 'Backup Registry',
+      url: this.configService.getOrThrow('internalRegistry.url'),
+      username: this.configService.getOrThrow('internalRegistry.admin'),
+      password: this.configService.getOrThrow('internalRegistry.password'),
+      project: this.configService.getOrThrow('internalRegistry.projectId'),
+      registryType: RegistryType.BACKUP,
+      isFallback: true,
+    })
+  }
+
+  private async initializeSystemTemplates(): Promise<void> {
+    const adminPersonalOrg = await this.organizationService.findPersonal(BOXLITE_ADMIN_USER_ID)
+
+    const defaultTemplate = this.configService.getOrThrow('defaultTemplate')
+    if (!SYSTEM_TEMPLATES.some((template) => template.name === defaultTemplate)) {
+      this.logger.warn(`Configured default template ${defaultTemplate} is not in the MVP system template list`)
+    }
+
+    for (const template of SYSTEM_TEMPLATES) {
+      this.logger.log(`Ensuring system template: ${template.name}`)
+      await this.boxTemplateService.ensureSystemTemplate(adminPersonalOrg, template)
+    }
+
+    this.logger.log('System templates initialized successfully')
+  }
+
+  private async ensureConfiguredDefaultRegistry(
+    existingRegistry: DockerRegistry | null,
+    options: {
+      name: string
+      url: string
+      username: string
+      password: string
+      project: string
+      registryType: RegistryType
+      isFallback?: boolean
+    },
+  ): Promise<void> {
+    if (!options.url || !options.username || !options.password || !options.project) {
+      this.logger.warn(`Registry configuration not found, skipping ${options.name} setup`)
+      return
+    }
+
     if (existingRegistry) {
+      const desiredUrl = this.normalizeRegistryUrl(options.url)
+      const currentProject = existingRegistry.project ?? ''
+      const desiredProject = options.project ?? ''
+
+      if (
+        existingRegistry.url !== desiredUrl ||
+        existingRegistry.username !== options.username ||
+        currentProject !== desiredProject ||
+        existingRegistry.name !== options.name
+      ) {
+        this.logger.log(`Updating default ${options.name} configuration...`)
+        await this.dockerRegistryService.update(existingRegistry.id, {
+          name: options.name,
+          url: options.url,
+          username: options.username,
+          password: options.password,
+          project: options.project,
+        })
+      }
+
       return
     }
 
-    const registryUrl = this.configService.getOrThrow('internalRegistry.url')
-    const registryAdmin = this.configService.getOrThrow('internalRegistry.admin')
-    const registryPassword = this.configService.getOrThrow('internalRegistry.password')
-    const registryProjectId = this.configService.getOrThrow('internalRegistry.projectId')
-
-    if (!registryUrl || !registryAdmin || !registryPassword || !registryProjectId) {
-      this.logger.warn('Registry configuration not found, skipping backup registry setup')
-      return
-    }
-
-    this.logger.log('Initializing default backup registry...')
+    this.logger.log(`Initializing default ${options.name}...`)
 
     await this.dockerRegistryService.create(
       {
-        name: 'Backup Registry',
-        url: registryUrl,
-        username: registryAdmin,
-        password: registryPassword,
-        project: registryProjectId,
-        registryType: RegistryType.BACKUP,
+        name: options.name,
+        url: options.url,
+        username: options.username,
+        password: options.password,
+        project: options.project,
+        registryType: options.registryType,
         isDefault: true,
       },
       undefined,
-      true,
+      options.isFallback ?? false,
     )
 
-    this.logger.log('Default backup registry initialized successfully')
+    this.logger.log(`Default ${options.name} initialized successfully`)
   }
 
-  private async initializeSystemEnvironmentSnapshots(): Promise<void> {
-    const adminPersonalOrg = await this.organizationService.findPersonal(BOXLITE_ADMIN_USER_ID)
-
-    const defaultSnapshot = this.configService.getOrThrow('defaultSnapshot')
-    if (!SYSTEM_ENVIRONMENTS.some((environment) => environment.name === defaultSnapshot)) {
-      this.logger.warn(`Configured default snapshot ${defaultSnapshot} is not in the MVP system environment list`)
+  private normalizeRegistryUrl(url: string): string {
+    if (!url || url.trim() === '' || url.toLowerCase().includes('docker.io')) {
+      return 'docker.io'
     }
 
-    for (const environment of SYSTEM_ENVIRONMENTS) {
-      this.logger.log(`Ensuring system environment snapshot: ${environment.name}`)
-      await this.snapshotService.ensureSystemEnvironment(adminPersonalOrg, environment)
-    }
-
-    this.logger.log('System environment snapshots initialized successfully')
+    return url.trim().replace(/\/+$/, '')
   }
 }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { getEnvironmentDisplayName } from '@/lib/environment-display'
+import { getTemplateDisplayName } from '@/lib/template-display'
 import { formatTimestamp, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox, SandboxDesiredState, SandboxState } from '@boxlite-ai/api-client'
 import { ColumnDef } from '@tanstack/react-table'
@@ -176,25 +176,25 @@ export function getColumns({
       accessorKey: 'state',
     },
     {
-      id: 'snapshot',
+      id: 'template',
       size: 150,
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
-        return <SortableHeader column={column} label="Base image" />
+        return <SortableHeader column={column} label="Template" />
       },
       cell: ({ row }) => {
         return (
           <div className="w-full truncate">
-            {row.original.snapshot ? (
-              <EllipsisWithTooltip>{getEnvironmentDisplayName(row.original.snapshot)}</EllipsisWithTooltip>
+            {row.original.template ? (
+              <EllipsisWithTooltip>{getTemplateDisplayName(row.original.template)}</EllipsisWithTooltip>
             ) : (
               <div className="truncate text-muted-foreground/50">-</div>
             )}
           </div>
         )
       },
-      accessorKey: 'snapshot',
+      accessorKey: 'template',
     },
     {
       id: 'region',

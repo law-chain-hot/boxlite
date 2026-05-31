@@ -9,7 +9,7 @@ import { SandboxState } from '../../sandbox/enums/sandbox-state.enum'
 import { BoxResponseDto } from '../dto/box-response.dto'
 import { CreateBoxDto } from '../dto/create-box.dto'
 import { CreateSandboxDto } from '../../sandbox/dto/create-sandbox.dto'
-import { SYSTEM_ENVIRONMENTS, getSystemEnvironmentDefinition } from '../../sandbox/constants/system-environments'
+import { SYSTEM_TEMPLATES, getSystemTemplateDefinition } from '../../sandbox/constants/system-templates'
 
 export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
   return {
@@ -18,7 +18,7 @@ export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
     status: mapState(sandbox.state),
     created_at: sandbox.createdAt || new Date().toISOString(),
     updated_at: sandbox.updatedAt || new Date().toISOString(),
-    image: sandbox.snapshot || '',
+    image: sandbox.template || '',
     cpus: sandbox.cpu || 1,
     memory_mib: (sandbox.memory || 1) * 1024,
     labels: sandbox.labels || {},
@@ -27,7 +27,7 @@ export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
 
 export function createBoxToCreateSandbox(dto: CreateBoxDto, target?: string): CreateSandboxDto {
   const createDto = new CreateSandboxDto()
-  createDto.environmentId = resolveBoxEnvironmentId(dto.image)
+  createDto.templateId = resolveBoxTemplateId(dto.image)
   createDto.name = dto.name
   createDto.user = dto.user
   createDto.env = dto.env
@@ -38,13 +38,13 @@ export function createBoxToCreateSandbox(dto: CreateBoxDto, target?: string): Cr
   return createDto
 }
 
-export function resolveBoxEnvironmentId(image?: string): string | undefined {
+export function resolveBoxTemplateId(image?: string): string | undefined {
   const imageName = image?.trim()
   if (!imageName) {
-    return SYSTEM_ENVIRONMENTS[0]?.name
+    return SYSTEM_TEMPLATES[0]?.name
   }
 
-  return getSystemEnvironmentDefinition(imageName)?.name
+  return getSystemTemplateDefinition(imageName)?.name
 }
 
 function mapState(state: string | SandboxState | undefined): string {
@@ -57,8 +57,8 @@ function mapState(state: string | SandboxState | undefined): string {
     case SandboxState.CREATING:
     case SandboxState.STARTING:
     case SandboxState.RESTORING:
-    case SandboxState.PULLING_SNAPSHOT:
-    case SandboxState.BUILDING_SNAPSHOT:
+    case SandboxState.PULLING_ARTIFACT:
+    case SandboxState.BUILDING_ARTIFACT:
     case SandboxState.PENDING_BUILD:
       return 'configured'
     case SandboxState.STOPPING:

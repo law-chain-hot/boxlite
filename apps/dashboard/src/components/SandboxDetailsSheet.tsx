@@ -22,7 +22,7 @@ import { SandboxSpendingTab } from './spending'
 import { useFeatureFlagEnabled } from 'posthog-js/react'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { useConfig } from '@/hooks/useConfig'
-import { getEnvironmentDisplayName } from '@/lib/environment-display'
+import { getTemplateDisplayName } from '@/lib/template-display'
 
 interface SandboxDetailsSheetProps {
   sandbox: Sandbox | null
@@ -75,7 +75,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
   // }, [sandbox?.id, getWebTerminalUrl])
 
   if (!sandbox) return null
-  const environmentDisplayName = getEnvironmentDisplayName(sandbox.snapshot)
+  const templateDisplayName = getTemplateDisplayName(sandbox.template)
 
   const getLastEvent = (sandbox: Sandbox): { date: Date; relativeTimeString: string } => {
     return getRelativeTimeString(sandbox.updatedAt)
@@ -122,26 +122,6 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                     Recover
                   </Button>
                 )}
-                {/* {(sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleFork(sandbox.id)}
-                    disabled={sandboxIsLoading[sandbox.id]}
-                  >
-                    <GitFork className="w-4 h-4" />
-                    Fork
-                  </Button>
-                )}
-                {(sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleSnapshot(sandbox.id)}
-                    disabled={sandboxIsLoading[sandbox.id]}
-                  >
-                    <Camera className="w-4 h-4" />
-                    Snapshot
-                  </Button>
-                )} */}
                 {sandbox.state === SandboxState.STOPPED && (
                   <Button
                     variant="outline"
@@ -243,16 +223,16 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                 </div>
               </div>
               <div>
-                <h3 className="text-sm text-muted-foreground">Base image</h3>
+                <h3 className="text-sm text-muted-foreground">Template</h3>
                 <div className="mt-1 flex items-center gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{sandbox.snapshot ? environmentDisplayName : '-'}</p>
-                    {sandbox.snapshot && environmentDisplayName !== sandbox.snapshot && (
-                      <p className="truncate text-xs text-muted-foreground">{sandbox.snapshot}</p>
+                    <p className="truncate text-sm font-medium">{sandbox.template ? templateDisplayName : '-'}</p>
+                    {sandbox.template && templateDisplayName !== sandbox.template && (
+                      <p className="truncate text-xs text-muted-foreground">{sandbox.template}</p>
                     )}
                   </div>
-                  {sandbox.snapshot && (
-                    <CopyButton value={sandbox.snapshot} tooltipText="Copy base image" size="icon-xs" />
+                  {sandbox.template && (
+                    <CopyButton value={sandbox.template} tooltipText="Copy template" size="icon-xs" />
                   )}
                 </div>
               </div>

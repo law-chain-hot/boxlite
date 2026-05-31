@@ -37,8 +37,8 @@ type BoxliteConfiguration struct {
 	ProxyTemplateUrl string `json:"proxyTemplateUrl"`
 	// Toolbox template URL
 	ProxyToolboxUrl string `json:"proxyToolboxUrl"`
-	// Default snapshot for sandboxes
-	DefaultSnapshot string `json:"defaultSnapshot"`
+	// Default template for sandboxes
+	DefaultTemplate string `json:"defaultTemplate"`
 	// Dashboard URL
 	DashboardUrl string `json:"dashboardUrl"`
 	// Maximum auto-archive interval in minutes
@@ -56,7 +56,7 @@ type BoxliteConfiguration struct {
 	// Base64 encoded SSH Gateway public key
 	SshGatewayPublicKey *string `json:"sshGatewayPublicKey,omitempty"`
 	// Rate limit configuration
-	RateLimit *RateLimitConfig `json:"rateLimit,omitempty"`
+	RateLimit            *RateLimitConfig `json:"rateLimit,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -66,7 +66,7 @@ type _BoxliteConfiguration BoxliteConfiguration
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewBoxliteConfiguration(version string, oidc OidcConfig, linkedAccountsEnabled bool, announcements map[string]Announcement, proxyTemplateUrl string, proxyToolboxUrl string, defaultSnapshot string, dashboardUrl string, maxAutoArchiveInterval float32, maintananceMode bool, environment string) *BoxliteConfiguration {
+func NewBoxliteConfiguration(version string, oidc OidcConfig, linkedAccountsEnabled bool, announcements map[string]Announcement, proxyTemplateUrl string, proxyToolboxUrl string, defaultTemplate string, dashboardUrl string, maxAutoArchiveInterval float32, maintananceMode bool, environment string) *BoxliteConfiguration {
 	this := BoxliteConfiguration{}
 	this.Version = version
 	this.Oidc = oidc
@@ -74,7 +74,7 @@ func NewBoxliteConfiguration(version string, oidc OidcConfig, linkedAccountsEnab
 	this.Announcements = announcements
 	this.ProxyTemplateUrl = proxyTemplateUrl
 	this.ProxyToolboxUrl = proxyToolboxUrl
-	this.DefaultSnapshot = defaultSnapshot
+	this.DefaultTemplate = defaultTemplate
 	this.DashboardUrl = dashboardUrl
 	this.MaxAutoArchiveInterval = maxAutoArchiveInterval
 	this.MaintananceMode = maintananceMode
@@ -298,28 +298,28 @@ func (o *BoxliteConfiguration) SetProxyToolboxUrl(v string) {
 	o.ProxyToolboxUrl = v
 }
 
-// GetDefaultSnapshot returns the DefaultSnapshot field value
-func (o *BoxliteConfiguration) GetDefaultSnapshot() string {
+// GetDefaultTemplate returns the DefaultTemplate field value
+func (o *BoxliteConfiguration) GetDefaultTemplate() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.DefaultSnapshot
+	return o.DefaultTemplate
 }
 
-// GetDefaultSnapshotOk returns a tuple with the DefaultSnapshot field value
+// GetDefaultTemplateOk returns a tuple with the DefaultTemplate field value
 // and a boolean to check if the value has been set.
-func (o *BoxliteConfiguration) GetDefaultSnapshotOk() (*string, bool) {
+func (o *BoxliteConfiguration) GetDefaultTemplateOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.DefaultSnapshot, true
+	return &o.DefaultTemplate, true
 }
 
-// SetDefaultSnapshot sets field value
-func (o *BoxliteConfiguration) SetDefaultSnapshot(v string) {
-	o.DefaultSnapshot = v
+// SetDefaultTemplate sets field value
+func (o *BoxliteConfiguration) SetDefaultTemplate(v string) {
+	o.DefaultTemplate = v
 }
 
 // GetDashboardUrl returns the DashboardUrl field value
@@ -579,7 +579,7 @@ func (o *BoxliteConfiguration) SetRateLimit(v RateLimitConfig) {
 }
 
 func (o BoxliteConfiguration) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -600,7 +600,7 @@ func (o BoxliteConfiguration) ToMap() (map[string]interface{}, error) {
 	}
 	toSerialize["proxyTemplateUrl"] = o.ProxyTemplateUrl
 	toSerialize["proxyToolboxUrl"] = o.ProxyToolboxUrl
-	toSerialize["defaultSnapshot"] = o.DefaultSnapshot
+	toSerialize["defaultTemplate"] = o.DefaultTemplate
 	toSerialize["dashboardUrl"] = o.DashboardUrl
 	toSerialize["maxAutoArchiveInterval"] = o.MaxAutoArchiveInterval
 	toSerialize["maintananceMode"] = o.MaintananceMode
@@ -639,7 +639,7 @@ func (o *BoxliteConfiguration) UnmarshalJSON(data []byte) (err error) {
 		"announcements",
 		"proxyTemplateUrl",
 		"proxyToolboxUrl",
-		"defaultSnapshot",
+		"defaultTemplate",
 		"dashboardUrl",
 		"maxAutoArchiveInterval",
 		"maintananceMode",
@@ -651,10 +651,10 @@ func (o *BoxliteConfiguration) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -681,7 +681,7 @@ func (o *BoxliteConfiguration) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "pylonAppId")
 		delete(additionalProperties, "proxyTemplateUrl")
 		delete(additionalProperties, "proxyToolboxUrl")
-		delete(additionalProperties, "defaultSnapshot")
+		delete(additionalProperties, "defaultTemplate")
 		delete(additionalProperties, "dashboardUrl")
 		delete(additionalProperties, "maxAutoArchiveInterval")
 		delete(additionalProperties, "maintananceMode")

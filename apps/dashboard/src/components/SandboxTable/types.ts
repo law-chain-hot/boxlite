@@ -5,7 +5,7 @@
  */
 
 import { DEFAULT_SANDBOX_SORTING, SandboxFilters, SandboxSorting } from '@/hooks/useSandboxes'
-import { Environment } from '@/hooks/queries/useEnvironmentsQuery'
+import type { BoxTemplate } from '@/hooks/queries/useTemplatesQuery'
 import {
   ListSandboxesPaginatedOrderEnum,
   ListSandboxesPaginatedSortEnum,
@@ -21,8 +21,8 @@ export interface SandboxTableProps {
   sandboxIsLoading: Record<string, boolean>
   sandboxStateIsTransitioning: Record<string, boolean>
   loading: boolean
-  environments: Environment[]
-  environmentsDataIsLoading: boolean
+  templates: BoxTemplate[]
+  templatesDataIsLoading: boolean
   getRegionName: (regionId: string) => string | undefined
   handleStart: (id: string) => void
   handleStop: (id: string) => void
@@ -75,8 +75,8 @@ export interface SandboxTableActionsProps {
 
 export interface SandboxTableHeaderProps {
   table: Table<Sandbox>
-  environments: Environment[]
-  environmentsDataIsLoading: boolean
+  templates: BoxTemplate[]
+  templatesDataIsLoading: boolean
   onRefresh: () => void
   isRefreshing?: boolean
   headerAction?: ReactNode
@@ -106,8 +106,8 @@ export const convertTableSortingToApiSorting = (sorting: SortingState): SandboxS
     case 'state':
       field = ListSandboxesPaginatedSortEnum.STATE
       break
-    case 'snapshot':
-      field = ListSandboxesPaginatedSortEnum.SNAPSHOT
+    case 'template':
+      field = ListSandboxesPaginatedSortEnum.TEMPLATE
       break
     case 'region':
     case 'target':
@@ -144,9 +144,9 @@ export const convertTableFiltersToApiFilters = (columnFilters: ColumnFiltersStat
           filters.states = filter.value as ListSandboxesPaginatedStatesEnum[]
         }
         break
-      case 'snapshot':
+      case 'template':
         if (Array.isArray(filter.value) && filter.value.length > 0) {
-          filters.snapshots = filter.value as string[]
+          filters.templates = filter.value as string[]
         }
         break
       case 'region':
@@ -230,8 +230,8 @@ export const convertApiSortingToTableSorting = (sorting: SandboxSorting): Sortin
     case ListSandboxesPaginatedSortEnum.STATE:
       id = 'state'
       break
-    case ListSandboxesPaginatedSortEnum.SNAPSHOT:
-      id = 'snapshot'
+    case ListSandboxesPaginatedSortEnum.TEMPLATE:
+      id = 'template'
       break
     case ListSandboxesPaginatedSortEnum.REGION:
       id = 'region'
@@ -259,8 +259,8 @@ export const convertApiFiltersToTableFilters = (filters: SandboxFilters): Column
     columnFilters.push({ id: 'state', value: filters.states })
   }
 
-  if (filters.snapshots && filters.snapshots.length > 0) {
-    columnFilters.push({ id: 'snapshot', value: filters.snapshots })
+  if (filters.templates && filters.templates.length > 0) {
+    columnFilters.push({ id: 'template', value: filters.templates })
   }
 
   if (filters.regions && filters.regions.length > 0) {

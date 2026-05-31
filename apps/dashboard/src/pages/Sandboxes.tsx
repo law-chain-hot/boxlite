@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label'
 import { DEFAULT_PAGE_SIZE } from '@/constants/Pagination'
 import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { RoutePath } from '@/enums/RoutePath'
-import { useEnvironmentsQuery } from '@/hooks/queries/useEnvironmentsQuery'
+import { useTemplatesQuery } from '@/hooks/queries/useTemplatesQuery'
 import { CopyableValue } from '@/components/ui/copyable-value'
 import { useApi } from '@/hooks/useApi'
 import { useConfig } from '@/hooks/useConfig'
@@ -311,17 +311,13 @@ const Sandboxes: React.FC = () => {
   const [sshSandboxId, setSshSandboxId] = useState<string>('')
   const [copied, setCopied] = useState<string | null>(null)
 
-  const {
-    data: environmentsData,
-    isLoading: environmentsDataIsLoading,
-    error: environmentsDataError,
-  } = useEnvironmentsQuery()
+  const { data: templatesData, isLoading: templatesDataIsLoading, error: templatesDataError } = useTemplatesQuery()
 
   useEffect(() => {
-    if (environmentsDataError) {
-      handleApiError(environmentsDataError, 'Failed to fetch base images')
+    if (templatesDataError) {
+      handleApiError(templatesDataError, 'Failed to fetch templates')
     }
-  }, [environmentsDataError])
+  }, [templatesDataError])
 
   const { getRegionName } = useRegions()
 
@@ -932,8 +928,8 @@ const Sandboxes: React.FC = () => {
           isRefreshing={sandboxDataIsRefreshing}
           data={sandboxesData?.items || []}
           loading={sandboxesDataIsLoading}
-          environments={environmentsData || []}
-          environmentsDataIsLoading={environmentsDataIsLoading}
+          templates={templatesData || []}
+          templatesDataIsLoading={templatesDataIsLoading}
           onRowClick={(sandbox: Sandbox) => {
             navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id }))
           }}

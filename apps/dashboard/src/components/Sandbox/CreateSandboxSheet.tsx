@@ -21,12 +21,12 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { RoutePath } from '@/enums/RoutePath'
-import { useCreateSandboxFromEnvironmentMutation } from '@/hooks/mutations/useCreateSandboxFromEnvironmentMutation'
-import { useEnvironmentsQuery } from '@/hooks/queries/useEnvironmentsQuery'
-import type { Environment } from '@/hooks/queries/useEnvironmentsQuery'
+import { useCreateSandboxFromTemplateMutation } from '@/hooks/mutations/useCreateSandboxFromTemplateMutation'
+import { useTemplatesQuery } from '@/hooks/queries/useTemplatesQuery'
+import type { BoxTemplate } from '@/hooks/queries/useTemplatesQuery'
 import { useConfig } from '@/hooks/useConfig'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
-import { getEnvironmentDisplayMetadata, getEnvironmentDisplaySortIndex } from '@/lib/environment-display'
+import { getTemplateDisplayMetadata, getTemplateDisplaySortIndex } from '@/lib/template-display'
 import { handleApiError } from '@/lib/error-handling'
 import { cn } from '@/lib/utils'
 import type { Sandbox } from '@boxlite-ai/api-client'
@@ -70,7 +70,7 @@ const formSchema = z.object({
     .string()
     .optional()
     .refine((val) => !val || NAME_REGEX.test(val), 'Only letters, digits, dots, underscores and dashes are allowed'),
-  environment: z.string().min(1, 'Select a base image'),
+  template: z.string().min(1, 'Select a template'),
   autoStopInterval: z
     .string()
     .optional()
@@ -88,7 +88,7 @@ type FormValues = z.input<typeof formSchema>
 
 const defaultValues: FormValues = {
   name: '',
-  environment: '',
+  template: '',
   autoStopInterval: '',
   autoDeleteInterval: '',
   cpu: '',
@@ -96,22 +96,22 @@ const defaultValues: FormValues = {
   disk: '',
 }
 
-const getEnvironmentImageTag = (environment: Environment) => environment.imageName || environment.name
+const getTemplateName = (template: BoxTemplate) => template.name
 
-const getEnvironmentLabel = (environment: Environment) => {
-  const imageTag = getEnvironmentImageTag(environment)
-  return environment.displayName || getEnvironmentDisplayMetadata(imageTag)?.displayName || imageTag
+const getTemplateLabel = (template: BoxTemplate) => {
+  const templateName = getTemplateName(template)
+  return template.displayName || getTemplateDisplayMetadata(templateName)?.displayName || templateName
 }
 
-const getEnvironmentDescription = (environment: Environment) => {
-  const imageTag = getEnvironmentImageTag(environment)
-  return environment.description || getEnvironmentDisplayMetadata(imageTag)?.description
+const getTemplateDescription = (template: BoxTemplate) => {
+  const templateName = getTemplateName(template)
+  return template.description || getTemplateDisplayMetadata(templateName)?.description
 }
 
-const getEnvironmentResourceSummary = (environment: Environment) => ({
-  cpu: environment.cpu ?? 1,
-  memory: environment.mem ?? 1,
-  disk: environment.disk ?? 3,
+const getTemplateResourceSummary = (template: BoxTemplate) => ({
+  cpu: template.defaultResources?.cpu ?? 1,
+  memory: template.defaultResources?.memory ?? 1,
+  disk: template.defaultResources?.disk ?? 3,
 })
 
 type ResourceFieldName = 'cpu' | 'memory' | 'disk'
@@ -147,28 +147,26 @@ export const CreateSandboxSheet = ({
   const open = controlledOpen ?? internalOpen
   const setOpen = onOpenChange ?? setInternalOpen
 
-  const { defaultSnapshot } = useConfig()
+  const { defaultTemplate } = useConfig()
   const { selectedOrganization } = useSelectedOrganization()
-  const { reset: resetCreateSandboxMutation, ...createSandboxMutation } = useCreateSandboxFromEnvironmentMutation()
+  const { reset: resetCreateSandboxMutation, ...createSandboxMutation } = useCreateSandboxFromTemplateMutation()
   const formRef = useRef<HTMLFormElement>(null)
 
-  const { data: environmentsData, isLoading: environmentsLoading } = useEnvironmentsQuery()
+  const { data: templatesData, isLoading: templatesLoading } = useTemplatesQuery()
 
-  const environments = useMemo(() => {
-    const items = environmentsData ?? []
+  const templates = useMemo(() => {
+    const items = templatesData ?? []
     return [...items].sort((a, b) => {
-      if (a.name === defaultSnapshot || a.id === defaultSnapshot) return -1
-      if (b.name === defaultSnapshot || b.id === defaultSnapshot) return 1
-      const order =
-        getEnvironmentDisplaySortIndex(getEnvironmentImageTag(a)) -
-        getEnvironmentDisplaySortIndex(getEnvironmentImageTag(b))
+      if (a.name === defaultTemplate || a.id === defaultTemplate) return -1
+      if (b.name === defaultTemplate || b.id === defaultTemplate) return 1
+      const order = getTemplateDisplaySortIndex(getTemplateName(a)) - getTemplateDisplaySortIndex(getTemplateName(b))
       if (order !== 0) return order
 
-      return getEnvironmentLabel(a).localeCompare(getEnvironmentLabel(b))
+      return getTemplateLabel(a).localeCompare(getTemplateLabel(b))
     })
-  }, [defaultSnapshot, environmentsData])
+  }, [defaultTemplate, templatesData])
 
-  const defaultEnvironmentId = environments[0]?.id ?? ''
+  const defaultTemplateId = templates[0]?.id ?? ''
 
   const form = useForm({
     defaultValues,
@@ -190,8 +188,8 @@ export const CreateSandboxSheet = ({
         return
       }
 
-      if (!value.environment) {
-        toast.error('Select a base image to create a box.')
+      if (!value.template) {
+        toast.error('Select a template to create a box.')
         return
       }
 
@@ -199,7 +197,7 @@ export const CreateSandboxSheet = ({
       try {
         const sandbox = await createSandboxMutation.mutateAsync({
           name: value.name?.trim() || undefined,
-          environmentId: value.environment,
+          templateId: value.template,
           public: false,
           networkBlockAll: false,
           autoStopInterval: parseOptionalInteger(value.autoStopInterval),
@@ -242,11 +240,11 @@ export const CreateSandboxSheet = ({
   }, [open, resetState])
 
   useEffect(() => {
-    if (!open || !defaultEnvironmentId || form.getFieldValue('environment')) {
+    if (!open || !defaultTemplateId || form.getFieldValue('template')) {
       return
     }
-    form.setFieldValue('environment', defaultEnvironmentId)
-  }, [defaultEnvironmentId, form, open])
+    form.setFieldValue('template', defaultTemplateId)
+  }, [defaultTemplateId, form, open])
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -297,48 +295,48 @@ export const CreateSandboxSheet = ({
               }}
             </form.Field>
 
-            <form.Field name="environment">
+            <form.Field name="template">
               {(field) => {
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name} className="text-sm font-semibold">
-                      Base image
+                      Template
                     </FieldLabel>
-                    <FieldDescription>Choose a shared Linux base image for this box.</FieldDescription>
+                    <FieldDescription>Choose a prepared template for this box.</FieldDescription>
                     <div
                       id={field.name}
                       role="radiogroup"
                       aria-invalid={isInvalid}
-                      aria-label="Base image"
+                      aria-label="Template"
                       className="grid gap-3"
                     >
-                      {environmentsLoading && (
+                      {templatesLoading && (
                         <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
-                          Loading base images...
+                          Loading templates...
                         </div>
                       )}
-                      {!environmentsLoading && environments.length === 0 && (
+                      {!templatesLoading && templates.length === 0 && (
                         <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
-                          No base images are available for this organization.
+                          No templates are available for this organization.
                         </div>
                       )}
-                      {environments.map((environment) => {
-                        const imageTag = getEnvironmentImageTag(environment)
-                        const description = getEnvironmentDescription(environment) ?? 'Linux base environment'
-                        const resources = getEnvironmentResourceSummary(environment)
-                        const selected = field.state.value === environment.id
-                        const isDefault = environment.name === defaultSnapshot || environment.id === defaultSnapshot
+                      {templates.map((template, index) => {
+                        const templateName = getTemplateName(template)
+                        const description = getTemplateDescription(template) ?? 'Prepared Linux template'
+                        const resources = getTemplateResourceSummary(template)
+                        const selected = field.state.value === template.id
+                        const isDefault = template.name === defaultTemplate || template.id === defaultTemplate
 
                         return (
                           <button
-                            key={environment.id}
+                            key={template.id}
                             type="button"
                             role="radio"
                             aria-checked={selected}
-                            title={imageTag}
-                            disabled={environmentsLoading}
-                            onClick={() => field.handleChange(environment.id)}
+                            title={templateName}
+                            disabled={templatesLoading}
+                            onClick={() => field.handleChange(template.id)}
                             className={cn(
                               'group grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-md border bg-background p-4 text-left transition-all',
                               'hover:border-foreground/40 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20',
@@ -348,12 +346,10 @@ export const CreateSandboxSheet = ({
                           >
                             <span className="min-w-0 space-y-2.5">
                               <span className="flex min-w-0 items-center gap-2">
-                                <span className="truncate text-base font-semibold">
-                                  {getEnvironmentLabel(environment)}
-                                </span>
+                                <span className="truncate text-base font-semibold">{getTemplateLabel(template)}</span>
                                 {isDefault && (
                                   <Badge variant="secondary" className="shrink-0">
-                                    default
+                                    Default
                                   </Badge>
                                 )}
                               </span>
@@ -363,9 +359,7 @@ export const CreateSandboxSheet = ({
                               <span className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-[minmax(0,1fr)_auto]">
                                 <span className="flex min-w-0 items-center gap-2">
                                   <Layers className="size-4 shrink-0" />
-                                  <code className="min-w-0 truncate rounded-sm bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground">
-                                    {imageTag}
-                                  </code>
+                                  <span className="truncate">Template {index + 1}</span>
                                 </span>
                                 <span className="flex flex-wrap items-center gap-1">
                                   <ResourceChip resource="cpu" value={resources.cpu} />
@@ -409,20 +403,23 @@ export const CreateSandboxSheet = ({
                 </AccordionTrigger>
                 <AccordionContent className="pb-0 pt-4">
                   <form.Subscribe
-                    selector={(state) => state.values.environment}
-                    children={(selectedEnvironmentId) => {
-                      const selectedEnvironment = environments.find(
-                        (environment) => environment.id === selectedEnvironmentId,
-                      )
-                      const defaultResources = selectedEnvironment
-                        ? getEnvironmentResourceSummary(selectedEnvironment)
+                    selector={(state) => state.values.template}
+                    children={(selectedTemplateId) => {
+                      const selectedTemplate = templates.find((template) => template.id === selectedTemplateId)
+                      const defaultResources = selectedTemplate
+                        ? getTemplateResourceSummary(selectedTemplate)
                         : undefined
 
                       return (
-                        <div className="rounded-md border bg-background p-3">
-                          <div className="space-y-2">
-                            <Label className="text-sm font-semibold">Resources</Label>
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] gap-x-5 gap-y-3">
+                        <div className="space-y-5">
+                          <div className="space-y-3">
+                            <div>
+                              <Label className="text-sm font-semibold">Resources</Label>
+                              <p className="text-xs text-muted-foreground">
+                                Leave fields blank to use the selected template defaults.
+                              </p>
+                            </div>
+                            <div className="grid gap-3">
                               {RESOURCE_FIELDS.map(({ name, label, unit, Icon }) => {
                                 const defaultValue = defaultResources?.[name]
 
@@ -431,15 +428,22 @@ export const CreateSandboxSheet = ({
                                     {(field) => {
                                       const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                       return (
-                                        <div className="min-w-0">
-                                          <Label
-                                            htmlFor={field.name}
-                                            className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
-                                          >
-                                            <Icon className="size-3.5" />
-                                            {label}
-                                          </Label>
-                                          <div className="relative mt-1.5">
+                                        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
+                                          <div className="min-w-0">
+                                            <Label
+                                              htmlFor={field.name}
+                                              className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
+                                            >
+                                              <Icon className="size-3.5" />
+                                              {label}
+                                            </Label>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                              {defaultValue === undefined
+                                                ? 'Select a template to view the default.'
+                                                : `Default: ${defaultValue} ${unit}`}
+                                            </p>
+                                          </div>
+                                          <div className="relative min-w-0">
                                             <NumericFormat
                                               customInput={Input}
                                               aria-invalid={isInvalid}
@@ -468,10 +472,10 @@ export const CreateSandboxSheet = ({
                                             <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">
                                               {unit}
                                             </span>
+                                            {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
+                                              <FieldError errors={field.state.meta.errors} />
+                                            )}
                                           </div>
-                                          {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
-                                            <FieldError errors={field.state.meta.errors} />
-                                          )}
                                         </div>
                                       )
                                     }}
@@ -481,18 +485,29 @@ export const CreateSandboxSheet = ({
                             </div>
                           </div>
 
-                          <div className="mt-4">
-                            <Label className="text-sm font-semibold">Lifecycle</Label>
-                            <div className="mt-2 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-5 gap-y-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+                          <div className="space-y-3 border-t pt-4">
+                            <div>
+                              <Label className="text-sm font-semibold">Lifecycle</Label>
+                              <p className="text-xs text-muted-foreground">
+                                Leave fields blank to use the platform defaults.
+                              </p>
+                            </div>
+                            <div className="grid gap-3">
                               <form.Field name="autoStopInterval">
                                 {(field) => {
                                   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                   return (
-                                    <div className="min-w-0">
-                                      <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
-                                        Auto-stop
-                                      </Label>
-                                      <div className="relative mt-1.5">
+                                    <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
+                                      <div className="min-w-0">
+                                        <Label
+                                          htmlFor={field.name}
+                                          className="text-xs font-medium text-muted-foreground"
+                                        >
+                                          Auto-stop
+                                        </Label>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">Default: 15 min</p>
+                                      </div>
+                                      <div className="relative min-w-0">
                                         <NumericFormat
                                           customInput={Input}
                                           aria-invalid={isInvalid}
@@ -514,10 +529,10 @@ export const CreateSandboxSheet = ({
                                         <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">
                                           min
                                         </span>
+                                        {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
+                                          <FieldError errors={field.state.meta.errors} />
+                                        )}
                                       </div>
-                                      {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
-                                        <FieldError errors={field.state.meta.errors} />
-                                      )}
                                     </div>
                                   )
                                 }}
@@ -527,35 +542,43 @@ export const CreateSandboxSheet = ({
                                 {(field) => {
                                   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                   return (
-                                    <div className="min-w-0">
-                                      <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
-                                        Auto-delete
-                                      </Label>
-                                      <NumericFormat
-                                        customInput={Input}
-                                        aria-invalid={isInvalid}
-                                        id={field.name}
-                                        className="mt-1.5 h-8 w-full text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
-                                        placeholder={focusedAdvancedField === field.name ? '' : 'Disabled'}
-                                        decimalScale={0}
-                                        allowNegative
-                                        isAllowed={(values) => {
-                                          if (values.floatValue === undefined) return true
-                                          return values.floatValue === -1 || values.floatValue >= 0
-                                        }}
-                                        value={field.state.value ?? ''}
-                                        onFocus={() => setFocusedAdvancedField(field.name)}
-                                        onBlur={() => {
-                                          field.handleBlur()
-                                          setFocusedAdvancedField((currentField) =>
-                                            currentField === field.name ? null : currentField,
-                                          )
-                                        }}
-                                        onValueChange={(values) => field.handleChange(values.value)}
-                                      />
-                                      {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
-                                        <FieldError errors={field.state.meta.errors} />
-                                      )}
+                                    <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
+                                      <div className="min-w-0">
+                                        <Label
+                                          htmlFor={field.name}
+                                          className="text-xs font-medium text-muted-foreground"
+                                        >
+                                          Auto-delete
+                                        </Label>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">Default: Disabled</p>
+                                      </div>
+                                      <div className="min-w-0">
+                                        <NumericFormat
+                                          customInput={Input}
+                                          aria-invalid={isInvalid}
+                                          id={field.name}
+                                          className="h-8 w-full text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
+                                          placeholder={focusedAdvancedField === field.name ? '' : 'Disabled'}
+                                          decimalScale={0}
+                                          allowNegative
+                                          isAllowed={(values) => {
+                                            if (values.floatValue === undefined) return true
+                                            return values.floatValue === -1 || values.floatValue >= 0
+                                          }}
+                                          value={field.state.value ?? ''}
+                                          onFocus={() => setFocusedAdvancedField(field.name)}
+                                          onBlur={() => {
+                                            field.handleBlur()
+                                            setFocusedAdvancedField((currentField) =>
+                                              currentField === field.name ? null : currentField,
+                                            )
+                                          }}
+                                          onValueChange={(values) => field.handleChange(values.value)}
+                                        />
+                                        {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
+                                          <FieldError errors={field.state.meta.errors} />
+                                        )}
+                                      </div>
                                     </div>
                                   )
                                 }}
@@ -579,7 +602,7 @@ export const CreateSandboxSheet = ({
                 type="submit"
                 form="create-sandbox-form"
                 variant="default"
-                disabled={isSubmitting || !selectedOrganization?.id || environments.length === 0}
+                disabled={isSubmitting || !selectedOrganization?.id || templates.length === 0}
                 className="w-full sm:w-auto"
               >
                 {isSubmitting && <Spinner />}
