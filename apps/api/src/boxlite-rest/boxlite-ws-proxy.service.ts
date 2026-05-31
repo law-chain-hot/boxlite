@@ -13,9 +13,10 @@ import { SandboxService } from '../sandbox/services/sandbox.service'
 import { RunnerService } from '../sandbox/services/runner.service'
 import type { Runner } from '../sandbox/entities/runner.entity'
 
-// Matches /api/v1/<tenant>/boxes/<id>/executions/<id>/attach with optional query string.
+// Matches /api/v1/boxes/<id>/executions/<id>/attach and the legacy
+// /api/v1/<tenant>/boxes/<id>/executions/<id>/attach shape with optional query string.
 // Capture group 1 is the sandbox/box id.
-const ATTACH_PATH = /^\/api\/v1\/[^/]+\/boxes\/([^/]+)\/executions\/[^/]+\/attach(?:\?.*)?$/
+const ATTACH_PATH = /^\/api\/v1\/(?:[^/]+\/)?boxes\/([^/]+)\/executions\/[^/]+\/attach(?:\?.*)?$/
 
 /**
  * Singleton WebSocket proxy for `/attach` upgrades.
@@ -42,8 +43,8 @@ export class BoxliteWsProxyService {
     this.proxy = createProxyMiddleware({
       ws: true,
       changeOrigin: true,
-      // Drop the public `/api/v1/<tenant>/` prefix; runner mounts routes at `/v1/...`.
-      pathRewrite: (path: string) => path.replace(/^\/api\/v1\/[^/]+\/boxes\//, '/v1/boxes/'),
+      // Drop the public `/api/v1/` or `/api/v1/<tenant>/` prefix; runner mounts routes at `/v1/...`.
+      pathRewrite: (path: string) => path.replace(/^\/api\/v1\/(?:[^/]+\/)?boxes\//, '/v1/boxes/'),
       // Target is resolved per-upgrade and stashed on the request before
       // delegating into the proxy.
       router: (req: IncomingMessage) => {

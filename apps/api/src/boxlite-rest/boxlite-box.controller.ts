@@ -39,7 +39,7 @@ import { AuditTarget } from '../audit/enums/audit-target.enum'
 import { BadRequestError } from '../exceptions/bad-request.exception'
 
 @ApiTags('BoxLite REST')
-@Controller('v1/:prefix/boxes')
+@Controller(['v1/boxes', 'v1/:prefix/boxes'])
 @UseGuards(CombinedAuthGuard, OrganizationResourceActionGuard)
 @ApiBearerAuth()
 export class BoxliteBoxController {

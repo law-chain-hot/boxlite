@@ -28,7 +28,7 @@ import { SandboxService } from '../sandbox/services/sandbox.service'
 import { RunnerService } from '../sandbox/services/runner.service'
 
 @ApiTags('BoxLite REST')
-@Controller('v1/:prefix/boxes')
+@Controller(['v1/boxes', 'v1/:prefix/boxes'])
 @UseGuards(CombinedAuthGuard, OrganizationResourceActionGuard)
 @ApiBearerAuth()
 export class BoxliteProxyController {

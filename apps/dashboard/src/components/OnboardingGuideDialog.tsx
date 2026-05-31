@@ -241,7 +241,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let box_handle = rt.create(options, Some("my-box".into())).await?;
     box_handle.start().await?;
 
-    let mut exec = box_handle
+    let exec = box_handle
         .exec(BoxCommand::new("echo").arg("Hello World!"))
         .await?;
     let result = exec.wait().await?;
@@ -261,7 +261,7 @@ boxlite run --rm ubuntu:24.04 echo "Hello World!"
 
 boxlite create --name my-box ubuntu:24.04
 boxlite start my-box
-boxlite exec my-box echo "Hello World!"
+boxlite exec my-box -- echo "Hello World!"
 boxlite rm -f my-box`,
   },
 }

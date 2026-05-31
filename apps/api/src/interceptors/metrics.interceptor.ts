@@ -155,6 +155,7 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
             break
           case '/api/sandbox/:sandboxIdOrName/start':
           case '/api/workspace/:workspaceId/start':
+          case '/api/v1/boxes/:boxId/start':
           case '/api/v1/:prefix/boxes/:boxId/start':
             this.captureStartSandbox(
               props,
@@ -163,6 +164,7 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
             break
           case '/api/sandbox/:sandboxIdOrName/stop':
           case '/api/workspace/:workspaceId/stop':
+          case '/api/v1/boxes/:boxId/stop':
           case '/api/v1/:prefix/boxes/:boxId/stop':
             this.captureStopSandbox(
               props,
@@ -245,6 +247,7 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
         switch (request.route.path) {
           case '/api/sandbox/:sandboxIdOrName':
           case '/api/workspace/:workspaceId':
+          case '/api/v1/boxes/:boxId':
           case '/api/v1/:prefix/boxes/:boxId':
             this.captureDeleteSandbox(
               props,
