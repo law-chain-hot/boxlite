@@ -53,6 +53,12 @@ function createService({
   const eventEmitter = {
     emit: jest.fn(),
   }
+  const dockerRegistryService = {
+    getAvailableInternalRegistry: jest.fn(async () => ({
+      url: 'http://current-registry.local',
+      project: 'boxlite',
+    })),
+  }
 
   const service = new BoxTemplateService(
     {} as any,
@@ -66,12 +72,19 @@ function createService({
     {} as any,
     {} as any,
     {} as any,
-    {} as any,
+    dockerRegistryService as any,
     eventEmitter as any,
     configService as any,
   )
 
-  return { service, boxTemplateRepository, boxTemplateRegionRepository, organizationService, eventEmitter }
+  return {
+    service,
+    boxTemplateRepository,
+    boxTemplateRegionRepository,
+    organizationService,
+    eventEmitter,
+    dockerRegistryService,
+  }
 }
 
 function template(partial: Partial<BoxTemplate>): BoxTemplate {
@@ -251,6 +264,38 @@ describe('BoxTemplateService system templates', () => {
       expect.objectContaining({
         state: BoxTemplateState.PENDING,
         errorReason: undefined,
+      }),
+    )
+    expect(eventEmitter.emit).toHaveBeenCalledWith(BoxTemplateEvents.ACTIVATED, expect.any(Object))
+  })
+
+  it('reactivates active system templates pinned to a previous internal registry host', async () => {
+    const existingTemplate = template({
+      id: 'ubuntu-id',
+      name: 'ubuntu:24.04',
+      state: BoxTemplateState.ACTIVE,
+      artifactRef: `old-registry.local/boxlite/boxlite-${'a'.repeat(64)}:boxlite`,
+      initialRunnerId: 'old-runner-id',
+      size: 1,
+      templateRegions: [templateRegion('ubuntu-id', 'us')],
+    })
+
+    const { service, boxTemplateRepository, eventEmitter } = createService({})
+    boxTemplateRepository.findOne.mockResolvedValue(existingTemplate)
+
+    await service.ensureSystemTemplate({ id: 'admin-org-id', defaultRegionId: 'us' } as any, {
+      name: 'ubuntu:24.04',
+      imageName: 'ubuntu:24.04',
+      displayName: 'Ubuntu 24.04 LTS',
+      description: 'General-purpose Linux template',
+    })
+
+    expect(boxTemplateRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        state: BoxTemplateState.PENDING,
+        artifactRef: null,
+        initialRunnerId: null,
+        size: null,
       }),
     )
     expect(eventEmitter.emit).toHaveBeenCalledWith(BoxTemplateEvents.ACTIVATED, expect.any(Object))

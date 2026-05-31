@@ -7,6 +7,7 @@
 import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common'
 import { DockerRegistryService } from './docker-registry/services/docker-registry.service'
 import { RegistryType } from './docker-registry/enums/registry-type.enum'
+import { DockerRegistry } from './docker-registry/entities/docker-registry.entity'
 import { OrganizationService } from './organization/services/organization.service'
 import { UserService } from './user/user.service'
 import { ApiKeyService } from './api-key/api-key.service'
@@ -212,103 +213,43 @@ Admin user created with API key: ${value}
     const existingRegistry = await this.dockerRegistryService.getAvailableTransientRegistry(
       this.configService.getOrThrow('defaultRegion.id'),
     )
-    if (existingRegistry) {
-      return
-    }
-
-    const registryUrl = this.configService.getOrThrow('transientRegistry.url')
-    const registryAdmin = this.configService.getOrThrow('transientRegistry.admin')
-    const registryPassword = this.configService.getOrThrow('transientRegistry.password')
-    const registryProjectId = this.configService.getOrThrow('transientRegistry.projectId')
-
-    if (!registryUrl || !registryAdmin || !registryPassword || !registryProjectId) {
-      this.logger.warn('Registry configuration not found, skipping transient registry setup')
-      return
-    }
-
-    this.logger.log('Initializing default transient registry...')
-
-    await this.dockerRegistryService.create({
+    await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Transient Registry',
-      url: registryUrl,
-      username: registryAdmin,
-      password: registryPassword,
-      project: registryProjectId,
+      url: this.configService.getOrThrow('transientRegistry.url'),
+      username: this.configService.getOrThrow('transientRegistry.admin'),
+      password: this.configService.getOrThrow('transientRegistry.password'),
+      project: this.configService.getOrThrow('transientRegistry.projectId'),
       registryType: RegistryType.TRANSIENT,
-      isDefault: true,
     })
-
-    this.logger.log('Default transient registry initialized successfully')
   }
 
   private async initializeInternalRegistry(): Promise<void> {
     const existingRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(
       this.configService.getOrThrow('defaultRegion.id'),
     )
-    if (existingRegistry) {
-      return
-    }
-
-    const registryUrl = this.configService.getOrThrow('internalRegistry.url')
-    const registryAdmin = this.configService.getOrThrow('internalRegistry.admin')
-    const registryPassword = this.configService.getOrThrow('internalRegistry.password')
-    const registryProjectId = this.configService.getOrThrow('internalRegistry.projectId')
-
-    if (!registryUrl || !registryAdmin || !registryPassword || !registryProjectId) {
-      this.logger.warn('Registry configuration not found, skipping internal registry setup')
-      return
-    }
-
-    this.logger.log('Initializing default internal registry...')
-
-    await this.dockerRegistryService.create({
+    await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Internal Registry',
-      url: registryUrl,
-      username: registryAdmin,
-      password: registryPassword,
-      project: registryProjectId,
+      url: this.configService.getOrThrow('internalRegistry.url'),
+      username: this.configService.getOrThrow('internalRegistry.admin'),
+      password: this.configService.getOrThrow('internalRegistry.password'),
+      project: this.configService.getOrThrow('internalRegistry.projectId'),
       registryType: RegistryType.INTERNAL,
-      isDefault: true,
     })
-
-    this.logger.log('Default internal registry initialized successfully')
   }
 
   private async initializeBackupRegistry(): Promise<void> {
     const existingRegistry = await this.dockerRegistryService.getAvailableBackupRegistry(
       this.configService.getOrThrow('defaultRegion.id'),
     )
-    if (existingRegistry) {
-      return
-    }
-
-    const registryUrl = this.configService.getOrThrow('internalRegistry.url')
-    const registryAdmin = this.configService.getOrThrow('internalRegistry.admin')
-    const registryPassword = this.configService.getOrThrow('internalRegistry.password')
-    const registryProjectId = this.configService.getOrThrow('internalRegistry.projectId')
-
-    if (!registryUrl || !registryAdmin || !registryPassword || !registryProjectId) {
-      this.logger.warn('Registry configuration not found, skipping backup registry setup')
-      return
-    }
-
-    this.logger.log('Initializing default backup registry...')
-
-    await this.dockerRegistryService.create(
-      {
-        name: 'Backup Registry',
-        url: registryUrl,
-        username: registryAdmin,
-        password: registryPassword,
-        project: registryProjectId,
-        registryType: RegistryType.BACKUP,
-        isDefault: true,
-      },
-      undefined,
-      true,
-    )
-
-    this.logger.log('Default backup registry initialized successfully')
+    await this.ensureConfiguredDefaultRegistry(existingRegistry, {
+      name: 'Backup Registry',
+      url: this.configService.getOrThrow('internalRegistry.url'),
+      username: this.configService.getOrThrow('internalRegistry.admin'),
+      password: this.configService.getOrThrow('internalRegistry.password'),
+      project: this.configService.getOrThrow('internalRegistry.projectId'),
+      registryType: RegistryType.BACKUP,
+      isFallback: true,
+    })
   }
 
   private async initializeSystemTemplates(): Promise<void> {
@@ -325,5 +266,73 @@ Admin user created with API key: ${value}
     }
 
     this.logger.log('System templates initialized successfully')
+  }
+
+  private async ensureConfiguredDefaultRegistry(
+    existingRegistry: DockerRegistry | null,
+    options: {
+      name: string
+      url: string
+      username: string
+      password: string
+      project: string
+      registryType: RegistryType
+      isFallback?: boolean
+    },
+  ): Promise<void> {
+    if (!options.url || !options.username || !options.password || !options.project) {
+      this.logger.warn(`Registry configuration not found, skipping ${options.name} setup`)
+      return
+    }
+
+    if (existingRegistry) {
+      const desiredUrl = this.normalizeRegistryUrl(options.url)
+      const currentProject = existingRegistry.project ?? ''
+      const desiredProject = options.project ?? ''
+
+      if (
+        existingRegistry.url !== desiredUrl ||
+        existingRegistry.username !== options.username ||
+        currentProject !== desiredProject ||
+        existingRegistry.name !== options.name
+      ) {
+        this.logger.log(`Updating default ${options.name} configuration...`)
+        await this.dockerRegistryService.update(existingRegistry.id, {
+          name: options.name,
+          url: options.url,
+          username: options.username,
+          password: options.password,
+          project: options.project,
+        })
+      }
+
+      return
+    }
+
+    this.logger.log(`Initializing default ${options.name}...`)
+
+    await this.dockerRegistryService.create(
+      {
+        name: options.name,
+        url: options.url,
+        username: options.username,
+        password: options.password,
+        project: options.project,
+        registryType: options.registryType,
+        isDefault: true,
+      },
+      undefined,
+      options.isFallback ?? false,
+    )
+
+    this.logger.log(`Default ${options.name} initialized successfully`)
+  }
+
+  private normalizeRegistryUrl(url: string): string {
+    if (!url || url.trim() === '' || url.toLowerCase().includes('docker.io')) {
+      return 'docker.io'
+    }
+
+    return url.trim().replace(/\/+$/, '')
   }
 }

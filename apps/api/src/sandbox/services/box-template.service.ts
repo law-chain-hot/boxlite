@@ -54,6 +54,7 @@ import { BoxTemplateActivatedEvent } from '../events/box-template-activated.even
 import { LogExecution } from '../../common/decorators/log-execution.decorator'
 import { WithInstrumentation } from '../../common/decorators/otel.decorator'
 import { getSystemTemplateSortIndex, SYSTEM_TEMPLATES, SystemTemplateDefinition } from '../constants/system-templates'
+import { isBoxLiteInternalArtifactRef } from '../utils/artifact-ref.util'
 
 const IMAGE_NAME_REGEX = /^[a-zA-Z0-9_.\-:]+(\/[a-zA-Z0-9_.\-:]+)*(@sha256:[a-f0-9]{64})?$/
 @Injectable()
@@ -243,6 +244,10 @@ export class BoxTemplateService {
     ].includes(existingTemplate.state)
     const activeSystemTemplateMissingRef =
       existingTemplate.state === BoxTemplateState.ACTIVE && !existingTemplate.artifactRef?.trim()
+    const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(regionId)
+    const activeSystemTemplatePinnedToPreviousRegistry =
+      existingTemplate.state === BoxTemplateState.ACTIVE &&
+      this.isPinnedToDifferentInternalRegistry(existingTemplate.artifactRef, internalRegistry?.url)
 
     if (existingTemplate.imageName !== templateDefinition.imageName) {
       existingTemplate.imageName = templateDefinition.imageName
@@ -254,10 +259,20 @@ export class BoxTemplateService {
       shouldSaveTemplate = true
     }
 
-    if (shouldReactivateSystemTemplate || activeSystemTemplateMissingRef) {
+    if (
+      shouldReactivateSystemTemplate ||
+      activeSystemTemplateMissingRef ||
+      activeSystemTemplatePinnedToPreviousRegistry
+    ) {
       existingTemplate.state = BoxTemplateState.PENDING
       existingTemplate.errorReason = undefined
       shouldSaveTemplate = true
+
+      if (activeSystemTemplatePinnedToPreviousRegistry) {
+        existingTemplate.artifactRef = null
+        existingTemplate.initialRunnerId = null
+        existingTemplate.size = null
+      }
     }
 
     const hasDefaultRegion = existingTemplate.templateRegions?.some(
@@ -275,11 +290,24 @@ export class BoxTemplateService {
       ? await this.boxTemplateRepository.save(existingTemplate)
       : existingTemplate
 
-    if (shouldReactivateSystemTemplate || activeSystemTemplateMissingRef) {
+    if (
+      shouldReactivateSystemTemplate ||
+      activeSystemTemplateMissingRef ||
+      activeSystemTemplatePinnedToPreviousRegistry
+    ) {
       this.eventEmitter.emit(BoxTemplateEvents.ACTIVATED, new BoxTemplateActivatedEvent(savedTemplate))
     }
 
     return savedTemplate
+  }
+
+  private isPinnedToDifferentInternalRegistry(artifactRef?: string | null, internalRegistryUrl?: string | null) {
+    if (!artifactRef || !internalRegistryUrl || !isBoxLiteInternalArtifactRef(artifactRef)) {
+      return false
+    }
+
+    const currentRegistryPrefix = `${internalRegistryUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')}/`
+    return !artifactRef.startsWith(currentRegistryPrefix)
   }
 
   async createFromBuildInfo(organization: Organization, createBoxTemplateDto: CreateBoxTemplateDto, general = false) {
