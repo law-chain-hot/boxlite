@@ -143,8 +143,12 @@ export class BoxTemplateController {
   async listBoxTemplates(
     @AuthContext() authContext: OrganizationAuthContext,
     @Query() queryParams: ListBoxTemplatesQueryDto,
+    @Request() req: { query?: Record<string, unknown> },
   ): Promise<BoxTemplateDto[] | PaginatedBoxTemplatesDto> {
-    const hasPagination = queryParams.page !== undefined || queryParams.limit !== undefined
+    const query = req.query ?? {}
+    const hasPagination = ['page', 'limit', 'name', 'sort', 'order'].some((key) =>
+      Object.prototype.hasOwnProperty.call(query, key),
+    )
 
     if (!hasPagination) {
       const templates = await this.boxTemplateService.getSystemTemplates(authContext.organizationId)
