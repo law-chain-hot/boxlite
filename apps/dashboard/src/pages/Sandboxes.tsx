@@ -43,6 +43,8 @@ import { createBulkActionToast } from '@/lib/bulk-action-toast'
 import { handleApiError } from '@/lib/error-handling'
 import { getLocalStorageItem, setLocalStorageItem } from '@/lib/local-storage'
 import {
+  ONBOARDING_ENTRY_HIGHLIGHT_EVENT,
+  ONBOARDING_OPEN_EVENT,
   mergeOnboardingProgress,
   ONBOARDING_PROGRESS_EVENT,
   readOnboardingProgress,
@@ -60,14 +62,20 @@ import {
 import { QueryKey, useQueryClient } from '@tanstack/react-query'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { createSearchParams, generatePath, useNavigate, useSearchParams } from 'react-router-dom'
+import { createSearchParams, generatePath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+
+interface SandboxesLocationState {
+  openCreateBox?: boolean
+  resumeOnboardingAfterCreate?: boolean
+}
 
 const Sandboxes: React.FC = () => {
   const { sandboxApi } = useApi()
   const { user } = useAuth()
   const userId = user?.profile.sub
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { notificationSocket } = useNotificationSocket()
   const config = useConfig()
@@ -829,6 +837,16 @@ const Sandboxes: React.FC = () => {
     }
   }, [searchParams, selectedOrganization, user?.profile.sub])
 
+  useEffect(() => {
+    const handleOpenOnboarding = (event: Event) => {
+      event.preventDefault()
+      setShowOnboardingDialog(true)
+    }
+
+    window.addEventListener(ONBOARDING_OPEN_EVENT, handleOpenOnboarding)
+    return () => window.removeEventListener(ONBOARDING_OPEN_EVENT, handleOpenOnboarding)
+  }, [])
+
   const clearOnboardingUrlParam = useCallback(() => {
     if (searchParams.get('onboarding') !== '1') {
       return
@@ -844,7 +862,7 @@ const Sandboxes: React.FC = () => {
     }
     setShowOnboardingDialog(false)
     window.setTimeout(() => {
-      window.dispatchEvent(new Event('boxlite:onboarding-entry-highlight'))
+      window.dispatchEvent(new Event(ONBOARDING_ENTRY_HIGHLIGHT_EVENT))
       clearOnboardingUrlParam()
     }, 220)
   }, [clearOnboardingUrlParam, userId])
@@ -864,6 +882,18 @@ const Sandboxes: React.FC = () => {
     setCreateSandboxOpen(true)
     clearOnboardingUrlParam()
   }, [clearOnboardingUrlParam])
+
+  useEffect(() => {
+    const state = location.state as SandboxesLocationState | null
+    if (!state?.openCreateBox) {
+      return
+    }
+
+    resumeOnboardingAfterCreateRef.current = Boolean(state.resumeOnboardingAfterCreate)
+    setShowOnboardingDialog(false)
+    setCreateSandboxOpen(true)
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
+  }, [location.pathname, location.search, location.state, navigate])
 
   const openTerminalFromOnboardingDialog = useCallback(() => {
     if (!primarySandboxForOnboarding) {

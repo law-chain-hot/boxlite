@@ -4,6 +4,7 @@
  */
 
 import { OrganizationSuspendedError } from '@/api/errors'
+import { OnboardingGuideDialog } from '@/components/OnboardingGuideDialog'
 import { PageLayout } from '@/components/PageLayout'
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FeatureFlags } from '@/enums/FeatureFlags'
+import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { RoutePath } from '@/enums/RoutePath'
 import { useArchiveSandboxMutation } from '@/hooks/mutations/useArchiveSandboxMutation'
 import { useDeleteSandboxMutation } from '@/hooks/mutations/useDeleteSandboxMutation'
@@ -33,7 +35,10 @@ import { useRegions } from '@/hooks/useRegions'
 import { useSandboxWsSync } from '@/hooks/useSandboxWsSync'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { handleApiError } from '@/lib/error-handling'
+import { setLocalStorageItem } from '@/lib/local-storage'
 import {
+  ONBOARDING_ENTRY_HIGHLIGHT_EVENT,
+  ONBOARDING_OPEN_EVENT,
   getOnboardingCoreProgress,
   mergeOnboardingProgress,
   ONBOARDING_PROGRESS_EVENT,
@@ -49,7 +54,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Group, Panel, Separator } from 'react-resizable-panels'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CreateSshAccessDialog } from './CreateSshAccessDialog'
 import { RevokeSshAccessDialog } from './RevokeSshAccessDialog'
@@ -61,6 +66,7 @@ import { tabParser } from './SearchParams'
 export default function SandboxDetails() {
   const { sandboxId } = useParams<{ sandboxId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const config = useConfig()
   const { user } = useAuth()
   const userId = user?.profile.sub
@@ -74,6 +80,7 @@ export default function SandboxDetails() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createSshDialogOpen, setCreateSshDialogOpen] = useState(false)
   const [revokeSshDialogOpen, setRevokeSshDialogOpen] = useState(false)
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
   const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>(() => readOnboardingProgress(userId))
   const [tab, setTab] = useQueryState('tab', tabParser)
   const isDesktop = useMatchMedia('(min-width: 1024px)')
@@ -98,6 +105,62 @@ export default function SandboxDetails() {
     window.addEventListener(ONBOARDING_PROGRESS_EVENT, handleOnboardingProgress)
     return () => window.removeEventListener(ONBOARDING_PROGRESS_EVENT, handleOnboardingProgress)
   }, [userId])
+
+  useEffect(() => {
+    if (!selectedOrganization || !user?.profile.sub) {
+      return
+    }
+
+    if (searchParams.get('onboarding') === '1') {
+      setShowOnboardingDialog(true)
+    }
+  }, [searchParams, selectedOrganization, user?.profile.sub])
+
+  useEffect(() => {
+    const handleOpenOnboarding = (event: Event) => {
+      event.preventDefault()
+      setShowOnboardingDialog(true)
+    }
+
+    window.addEventListener(ONBOARDING_OPEN_EVENT, handleOpenOnboarding)
+    return () => window.removeEventListener(ONBOARDING_OPEN_EVENT, handleOpenOnboarding)
+  }, [])
+
+  const clearOnboardingUrlParam = useCallback(() => {
+    if (searchParams.get('onboarding') !== '1') {
+      return
+    }
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('onboarding')
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  const closeOnboardingDialog = useCallback(() => {
+    if (userId) {
+      setLocalStorageItem(`${LocalStorageKey.SkipOnboardingPrefix}${userId}`, 'true')
+    }
+    setShowOnboardingDialog(false)
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event(ONBOARDING_ENTRY_HIGHLIGHT_EVENT))
+      clearOnboardingUrlParam()
+    }, 220)
+  }, [clearOnboardingUrlParam, userId])
+
+  const createBoxFromOnboardingDialog = useCallback(() => {
+    setShowOnboardingDialog(false)
+    clearOnboardingUrlParam()
+    navigate(RoutePath.BOXES, {
+      state: { openCreateBox: true, resumeOnboardingAfterCreate: true },
+    })
+  }, [clearOnboardingUrlParam, navigate])
+
+  const openTerminalFromOnboardingDialog = useCallback(() => {
+    updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
+    setShowOnboardingDialog(false)
+    clearOnboardingUrlParam()
+    setTab('terminal')
+  }, [clearOnboardingUrlParam, setTab, updateOnboardingProgress])
 
   // On desktop (lg+), the overview tab is hidden in the sidebar, so switch to a content tab
   useEffect(() => {
@@ -235,6 +298,21 @@ export default function SandboxDetails() {
 
   return (
     <PageLayout className="h-[var(--app-content-height,calc(100svh_-_3.5rem))] overflow-hidden">
+      <OnboardingGuideDialog
+        open={showOnboardingDialog}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            closeOnboardingDialog()
+          } else {
+            setShowOnboardingDialog(true)
+          }
+        }}
+        onCreateBox={createBoxFromOnboardingDialog}
+        onOpenTerminal={openTerminalFromOnboardingDialog}
+        onProgressChange={updateOnboardingProgress}
+        progress={onboardingProgress}
+        hasBoxes={Boolean(sandbox) || Boolean(onboardingProgress.boxCreated)}
+      />
       <SandboxHeader
         sandbox={sandbox}
         isLoading={isLoading}

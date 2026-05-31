@@ -8,6 +8,8 @@ import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { getLocalStorageItem, setLocalStorageItem } from './local-storage'
 
 export const ONBOARDING_PROGRESS_EVENT = 'boxlite:onboarding-progress'
+export const ONBOARDING_OPEN_EVENT = 'boxlite:onboarding-open'
+export const ONBOARDING_ENTRY_HIGHLIGHT_EVENT = 'boxlite:onboarding-entry-highlight'
 
 export interface OnboardingProgress {
   boxCreated?: boolean

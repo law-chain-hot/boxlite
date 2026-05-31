@@ -23,6 +23,8 @@ import { Theme, useTheme } from '@/contexts/ThemeContext'
 import { RoutePath } from '@/enums/RoutePath'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
 import {
+  ONBOARDING_OPEN_EVENT,
+  ONBOARDING_ENTRY_HIGHLIGHT_EVENT,
   getOnboardingCoreProgress,
   ONBOARDING_PROGRESS_EVENT,
   readOnboardingProgress,
@@ -48,7 +50,7 @@ import {
   SunIcon,
 } from 'lucide-react'
 import { usePostHog } from 'posthog-js/react'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CommandConfig, useCommandPaletteActions, useRegisterCommands } from './CommandPalette'
@@ -70,8 +72,6 @@ interface SidebarGroup {
   label: string
   items: SidebarItem[]
 }
-
-const ONBOARDING_ENTRY_HIGHLIGHT_EVENT = 'boxlite:onboarding-entry-highlight'
 
 const themeOptions: { value: Theme; label: string; icon: React.ReactElement }[] = [
   { value: 'system', label: 'System', icon: <Monitor className="size-4" /> },
@@ -135,6 +135,7 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
   const { user, signoutRedirect } = useAuth()
   const userId = user?.profile.sub
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [highlightOnboardingEntry, setHighlightOnboardingEntry] = useState(false)
   const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>(() => readOnboardingProgress(userId))
 
@@ -181,6 +182,15 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
 
   const secondaryGroups: SidebarGroup[] = useMemo(() => [], [])
 
+  const openOnboardingGuide = useCallback(() => {
+    const event = new Event(ONBOARDING_OPEN_EVENT, { cancelable: true })
+    window.dispatchEvent(event)
+
+    if (!event.defaultPrevented) {
+      navigate(`${RoutePath.BOXES}?onboarding=1`)
+    }
+  }, [navigate])
+
   const commandItems = useMemo<SidebarItem[]>(
     () => [
       ...primaryItems,
@@ -191,12 +201,13 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
         icon: <KeyRound size={16} strokeWidth={1.5} />,
       },
       {
-        path: `${RoutePath.BOXES}?onboarding=1`,
+        path: RoutePath.ONBOARDING,
         label: 'Onboarding',
         icon: <ListChecks size={16} strokeWidth={1.5} />,
+        onClick: openOnboardingGuide,
       },
     ],
-    [primaryItems, secondaryGroups],
+    [openOnboardingGuide, primaryItems, secondaryGroups],
   )
 
   const handleSignOut = () => {
@@ -323,24 +334,23 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
                   highlightOnboardingEntry &&
                     'animate-[boxlite-guide-callout_1.1s_ease-in-out_3] ring-2 ring-primary ring-offset-2 ring-offset-background',
                 )}
-                asChild
+                aria-label="Open onboarding guide"
+                onClick={openOnboardingGuide}
               >
-                <Link to={`${RoutePath.BOXES}?onboarding=1`} aria-label="Open onboarding guide">
-                  <ListChecks className="size-4" />
-                  {!isCompactScreen && <span>Guide</span>}
-                  {!onboardingCoreProgress.isComplete && (
-                    <span
-                      className={cn(
-                        'inline-flex items-center justify-center rounded-full bg-muted-foreground/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground',
-                        isCompactScreen && 'absolute -right-1 -top-1 size-4 bg-foreground p-0 text-background',
-                      )}
-                    >
-                      {isCompactScreen
-                        ? onboardingCoreProgress.completed
-                        : `${onboardingCoreProgress.completed}/${onboardingCoreProgress.total}`}
-                    </span>
-                  )}
-                </Link>
+                <ListChecks className="size-4" />
+                {!isCompactScreen && <span>Guide</span>}
+                {!onboardingCoreProgress.isComplete && (
+                  <span
+                    className={cn(
+                      'inline-flex items-center justify-center rounded-full bg-muted-foreground/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground',
+                      isCompactScreen && 'absolute -right-1 -top-1 size-4 bg-foreground p-0 text-background',
+                    )}
+                  >
+                    {isCompactScreen
+                      ? onboardingCoreProgress.completed
+                      : `${onboardingCoreProgress.completed}/${onboardingCoreProgress.total}`}
+                  </span>
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>Open onboarding guide</TooltipContent>
