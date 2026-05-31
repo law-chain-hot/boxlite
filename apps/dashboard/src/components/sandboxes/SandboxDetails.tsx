@@ -48,7 +48,7 @@ import {
 import { isStoppable, isTransitioning } from '@/lib/utils/sandbox'
 import { OrganizationRolePermissionsEnum, OrganizationUserRoleEnum } from '@boxlite-ai/api-client'
 import { isAxiosError } from 'axios'
-import { CheckCircle2, Container, GripVertical, ListChecks, Power, RefreshCw, Terminal } from 'lucide-react'
+import { CheckCircle2, Container, GripVertical, ListChecks, RefreshCw, Terminal } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { useFeatureFlagEnabled } from 'posthog-js/react'
 import { useCallback, useEffect, useState } from 'react'
@@ -178,7 +178,7 @@ export default function SandboxDetails() {
 
   const { data: sandbox, isLoading, isError, error, refetch, isFetching } = useSandboxQuery(sandboxId ?? '')
   const isNotFound = isError && isAxiosError(error.cause) && error.cause?.status === 404
-  const onboardingCoreProgress = getOnboardingCoreProgress(onboardingProgress)
+  const onboardingCoreProgress = getOnboardingCoreProgress(onboardingProgress, Boolean(sandbox))
   const showOnboardingNudge = Boolean(sandbox && !onboardingCoreProgress.isComplete)
 
   useSandboxWsSync({ sandboxId })
@@ -200,8 +200,8 @@ export default function SandboxDetails() {
     setTab('terminal')
   }
 
-  const markLifecycleSeen = () => {
-    updateOnboardingProgress({ boxCreated: true, terminalOpened: true, lifecycleSeen: true })
+  const markOnboardingCommandRan = () => {
+    updateOnboardingProgress({ boxCreated: true, terminalOpened: true, commandRan: true })
   }
 
   const startMutation = useStartSandboxMutation()
@@ -354,11 +354,11 @@ export default function SandboxDetails() {
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <Terminal className="size-3.5" />
-                    {onboardingProgress.terminalOpened ? 'Terminal opened' : 'Open terminal'}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Power className="size-3.5" />
-                    {onboardingProgress.lifecycleSeen ? 'Lifecycle reviewed' : 'Review lifecycle controls'}
+                    {onboardingProgress.commandRan
+                      ? 'Command ran'
+                      : onboardingProgress.terminalOpened
+                        ? 'Command not confirmed'
+                        : 'Open terminal'}
                   </span>
                 </div>
               </div>
@@ -372,10 +372,10 @@ export default function SandboxDetails() {
               <Button
                 type="button"
                 size="sm"
-                variant={onboardingProgress.lifecycleSeen ? 'secondary' : 'outline'}
-                onClick={markLifecycleSeen}
+                variant={onboardingProgress.terminalOpened ? 'default' : 'outline'}
+                onClick={markOnboardingCommandRan}
               >
-                {onboardingProgress.lifecycleSeen ? 'Lifecycle done' : 'I understand lifecycle'}
+                I ran this command
               </Button>
             </div>
           </div>

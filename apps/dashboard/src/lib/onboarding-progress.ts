@@ -14,7 +14,12 @@ export const ONBOARDING_ENTRY_HIGHLIGHT_EVENT = 'boxlite:onboarding-entry-highli
 export interface OnboardingProgress {
   boxCreated?: boolean
   terminalOpened?: boolean
+  commandRan?: boolean
   lifecycleSeen?: boolean
+  sdkConnected?: boolean
+}
+
+type StoredOnboardingProgress = OnboardingProgress & {
   developerOpened?: boolean
 }
 
@@ -32,12 +37,13 @@ export function readOnboardingProgress(userId?: string): OnboardingProgress {
   if (!raw) return emptyProgress
 
   try {
-    const parsed = JSON.parse(raw) as OnboardingProgress
+    const parsed = JSON.parse(raw) as StoredOnboardingProgress
     return {
       boxCreated: Boolean(parsed.boxCreated),
-      terminalOpened: Boolean(parsed.terminalOpened),
+      terminalOpened: Boolean(parsed.terminalOpened || parsed.commandRan),
+      commandRan: Boolean(parsed.commandRan),
       lifecycleSeen: Boolean(parsed.lifecycleSeen),
-      developerOpened: Boolean(parsed.developerOpened),
+      sdkConnected: Boolean(parsed.sdkConnected || parsed.developerOpened),
     }
   } catch {
     return emptyProgress
@@ -58,15 +64,12 @@ export function mergeOnboardingProgress(userId: string | undefined, update: Onbo
   return nextProgress
 }
 
-export function getOnboardingCoreProgress(progress: OnboardingProgress) {
-  const completed =
-    Number(Boolean(progress.boxCreated)) +
-    Number(Boolean(progress.terminalOpened)) +
-    Number(Boolean(progress.lifecycleSeen))
+export function getOnboardingCoreProgress(progress: OnboardingProgress, hasBoxes = false) {
+  const completed = Number(Boolean(progress.boxCreated || hasBoxes)) + Number(Boolean(progress.commandRan))
 
   return {
     completed,
-    total: 3,
-    isComplete: completed === 3,
+    total: 2,
+    isComplete: completed === 2,
   }
 }
