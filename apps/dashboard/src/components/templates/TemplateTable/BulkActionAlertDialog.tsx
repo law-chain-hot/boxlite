@@ -28,20 +28,20 @@ interface BulkActionData {
 }
 
 function getBulkActionData(action: TemplateBulkAction, count: number): BulkActionData {
-  const countText = count === 1 ? 'this template' : `these ${count} selected templates`
+  const countText = count === 1 ? 'this image' : `these ${count} selected images`
 
   switch (action) {
     case TemplateBulkAction.Delete:
       return {
-        title: 'Delete Templates',
+        title: 'Delete Images',
         description: `Are you sure you want to delete ${countText}? This action cannot be undone.`,
         buttonLabel: 'Delete',
         buttonVariant: 'destructive',
       }
     case TemplateBulkAction.Deactivate:
       return {
-        title: 'Deactivate Templates',
-        description: `Are you sure you want to deactivate ${countText}? Deactivated templates can be reactivated later.`,
+        title: 'Deactivate Images',
+        description: `Are you sure you want to deactivate ${countText}? Deactivated images can be reactivated later.`,
         buttonLabel: 'Deactivate',
       }
   }

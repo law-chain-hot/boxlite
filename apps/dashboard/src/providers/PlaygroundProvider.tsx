@@ -323,8 +323,8 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
     const createSandboxFromTemplate = useCustomSandboxTemplateName || useDefaultResourceValues
 
-    // Create from base image if default resource values are not used
-    // Template parameter has precedence over resources and createSandboxFromImage
+    // SDK/API still use templateId for persisted dashboard Images. That
+    // template-backed path takes precedence over ad-hoc image/resource params.
     const createSandboxFromImage = !useDefaultResourceValues && !useCustomSandboxTemplateName
 
     // We specify resources for sandbox creation if there is any specified resource value which has value different from the default one and useCustomSandboxTemplateName is false

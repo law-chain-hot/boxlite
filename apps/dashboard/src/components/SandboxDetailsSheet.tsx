@@ -223,7 +223,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                 </div>
               </div>
               <div>
-                <h3 className="text-sm text-muted-foreground">Template</h3>
+                <h3 className="text-sm text-muted-foreground">Image</h3>
                 <div className="mt-1 flex items-center gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{sandbox.template ? templateDisplayName : '-'}</p>
@@ -231,9 +231,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                       <p className="truncate text-xs text-muted-foreground">{sandbox.template}</p>
                     )}
                   </div>
-                  {sandbox.template && (
-                    <CopyButton value={sandbox.template} tooltipText="Copy template" size="icon-xs" />
-                  )}
+                  {sandbox.template && <CopyButton value={sandbox.template} tooltipText="Copy image" size="icon-xs" />}
                 </div>
               </div>
             </div>

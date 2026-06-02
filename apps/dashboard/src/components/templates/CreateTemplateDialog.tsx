@@ -36,7 +36,7 @@ const IMAGE_NAME_REGEX = /^[a-zA-Z0-9_.\-:]+(\/[a-zA-Z0-9_.\-:]+)*(@sha256:[a-f0
 
 const templateNameSchema = z
   .string()
-  .min(1, 'Template name is required')
+  .min(1, 'Image name is required')
   .refine((name) => IMAGE_NAME_REGEX.test(name), 'Only letters, digits, dots, colons, slashes and dashes are allowed')
 
 const formSchema = z.object({
@@ -89,7 +89,7 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
     },
     onSubmit: async ({ value }) => {
       if (!selectedOrganization?.id) {
-        toast.error('Select an organization to create a template.')
+        toast.error('Select an organization to create an image.')
         return
       }
 
@@ -109,10 +109,10 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
           organizationId: selectedOrganization.id,
         })
 
-        toast.success(`Creating template ${value.name.trim()}`)
+        toast.success(`Creating image ${value.name.trim()}`)
         setOpen(false)
       } catch (error) {
-        handleApiError(error, 'Failed to create template')
+        handleApiError(error, 'Failed to create image')
       }
     },
   })
@@ -136,17 +136,15 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="default" size="sm" className="ml-auto" title="Create Template">
+        <Button variant="default" size="sm" className="ml-auto" title="Create Image">
           <Plus className="w-4 h-4" />
-          Create Template
+          Create Image
         </Button>
       </DialogTrigger>
       <DialogContent className={className}>
         <DialogHeader>
-          <DialogTitle>Create New Template</DialogTitle>
-          <DialogDescription>
-            Register a new template to be used for spinning up boxes in your organization.
-          </DialogDescription>
+          <DialogTitle>Create New Image</DialogTitle>
+          <DialogDescription>Register a reusable image for spinning up boxes in your organization.</DialogDescription>
         </DialogHeader>
         <ScrollArea fade="mask" className="h-[500px] overflow-auto -mx-5">
           <form
@@ -164,7 +162,7 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>Template Name</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                     <Input
                       aria-invalid={isInvalid}
                       id={field.name}
@@ -175,7 +173,7 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
                       placeholder="ubuntu-4vcpu-8ram-100gb"
                     />
                     <FieldDescription>
-                      The name you will use in your client app (SDK, CLI) to reference the template.
+                      The name you will use in your client app (SDK, CLI) to reference this image.
                     </FieldDescription>
                     {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
                       <FieldError errors={field.state.meta.errors} />
@@ -190,7 +188,7 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>Image</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Source Image</FieldLabel>
                     <Input
                       aria-invalid={isInvalid}
                       id={field.name}
@@ -228,8 +226,8 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
                     </SelectContent>
                   </Select>
                   <FieldDescription>
-                    The region where the template will be available. If not specified, your organization's default
-                    region will be used.
+                    The region where the image will be available. If not specified, your organization's default region
+                    will be used.
                   </FieldDescription>
                 </Field>
               )}
@@ -311,8 +309,8 @@ export const CreateTemplateDialog = ({ className, ref }: { className?: string; r
                     placeholder="sleep infinity"
                   />
                   <FieldDescription>
-                    Ensure that the entrypoint is a long running command. If not provided, or if the template does not
-                    have an entrypoint, 'sleep infinity' will be used as the default.
+                    Ensure that the entrypoint is a long running command. If not provided, or if the image does not have
+                    an entrypoint, 'sleep infinity' will be used as the default.
                   </FieldDescription>
                 </Field>
               )}

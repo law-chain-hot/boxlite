@@ -257,7 +257,7 @@ export function SandboxTable({
                       </div>
 
                       <div className="grid grid-cols-1 gap-x-5 gap-y-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
-                        <CompactSandboxMeta label="Template">
+                        <CompactSandboxMeta label="Image">
                           {getTemplateDisplayName(sandbox.template)}
                         </CompactSandboxMeta>
                         <CompactSandboxMeta label="Region">

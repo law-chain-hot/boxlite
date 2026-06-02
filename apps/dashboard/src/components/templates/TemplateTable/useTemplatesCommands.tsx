@@ -68,7 +68,7 @@ export function useTemplatesCommands({
     if (writePermitted && onCreateTemplate) {
       commands.push({
         id: 'create-template',
-        label: 'Create Template',
+        label: 'Create Image',
         icon: <PlusIcon className="w-4 h-4" />,
         onSelect: onCreateTemplate,
       })
@@ -77,7 +77,7 @@ export function useTemplatesCommands({
     if (selectableCount !== selectedCount) {
       commands.push({
         id: 'select-all-templates',
-        label: 'Select All Templates',
+        label: 'Select All Images',
         icon: <CheckSquare2Icon className="w-4 h-4" />,
         onSelect: () => toggleAllRowsSelected(true),
         chainable: true,
@@ -87,7 +87,7 @@ export function useTemplatesCommands({
     if (selectedCount > 0) {
       commands.push({
         id: 'deselect-all-templates',
-        label: 'Deselect All Templates',
+        label: 'Deselect All Images',
         icon: <MinusSquareIcon className="w-4 h-4" />,
         onSelect: () => toggleAllRowsSelected(false),
         chainable: true,
@@ -97,7 +97,7 @@ export function useTemplatesCommands({
     if (writePermitted && bulkActionCounts.deactivatable > 0) {
       commands.push({
         id: 'deactivate-templates',
-        label: `Deactivate ${pluralize(bulkActionCounts.deactivatable, 'Template', 'Templates')}`,
+        label: `Deactivate ${pluralize(bulkActionCounts.deactivatable, 'Image', 'Images')}`,
         icon: <PauseIcon className="w-4 h-4" />,
         onSelect: onDeactivate,
       })
@@ -106,7 +106,7 @@ export function useTemplatesCommands({
     if (writePermitted && bulkActionCounts.activatable > 0) {
       commands.push({
         id: 'activate-templates',
-        label: `Activate ${pluralize(bulkActionCounts.activatable, 'Template', 'Templates')}`,
+        label: `Activate ${pluralize(bulkActionCounts.activatable, 'Image', 'Images')}`,
         icon: <PlayIcon className="w-4 h-4" />,
         onSelect: onActivate,
       })
@@ -115,7 +115,7 @@ export function useTemplatesCommands({
     if (deletePermitted && bulkActionCounts.deletable > 0) {
       commands.push({
         id: 'delete-templates',
-        label: `Delete ${pluralize(bulkActionCounts.deletable, 'Template', 'Templates')}`,
+        label: `Delete ${pluralize(bulkActionCounts.deletable, 'Image', 'Images')}`,
         icon: <TrashIcon className="w-4 h-4" />,
         onSelect: onDelete,
       })
@@ -135,5 +135,5 @@ export function useTemplatesCommands({
     onCreateTemplate,
   ])
 
-  useRegisterCommands(rootCommands, { groupId: 'template-actions', groupLabel: 'Template actions', groupOrder: 0 })
+  useRegisterCommands(rootCommands, { groupId: 'template-actions', groupLabel: 'Image actions', groupOrder: 0 })
 }

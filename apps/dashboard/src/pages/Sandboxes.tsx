@@ -323,7 +323,7 @@ const Sandboxes: React.FC = () => {
 
   useEffect(() => {
     if (templatesDataError) {
-      handleApiError(templatesDataError, 'Failed to fetch templates')
+      handleApiError(templatesDataError, 'Failed to fetch images')
     }
   }, [templatesDataError])
 

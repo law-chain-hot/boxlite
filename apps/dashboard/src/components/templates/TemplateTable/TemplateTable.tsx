@@ -258,13 +258,13 @@ export function TemplateTable({
             ) : (
               <TableEmptyState
                 colSpan={columns.length}
-                message="No Templates yet."
+                message="No Images yet."
                 icon={<Box className="w-8 h-8" />}
                 description={
                   <div className="space-y-2">
                     <p>
-                      Templates are reproducible, pre-configured runtimes based on any Docker-compatible image. Use them
-                      to define language runtimes, dependencies, and tools for your boxes.
+                      Images are reusable, pre-configured Linux runtimes for your boxes. Use them to define language
+                      runtimes, dependencies, and tools.
                     </p>
                     <p>
                       Create one from the Dashboard, CLI, or SDK to get started. <br />
@@ -274,7 +274,7 @@ export function TemplateTable({
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-medium"
                       >
-                        Read the Templates guide
+                        Read the Images guide
                       </a>{' '}
                       to learn more.
                     </p>
@@ -288,7 +288,7 @@ export function TemplateTable({
       <Pagination
         table={table}
         selectionEnabled={deletePermitted}
-        entityName="Templates"
+        entityName="Images"
         totalItems={totalItems}
         className="mt-4"
       />

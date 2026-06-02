@@ -42,7 +42,7 @@ import { RegionsProvider } from './providers/RegionsProvider'
 import { SandboxSessionProvider } from './providers/SandboxSessionProvider'
 
 const MVP_HIDDEN_DASHBOARD_ROUTES = [
-  RoutePath.TEMPLATES,
+  RoutePath.IMAGES,
   RoutePath.REGISTRIES,
   RoutePath.VOLUMES,
   RoutePath.LIMITS,
@@ -196,6 +196,10 @@ function App() {
         <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Sandboxes />} />
         <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Pricing />} />
         <Route path={getRouteSubPath(RoutePath.LEGACY_SANDBOXES)} element={<Navigate to={boxesRedirect} replace />} />
+        <Route
+          path={getRouteSubPath(RoutePath.LEGACY_TEMPLATES)}
+          element={<Navigate to={RoutePath.IMAGES} replace />}
+        />
         {/* Pathless layout route: a single SandboxSessionProvider fiber
             persists across the three sandbox routes, so activation state
             (e.g. "terminal connected") survives navigation between the

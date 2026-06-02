@@ -70,7 +70,7 @@ const formSchema = z.object({
     .string()
     .optional()
     .refine((val) => !val || NAME_REGEX.test(val), 'Only letters, digits, dots, underscores and dashes are allowed'),
-  template: z.string().min(1, 'Select a template'),
+  template: z.string().min(1, 'Select an image'),
   autoStopInterval: z
     .string()
     .optional()
@@ -189,12 +189,14 @@ export const CreateSandboxSheet = ({
       }
 
       if (!value.template) {
-        toast.error('Select a template to create a box.')
+        toast.error('Select an image to create a box.')
         return
       }
 
       let sandboxId: string | undefined = undefined
       try {
+        // Product copy calls this an Image. The API keeps templateId because
+        // BoxTemplate owns defaults, visibility, and the runtime artifactRef.
         const sandbox = await createSandboxMutation.mutateAsync({
           name: value.name?.trim() || undefined,
           templateId: value.template,
@@ -301,29 +303,29 @@ export const CreateSandboxSheet = ({
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name} className="text-sm font-semibold">
-                      Template
+                      Image
                     </FieldLabel>
-                    <FieldDescription>Choose a prepared template for this box.</FieldDescription>
+                    <FieldDescription>Choose the base image for this box.</FieldDescription>
                     <div
                       id={field.name}
                       role="radiogroup"
                       aria-invalid={isInvalid}
-                      aria-label="Template"
+                      aria-label="Image"
                       className="grid gap-3"
                     >
                       {templatesLoading && (
                         <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
-                          Loading templates...
+                          Loading images...
                         </div>
                       )}
                       {!templatesLoading && templates.length === 0 && (
                         <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
-                          No templates are available for this organization.
+                          No images are available for this organization.
                         </div>
                       )}
                       {templates.map((template, index) => {
                         const templateName = getTemplateName(template)
-                        const description = getTemplateDescription(template) ?? 'Prepared Linux template'
+                        const description = getTemplateDescription(template) ?? 'Prepared Linux image'
                         const resources = getTemplateResourceSummary(template)
                         const selected = field.state.value === template.id
                         const isDefault = template.name === defaultTemplate || template.id === defaultTemplate
@@ -359,7 +361,7 @@ export const CreateSandboxSheet = ({
                               <span className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-[minmax(0,1fr)_auto]">
                                 <span className="flex min-w-0 items-center gap-2">
                                   <Layers className="size-4 shrink-0" />
-                                  <span className="truncate">Template {index + 1}</span>
+                                  <span className="truncate">Image {index + 1}</span>
                                 </span>
                                 <span className="flex flex-wrap items-center gap-1">
                                   <ResourceChip resource="cpu" value={resources.cpu} />
@@ -416,7 +418,7 @@ export const CreateSandboxSheet = ({
                             <div>
                               <Label className="text-sm font-semibold">Resources</Label>
                               <p className="text-xs text-muted-foreground">
-                                Leave fields blank to use the selected template defaults.
+                                Leave fields blank to use the selected image defaults.
                               </p>
                             </div>
                             <div className="grid gap-3">
@@ -439,7 +441,7 @@ export const CreateSandboxSheet = ({
                                             </Label>
                                             <p className="mt-0.5 text-xs text-muted-foreground">
                                               {defaultValue === undefined
-                                                ? 'Select a template to view the default.'
+                                                ? 'Select an image to view the default.'
                                                 : `Default: ${defaultValue} ${unit}`}
                                             </p>
                                           </div>

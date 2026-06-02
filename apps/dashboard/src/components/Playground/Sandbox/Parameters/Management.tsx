@@ -42,9 +42,9 @@ const SandboxManagementParameters: React.FC<SandboxManagementParametersProps> = 
   }
 
   // const sandboxTemplateFormData: ParameterFormItem = {
-  //   label: 'Template',
+  //   label: 'Image',
   //   key: 'templateName',
-  //   placeholder: 'Select sandbox template',
+  //   placeholder: 'Select box image',
   // }
 
   // Available languages
@@ -123,7 +123,7 @@ const SandboxManagementParameters: React.FC<SandboxManagementParametersProps> = 
             <Tooltip
               content={
                 <div className="text-balance text-center max-w-[300px]">
-                  Resources cannot be modified when a non-default template is selected.
+                  Resources cannot be modified when a non-default image is selected.
                 </div>
               }
               label={

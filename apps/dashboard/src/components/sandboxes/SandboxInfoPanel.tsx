@@ -68,7 +68,7 @@ export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
       )}
 
       <InfoSection title="General">
-        <InfoRow label="Template" className="-mr-2">
+        <InfoRow label="Image" className="-mr-2">
           {sandbox.template ? (
             <div className="flex min-w-0 items-center gap-1">
               <div className="min-w-0 text-right">

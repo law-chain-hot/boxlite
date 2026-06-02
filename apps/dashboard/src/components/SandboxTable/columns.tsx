@@ -181,7 +181,7 @@ export function getColumns({
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
-        return <SortableHeader column={column} label="Template" />
+        return <SortableHeader column={column} label="Image" />
       },
       cell: ({ row }) => {
         return (

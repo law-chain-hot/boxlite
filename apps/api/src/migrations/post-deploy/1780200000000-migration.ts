@@ -30,25 +30,16 @@ export class Migration1780200000000 implements MigrationInterface {
     await this.renameColumnIfExists(queryRunner, 'sandbox', 'buildInfoSnapshotRef', 'buildInfoArtifactRef')
     await this.renameColumnIfExists(queryRunner, 'sandbox', 'snapshot', 'template')
     await this.renameColumnIfExists(queryRunner, 'warm_pool', 'snapshot', 'template')
-    if (await queryRunner.hasColumn('organization', 'max_snapshot_size')) {
-      await queryRunner.renameColumn('organization', 'max_snapshot_size', 'max_template_size')
-    }
-    if (await queryRunner.hasColumn('organization', 'snapshot_quota')) {
-      await queryRunner.renameColumn('organization', 'snapshot_quota', 'template_quota')
-    }
-    if (await queryRunner.hasColumn('organization', 'snapshot_deactivation_timeout_minutes')) {
-      await queryRunner.renameColumn(
-        'organization',
-        'snapshot_deactivation_timeout_minutes',
-        'template_deactivation_timeout_minutes',
-      )
-    }
-    if (await queryRunner.hasColumn('region', 'snapshotManagerUrl')) {
-      await queryRunner.renameColumn('region', 'snapshotManagerUrl', 'artifactRegistryUrl')
-    }
-    if (await queryRunner.hasColumn('runner', 'currentSnapshotCount')) {
-      await queryRunner.renameColumn('runner', 'currentSnapshotCount', 'currentArtifactCount')
-    }
+    await this.renameColumnIfExists(queryRunner, 'organization', 'max_snapshot_size', 'max_template_size')
+    await this.renameColumnIfExists(queryRunner, 'organization', 'snapshot_quota', 'template_quota')
+    await this.renameColumnIfExists(
+      queryRunner,
+      'organization',
+      'snapshot_deactivation_timeout_minutes',
+      'template_deactivation_timeout_minutes',
+    )
+    await this.renameColumnIfExists(queryRunner, 'region', 'snapshotManagerUrl', 'artifactRegistryUrl')
+    await this.renameColumnIfExists(queryRunner, 'runner', 'currentSnapshotCount', 'currentArtifactCount')
 
     await this.renameTableIfExists(queryRunner, 'snapshot_runner', 'runner_artifact_cache')
     await this.renameColumnIfExists(queryRunner, 'runner_artifact_cache', 'snapshotRef', 'artifactRef')
@@ -189,25 +180,16 @@ export class Migration1780200000000 implements MigrationInterface {
     await this.renameColumnIfExists(queryRunner, 'sandbox', 'buildInfoArtifactRef', 'buildInfoSnapshotRef')
     await this.renameColumnIfExists(queryRunner, 'sandbox', 'template', 'snapshot')
     await this.renameColumnIfExists(queryRunner, 'warm_pool', 'template', 'snapshot')
-    if (await queryRunner.hasColumn('organization', 'max_template_size')) {
-      await queryRunner.renameColumn('organization', 'max_template_size', 'max_snapshot_size')
-    }
-    if (await queryRunner.hasColumn('organization', 'template_quota')) {
-      await queryRunner.renameColumn('organization', 'template_quota', 'snapshot_quota')
-    }
-    if (await queryRunner.hasColumn('organization', 'template_deactivation_timeout_minutes')) {
-      await queryRunner.renameColumn(
-        'organization',
-        'template_deactivation_timeout_minutes',
-        'snapshot_deactivation_timeout_minutes',
-      )
-    }
-    if (await queryRunner.hasColumn('region', 'artifactRegistryUrl')) {
-      await queryRunner.renameColumn('region', 'artifactRegistryUrl', 'snapshotManagerUrl')
-    }
-    if (await queryRunner.hasColumn('runner', 'currentArtifactCount')) {
-      await queryRunner.renameColumn('runner', 'currentArtifactCount', 'currentSnapshotCount')
-    }
+    await this.renameColumnIfExists(queryRunner, 'organization', 'max_template_size', 'max_snapshot_size')
+    await this.renameColumnIfExists(queryRunner, 'organization', 'template_quota', 'snapshot_quota')
+    await this.renameColumnIfExists(
+      queryRunner,
+      'organization',
+      'template_deactivation_timeout_minutes',
+      'snapshot_deactivation_timeout_minutes',
+    )
+    await this.renameColumnIfExists(queryRunner, 'region', 'artifactRegistryUrl', 'snapshotManagerUrl')
+    await this.renameColumnIfExists(queryRunner, 'runner', 'currentArtifactCount', 'currentSnapshotCount')
 
     await this.renameEnumTypeForColumn(queryRunner, 'box_template', 'state', 'snapshot_state_enum')
     await this.renameColumnIfExists(queryRunner, 'box_template_region', 'templateId', 'snapshotId')
@@ -246,13 +228,51 @@ export class Migration1780200000000 implements MigrationInterface {
     from: string,
     to: string,
   ): Promise<void> {
-    if (!(await queryRunner.hasTable(tableName))) {
+    if (!(await this.tableExists(queryRunner, tableName))) {
       return
     }
 
-    if ((await queryRunner.hasColumn(tableName, from)) && !(await queryRunner.hasColumn(tableName, to))) {
-      await queryRunner.renameColumn(tableName, from, to)
+    if (
+      (await this.columnExists(queryRunner, tableName, from)) &&
+      !(await this.columnExists(queryRunner, tableName, to))
+    ) {
+      await queryRunner.query(
+        `ALTER TABLE ${this.quoteIdentifier(tableName)} RENAME COLUMN ${this.quoteIdentifier(from)} TO ${this.quoteIdentifier(to)}`,
+      )
     }
+  }
+
+  private async tableExists(queryRunner: QueryRunner, tableName: string): Promise<boolean> {
+    const result = await queryRunner.query(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_name = $1
+        ) AS "exists"
+      `,
+      [tableName],
+    )
+
+    return result[0]?.exists === true
+  }
+
+  private async columnExists(queryRunner: QueryRunner, tableName: string, columnName: string): Promise<boolean> {
+    const result = await queryRunner.query(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = $1
+            AND column_name = $2
+        ) AS "exists"
+      `,
+      [tableName, columnName],
+    )
+
+    return result[0]?.exists === true
   }
 
   private async renameEnumTypeForColumn(

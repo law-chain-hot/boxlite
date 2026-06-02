@@ -20,7 +20,7 @@ export enum RoutePath {
   KEYS = '/dashboard/keys',
   BOXES = '/dashboard/boxes',
   PRICING = '/dashboard/pricing',
-  TEMPLATES = '/dashboard/templates',
+  IMAGES = '/dashboard/images',
   REGISTRIES = '/dashboard/registries',
   VOLUMES = '/dashboard/volumes',
   LIMITS = '/dashboard/limits',
@@ -53,6 +53,7 @@ export enum RoutePath {
   LEGACY_SANDBOX_DETAILS = '/dashboard/sandboxes/:sandboxId',
   LEGACY_SANDBOX_TERMINAL = '/dashboard/sandboxes/:sandboxId/terminal',
   LEGACY_SANDBOX_VNC = '/dashboard/sandboxes/:sandboxId/vnc',
+  LEGACY_TEMPLATES = '/dashboard/templates',
 
   // Email verification
   EMAIL_VERIFY = '/dashboard/organization/:organizationId/verify-email/:email/:token',

@@ -38,6 +38,8 @@ export interface PaginatedBoxTemplates {
   totalPages: number
 }
 
+// The user-facing page is Images, but the API contract remains templates so
+// runtime artifact semantics stay separate from presentation language.
 export function useTemplatesPageQuery(params: TemplateQueryParams) {
   const { templatesApi } = useApi()
   const { selectedOrganization } = useSelectedOrganization()

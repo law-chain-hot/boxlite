@@ -31,7 +31,7 @@ export function TemplateFilterIndicator({ value, onFilterChange, templates, isLo
     <div className="flex items-center h-6 gap-0.5 rounded-sm border border-border bg-muted/80 hover:bg-muted/50 text-sm">
       <Popover>
         <PopoverTrigger className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground px-2">
-          Template: <span className="text-primary font-medium">{value.length} selected</span>
+          Image: <span className="text-primary font-medium">{value.length} selected</span>
         </PopoverTrigger>
 
         <PopoverContent className="p-0 w-[240px]" align="start">
@@ -85,11 +85,11 @@ export function TemplateFilter({ value, onFilterChange, templates, isLoading }: 
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            <span className="text-sm text-muted-foreground">Loading templates...</span>
+            <span className="text-sm text-muted-foreground">Loading images...</span>
           </div>
         ) : (
           <>
-            <CommandEmpty>No templates found.</CommandEmpty>
+            <CommandEmpty>No images found.</CommandEmpty>
             <CommandGroup>
               {filteredTemplates.map((template) => (
                 <CommandCheckboxItem

@@ -88,7 +88,7 @@ const Templates: React.FC = () => {
 
   useEffect(() => {
     if (templatesDataError) {
-      handleApiError(templatesDataError, 'Failed to fetch templates')
+      handleApiError(templatesDataError, 'Failed to fetch images')
     }
   }, [templatesDataError])
 
@@ -145,9 +145,9 @@ const Templates: React.FC = () => {
       await markAllTemplateQueriesAsStale(true)
       setTemplateToDelete(null)
       setShowDeleteDialog(false)
-      toast.success(`Deleting template ${template.name}`)
+      toast.success(`Deleting image ${template.name}`)
     } catch (error) {
-      handleApiError(error, 'Failed to delete template')
+      handleApiError(error, 'Failed to delete image')
       updateTemplateInCache(template.id, { state: template.state })
     } finally {
       setLoadingTemplates((prev) => ({ ...prev, [template.id]: false }))
@@ -164,9 +164,9 @@ const Templates: React.FC = () => {
         organizationId: selectedOrganization?.id,
       })
       await markAllTemplateQueriesAsStale(true)
-      toast.success(`Activating template ${template.name}`)
+      toast.success(`Activating image ${template.name}`)
     } catch (error) {
-      handleApiError(error, 'Failed to activate template')
+      handleApiError(error, 'Failed to activate image')
       updateTemplateInCache(template.id, { state: template.state })
     } finally {
       setLoadingTemplates((prev) => ({ ...prev, [template.id]: false }))
@@ -183,9 +183,9 @@ const Templates: React.FC = () => {
         organizationId: selectedOrganization?.id,
       })
       await markAllTemplateQueriesAsStale(true)
-      toast.success(`Deactivating template ${template.name}`)
+      toast.success(`Deactivating image ${template.name}`)
     } catch (error) {
-      handleApiError(error, 'Failed to deactivate template')
+      handleApiError(error, 'Failed to deactivate image')
       updateTemplateInCache(template.id, { state: template.state })
     } finally {
       setLoadingTemplates((prev) => ({ ...prev, [template.id]: false }))
@@ -223,7 +223,7 @@ const Templates: React.FC = () => {
       let successCount = 0
       let failureCount = 0
 
-      const totalLabel = pluralize(ids.length, 'template', 'templates')
+      const totalLabel = pluralize(ids.length, 'image', 'images')
       const onCancel = () => {
         isCancelled = true
       }
@@ -250,7 +250,7 @@ const Templates: React.FC = () => {
           } catch (error) {
             failureCount += 1
             updateTemplateInCache(id, { state: previousStatesById.get(id) })
-            console.error(`${actionName} template failed`, id, error)
+            console.error(`${actionName} image failed`, id, error)
           } finally {
             setLoadingTemplates((prev) => ({ ...prev, [id]: false }))
           }
@@ -259,8 +259,8 @@ const Templates: React.FC = () => {
         await markAllTemplateQueriesAsStale(true)
         bulkToast.result({ successCount, failureCount }, toastMessages)
       } catch (error) {
-        console.error(`${actionName} templates failed`, error)
-        bulkToast.error(`${actionName} templates failed.`)
+        console.error(`${actionName} images failed`, error)
+        bulkToast.error(`${actionName} images failed.`)
       }
 
       return { successCount, failureCount }
@@ -279,9 +279,9 @@ const Templates: React.FC = () => {
           organizationId: selectedOrganization?.id,
         }),
       toastMessages: {
-        successTitle: `${pluralize(templates.length, 'Template', 'Templates')} deleted.`,
-        errorTitle: `Failed to delete ${pluralize(templates.length, 'template', 'templates')}.`,
-        warningTitle: 'Failed to delete some templates.',
+        successTitle: `${pluralize(templates.length, 'Image', 'Images')} deleted.`,
+        errorTitle: `Failed to delete ${pluralize(templates.length, 'image', 'images')}.`,
+        warningTitle: 'Failed to delete some images.',
         canceledTitle: 'Delete canceled.',
       },
     })
@@ -297,9 +297,9 @@ const Templates: React.FC = () => {
           organizationId: selectedOrganization?.id,
         }),
       toastMessages: {
-        successTitle: `${pluralize(templates.length, 'Template', 'Templates')} deactivated.`,
-        errorTitle: `Failed to deactivate ${pluralize(templates.length, 'template', 'templates')}.`,
-        warningTitle: 'Failed to deactivate some templates.',
+        successTitle: `${pluralize(templates.length, 'Image', 'Images')} deactivated.`,
+        errorTitle: `Failed to deactivate ${pluralize(templates.length, 'image', 'images')}.`,
+        warningTitle: 'Failed to deactivate some images.',
         canceledTitle: 'Deactivate canceled.',
       },
     })
@@ -315,9 +315,9 @@ const Templates: React.FC = () => {
           organizationId: selectedOrganization?.id,
         }),
       toastMessages: {
-        successTitle: `${pluralize(templates.length, 'Template', 'Templates')} activated.`,
-        errorTitle: `Failed to activate ${pluralize(templates.length, 'template', 'templates')}.`,
-        warningTitle: 'Failed to activate some templates.',
+        successTitle: `${pluralize(templates.length, 'Image', 'Images')} activated.`,
+        errorTitle: `Failed to activate ${pluralize(templates.length, 'image', 'images')}.`,
+        warningTitle: 'Failed to activate some images.',
         canceledTitle: 'Activate canceled.',
       },
     })
@@ -331,7 +331,7 @@ const Templates: React.FC = () => {
   return (
     <PageLayout>
       <PageHeader size="full">
-        <PageTitle>Templates</PageTitle>
+        <PageTitle>Images</PageTitle>
         {writePermitted && <CreateTemplateDialog className="ml-auto" ref={dialogRef} />}
       </PageHeader>
 
@@ -374,9 +374,9 @@ const Templates: React.FC = () => {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Confirm Template Deletion</DialogTitle>
+                <DialogTitle>Confirm Image Deletion</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete this template? This action cannot be undone.
+                  Are you sure you want to delete this image? This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

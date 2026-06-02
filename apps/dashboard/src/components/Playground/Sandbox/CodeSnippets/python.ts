@@ -14,7 +14,7 @@ export const PythonSnippetGenerator: CodeSnippetGenerator = {
         p.actions.useConfigObject ? 'BoxliteConfig as BoxLiteConfig' : '',
         p.config.useSandboxCreateParams
           ? p.config.createSandboxFromTemplate
-            ? 'CreateSandboxFromTemplateParams as CreateBoxFromTemplateParams'
+            ? 'CreateSandboxFromTemplateParams as CreateBoxFromImageParams'
             : 'CreateSandboxFromImageParams as CreateBoxFromImageParams'
           : '',
         p.config.useResources ? 'Resources' : '',
@@ -60,7 +60,7 @@ export const PythonSnippetGenerator: CodeSnippetGenerator = {
     if (!p.config.useSandboxCreateParams) return ''
     const ind = '\t'
     return [
-      `\n\nparams = ${p.config.createSandboxFromTemplate ? 'CreateBoxFromTemplateParams' : 'CreateBoxFromImageParams'}(`,
+      `\n\nparams = CreateBoxFromImageParams(`,
       p.config.useCustomSandboxTemplateName ? `${ind}template_id="${p.state['templateName']}",` : '',
       p.config.createSandboxFromImage ? `${ind}image=Image.debian_slim("3.13"),` : '',
       p.config.useResources ? `${ind}resources=resources,` : '',

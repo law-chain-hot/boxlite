@@ -12,6 +12,8 @@ import { queryKeys } from './queryKeys'
 
 export type BoxTemplate = BoxTemplateDto
 
+// Product-facing Dashboard copy calls these Images. The control plane still
+// calls them BoxTemplates because each record carries defaults and artifactRef.
 export function useTemplatesQuery() {
   const { axiosInstance } = useApi()
   const { selectedOrganization } = useSelectedOrganization()

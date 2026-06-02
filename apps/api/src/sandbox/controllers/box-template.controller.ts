@@ -62,6 +62,9 @@ import { LogProxy } from '../proxy/log-proxy'
 import { BoxTemplateService } from '../services/box-template.service'
 import { RunnerService } from '../services/runner.service'
 
+// Dashboard copy presents BoxTemplate records as Images because users choose
+// them as base images. The API/domain keeps templates because these records
+// also own defaults, visibility, lifecycle state, and runtime artifact refs.
 @ApiTags('templates')
 @Controller('templates')
 @ApiHeader(CustomHeaders.ORGANIZATION_ID)
