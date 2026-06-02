@@ -18,15 +18,15 @@ describe('system-templates', () => {
   it('maps image tags to user-facing labels and descriptions', () => {
     expect(getSystemTemplateDefinition('ubuntu:24.04')).toMatchObject({
       displayName: 'Ubuntu 24.04 LTS',
-      description: 'General-purpose Linux template',
+      description: 'General-purpose Linux image',
     })
     expect(getSystemTemplateDefinition('debian:13-slim')).toMatchObject({
       displayName: 'Debian 13 slim',
-      description: 'Small Debian-based template',
+      description: 'Small Debian-based image',
     })
     expect(getSystemTemplateDefinition('alpine:3.23')).toMatchObject({
       displayName: 'Alpine 3.23',
-      description: 'Minimal Linux template',
+      description: 'Minimal Linux image',
     })
   })
 

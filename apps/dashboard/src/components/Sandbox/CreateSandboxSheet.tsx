@@ -105,7 +105,7 @@ const getTemplateLabel = (template: BoxTemplate) => {
 
 const getTemplateDescription = (template: BoxTemplate) => {
   const templateName = getTemplateName(template)
-  return template.description || getTemplateDisplayMetadata(templateName)?.description
+  return getTemplateDisplayMetadata(templateName)?.description || template.description
 }
 
 const getTemplateResourceSummary = (template: BoxTemplate) => ({

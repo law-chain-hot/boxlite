@@ -116,7 +116,7 @@ export function SandboxTableHeader({
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Package className="w-4 h-4" />
-                Template
+                Image
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="p-0 w-64">

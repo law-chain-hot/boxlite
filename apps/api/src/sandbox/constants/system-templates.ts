@@ -16,19 +16,19 @@ export const SYSTEM_TEMPLATES: SystemTemplateDefinition[] = [
     name: 'ubuntu:24.04',
     imageName: 'ubuntu:24.04',
     displayName: 'Ubuntu 24.04 LTS',
-    description: 'General-purpose Linux template',
+    description: 'General-purpose Linux image',
   },
   {
     name: 'debian:13-slim',
     imageName: 'debian:13-slim',
     displayName: 'Debian 13 slim',
-    description: 'Small Debian-based template',
+    description: 'Small Debian-based image',
   },
   {
     name: 'alpine:3.23',
     imageName: 'alpine:3.23',
     displayName: 'Alpine 3.23',
-    description: 'Minimal Linux template',
+    description: 'Minimal Linux image',
   },
 ]
 
