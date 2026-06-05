@@ -48,7 +48,7 @@ export function SandboxTableHeader({
         <DebouncedInput
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(value) => table.getColumn('name')?.setFilterValue(value)}
-          placeholder="Search by Name or UUID"
+          placeholder="Search by name or Box ID"
           className={cn('min-w-0', {
             'w-full': isMobile,
             'min-w-[16rem] flex-1': !isMobile && isCompactScreen,
@@ -81,7 +81,7 @@ export function SandboxTableHeader({
                 getColumnLabel={(id: string) => {
                   switch (id) {
                     case 'id':
-                      return 'UUID'
+                      return 'Internal UUID'
                     default:
                       return id
                   }

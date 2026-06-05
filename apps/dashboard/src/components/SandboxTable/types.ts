@@ -30,8 +30,6 @@ export interface SandboxTableProps {
   handleBulkDelete: (ids: string[]) => void
   handleBulkStart: (ids: string[]) => void
   handleBulkStop: (ids: string[]) => void
-  handleBulkArchive: (ids: string[]) => void
-  handleArchive: (id: string) => void
   handleVnc: (id: string) => void
   getWebTerminalUrl: (id: string) => Promise<string | null>
   handleCreateSshAccess: (id: string) => void
@@ -64,7 +62,6 @@ export interface SandboxTableActionsProps {
   onStart: (id: string) => void
   onStop: (id: string) => void
   onDelete: (id: string) => void
-  onArchive: (id: string) => void
   onVnc: (id: string) => void
   onOpenWebTerminal: (id: string) => void
   onCreateSshAccess: (id: string) => void
@@ -97,6 +94,9 @@ export const convertTableSortingToApiSorting = (sorting: SortingState): SandboxS
   let field: ListSandboxesPaginatedSortEnum
 
   switch (sort.id) {
+    case 'boxId':
+      field = ListSandboxesPaginatedSortEnum.BOX_ID
+      break
     case 'id':
       field = ListSandboxesPaginatedSortEnum.ID
       break
@@ -221,6 +221,9 @@ export const convertApiSortingToTableSorting = (sorting: SandboxSorting): Sortin
 
   let id: string
   switch (sorting.field) {
+    case ListSandboxesPaginatedSortEnum.BOX_ID:
+      id = 'boxId'
+      break
     case ListSandboxesPaginatedSortEnum.ID:
       id = 'id'
       break

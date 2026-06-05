@@ -42,14 +42,14 @@ const futureItems = [
   },
 ]
 
-function Pricing() {
+function Billing() {
   return (
     <PageLayout>
       <PageHeader>
         <div>
-          <PageTitle>Pricing</PageTitle>
+          <PageTitle>Billing</PageTitle>
           <PageDescription className="mt-2 max-w-2xl">
-            BoxLite is free to try during the MVP. Pricing is coming soon and will be announced before billing starts.
+            BoxLite is free to try right now. Billing details will be announced before paid usage starts.
           </PageDescription>
         </div>
       </PageHeader>
@@ -59,11 +59,11 @@ function Pricing() {
           <div className="min-w-0">
             <Badge variant="secondary">Free trial now</Badge>
             <h1 className="mt-4 max-w-2xl text-3xl font-semibold tracking-normal text-foreground">
-              Pricing is coming soon.
+              Billing is coming soon.
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              BoxLite is currently free to try. We will publish pricing before billing starts, with clear usage and
-              resource limits.
+              BoxLite is currently free to try. We will publish billing details before paid usage starts, with clear
+              usage and resource limits.
             </p>
 
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
@@ -84,7 +84,7 @@ function Pricing() {
               <Logo className="h-20 w-20 opacity-90" decorative />
             </div>
             <div className="p-4">
-              <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">MVP trial</div>
+              <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Trial access</div>
               <div className="mt-3 text-3xl font-semibold">$0</div>
               <p className="mt-1 text-sm text-muted-foreground">No billing enabled yet.</p>
               <div className="mt-5 space-y-2 text-sm">
@@ -123,7 +123,7 @@ function Pricing() {
           <div className="rounded-md border border-border bg-background p-4">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <ReceiptText className="size-4 text-muted-foreground" />
-              Future pricing signals
+              Future billing signals
             </div>
             <div className="mt-4 grid gap-2">
               {futureItems.map((item) => {
@@ -137,7 +137,7 @@ function Pricing() {
               })}
             </div>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Pricing will focus on the resources users actually consume.
+              Billing will focus on the resources users actually consume.
             </p>
           </div>
         </section>
@@ -146,4 +146,4 @@ function Pricing() {
   )
 }
 
-export default Pricing
+export default Billing

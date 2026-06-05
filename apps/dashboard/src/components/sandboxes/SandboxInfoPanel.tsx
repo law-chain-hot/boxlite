@@ -8,6 +8,7 @@ import { ResourceChip } from '@/components/ResourceChip'
 import { TimestampTooltip } from '@/components/TimestampTooltip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getSandboxPublicId, getSandboxPublicIdLabel } from '@/lib/sandbox-identity'
 import { getTemplateDisplayName } from '@/lib/template-display'
 import { cn, formatDuration, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox } from '@boxlite-ai/api-client'
@@ -55,6 +56,7 @@ interface SandboxInfoPanelProps {
 
 export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
   const templateDisplayName = getTemplateDisplayName(sandbox.template)
+  const publicBoxId = getSandboxPublicId(sandbox)
 
   return (
     <div className="flex flex-col">
@@ -68,6 +70,12 @@ export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
       )}
 
       <InfoSection title="General">
+        <InfoRow label="Box ID" className="-mr-2">
+          <div className="flex min-w-0 items-center gap-1">
+            <span className="truncate font-mono text-xs">{getSandboxPublicIdLabel(sandbox)}</span>
+            {publicBoxId && <CopyButton value={publicBoxId} tooltipText="Copy Box ID" size="icon-xs" />}
+          </div>
+        </InfoRow>
         <InfoRow label="Image" className="-mr-2">
           {sandbox.template ? (
             <div className="flex min-w-0 items-center gap-1">
@@ -97,13 +105,6 @@ export function SandboxInfoPanel({ sandbox }: SandboxInfoPanelProps) {
         <InfoRow label="Auto-stop">
           {sandbox.autoStopInterval ? (
             formatDuration(sandbox.autoStopInterval)
-          ) : (
-            <span className="text-muted-foreground font-normal">Disabled</span>
-          )}
-        </InfoRow>
-        <InfoRow label="Auto-archive">
-          {sandbox.autoArchiveInterval ? (
-            formatDuration(sandbox.autoArchiveInterval)
           ) : (
             <span className="text-muted-foreground font-normal">Disabled</span>
           )}

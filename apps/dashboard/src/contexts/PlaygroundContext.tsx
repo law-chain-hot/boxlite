@@ -277,7 +277,6 @@ export type SandboxParametersInfo = {
   useResourcesDisk: boolean
   createSandboxParamsExist: boolean
   useAutoStopInterval: boolean
-  useAutoArchiveInterval: boolean
   useAutoDeleteInterval: boolean
   useSandboxCreateParams: boolean
   useCustomSandboxTemplateName: boolean

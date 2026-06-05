@@ -174,8 +174,8 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
       },
       {
         icon: <ReceiptText size={16} strokeWidth={1.5} />,
-        label: 'Pricing',
-        path: RoutePath.PRICING,
+        label: 'Billing',
+        path: RoutePath.BILLING,
       },
     ]
   }, [])
@@ -253,12 +253,16 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
       )}
     >
       <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-3 px-4 sm:px-5 2xl:px-0">
-        <div className="flex min-w-0 items-center gap-4 sm:gap-6">
-          <Link to={RoutePath.BOXES} className="shrink-0 text-[1.15rem] font-semibold tracking-tight text-foreground">
-            <LogoText />
+        <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+          <Link
+            to={RoutePath.BOXES}
+            className="inline-flex h-14 shrink-0 items-center text-foreground"
+            aria-label="BoxLite home"
+          >
+            <LogoText className="h-8 w-auto sm:h-9" />
           </Link>
 
-          <nav className="flex h-14 shrink-0 items-stretch gap-1">
+          <nav className="hidden h-14 shrink-0 items-stretch gap-1 md:flex">
             {primaryItems.map((item) => {
               const isActive = pathname.startsWith(item.path)
 

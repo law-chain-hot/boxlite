@@ -5,8 +5,9 @@
  */
 
 import { getTemplateDisplayName } from '@/lib/template-display'
+import { getSandboxDisplayName, getSandboxPublicIdLabel } from '@/lib/sandbox-identity'
 import { formatTimestamp, getRelativeTimeString } from '@/lib/utils'
-import { Sandbox, SandboxDesiredState, SandboxState } from '@boxlite-ai/api-client'
+import { Sandbox, SandboxState } from '@boxlite-ai/api-client'
 import { ColumnDef } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import React from 'react'
@@ -46,7 +47,6 @@ interface GetColumnsProps {
   handleStart: (id: string) => void
   handleStop: (id: string) => void
   handleDelete: (id: string) => void
-  handleArchive: (id: string) => void
   handleVnc: (id: string) => void
   getWebTerminalUrl: (id: string) => Promise<string | null>
   sandboxIsLoading: Record<string, boolean>
@@ -63,7 +63,6 @@ export function getColumns({
   handleStart,
   handleStop,
   handleDelete,
-  handleArchive,
   handleVnc,
   getWebTerminalUrl,
   sandboxIsLoading,
@@ -123,7 +122,7 @@ export function getColumns({
     },
     {
       id: 'name',
-      size: 320,
+      size: 220,
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
@@ -140,12 +139,29 @@ export function getColumns({
       },
     },
     {
+      id: 'boxId',
+      size: 140,
+      enableSorting: true,
+      enableHiding: false,
+      header: ({ column }) => {
+        return <SortableHeader column={column} label="Box ID" />
+      },
+      accessorKey: 'boxId',
+      cell: ({ row }) => {
+        return (
+          <div className="w-full truncate">
+            <span className="truncate block font-mono text-xs">{getSandboxPublicIdLabel(row.original)}</span>
+          </div>
+        )
+      },
+    },
+    {
       id: 'id',
       size: 320,
       enableSorting: true,
       enableHiding: true,
       header: ({ column }) => {
-        return <SortableHeader column={column} label="UUID" />
+        return <SortableHeader column={column} label="Internal UUID" />
       },
       accessorKey: 'id',
       cell: ({ row }) => {
@@ -158,7 +174,7 @@ export function getColumns({
     },
     {
       id: 'state',
-      size: 140,
+      size: 120,
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
@@ -198,7 +214,7 @@ export function getColumns({
     },
     {
       id: 'region',
-      size: 100,
+      size: 80,
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
@@ -233,7 +249,7 @@ export function getColumns({
     },
     {
       id: 'lastEvent',
-      size: 120,
+      size: 105,
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
@@ -251,7 +267,7 @@ export function getColumns({
     },
     {
       id: 'createdAt',
-      size: 200,
+      size: 170,
       enableSorting: true,
       enableHiding: false,
       header: ({ column }) => {
@@ -280,7 +296,6 @@ export function getColumns({
             onStart={handleStart}
             onStop={handleStop}
             onDelete={handleDelete}
-            onArchive={handleArchive}
             onVnc={handleVnc}
             onOpenWebTerminal={handleOpenWebTerminal}
             onCreateSshAccess={handleCreateSshAccess}
@@ -296,19 +311,7 @@ export function getColumns({
   return columns
 }
 
-export function getSandboxDisplayName(sandbox: Sandbox): string {
-  // If the sandbox is destroying and the name starts with "DESTROYED_", trim the prefix and timestamp
-  if (sandbox.desiredState === SandboxDesiredState.DESTROYED && sandbox.name.startsWith('DESTROYED_')) {
-    // Remove "DESTROYED_" prefix and everything after the last underscore (timestamp)
-    const withoutPrefix = sandbox.name.substring(10) // Remove "DESTROYED_"
-    const lastUnderscoreIndex = withoutPrefix.lastIndexOf('_')
-    if (lastUnderscoreIndex !== -1) {
-      return withoutPrefix.substring(0, lastUnderscoreIndex)
-    }
-    return withoutPrefix
-  }
-  return sandbox.name
-}
+export { getSandboxDisplayName, getSandboxPublicIdLabel }
 
 export function getSandboxLastEvent(sandbox: Sandbox): { date: Date; relativeTimeString: string } {
   return getRelativeTimeString(sandbox.updatedAt)

@@ -5,7 +5,7 @@
  */
 
 import { OrganizationSuspendedError } from '@/api/errors'
-import { OnboardingGuideDialog, type OnboardingStepId } from '@/components/OnboardingGuideDialog'
+import { OnboardingGuideDialog } from '@/components/OnboardingGuideDialog'
 import { PageContent, PageLayout } from '@/components/PageLayout'
 import { CreateSandboxSheet } from '@/components/Sandbox/CreateSandboxSheet'
 import { SandboxTable } from '@/components/SandboxTable'
@@ -50,6 +50,7 @@ import {
   readOnboardingProgress,
   type OnboardingProgress,
 } from '@/lib/onboarding-progress'
+import { getSandboxRouteId } from '@/lib/sandbox-identity'
 import { formatDuration, pluralize } from '@/lib/utils'
 import {
   OrganizationRolePermissionsEnum,
@@ -60,14 +61,13 @@ import {
   SshAccessDto,
 } from '@boxlite-ai/api-client'
 import { QueryKey, useQueryClient } from '@tanstack/react-query'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { createSearchParams, generatePath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { generatePath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 interface SandboxesLocationState {
   openCreateBox?: boolean
-  resumeOnboardingAfterCreate?: boolean
 }
 
 const Sandboxes: React.FC = () => {
@@ -84,8 +84,6 @@ const Sandboxes: React.FC = () => {
     useSelectedOrganization()
   const [createSandboxOpen, setCreateSandboxOpen] = useState(false)
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
-  const [onboardingInitialStep, setOnboardingInitialStep] = useState<OnboardingStepId | undefined>()
-  const resumeOnboardingAfterCreateRef = useRef(false)
   const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>(() => readOnboardingProgress(userId))
 
   const updateOnboardingProgress = useCallback(
@@ -167,26 +165,6 @@ const Sandboxes: React.FC = () => {
     refetch: refetchSandboxesData,
   } = useSandboxes(queryKey, queryParams)
   const hasBoxes = (sandboxesData?.items.length ?? 0) > 0 || (sandboxesData?.total ?? 0) > 0
-  const primarySandboxForOnboarding = useMemo(() => {
-    const items = sandboxesData?.items ?? []
-    const usableItems = items.filter(
-      (sandbox) =>
-        sandbox.state !== SandboxState.DESTROYED &&
-        sandbox.state !== SandboxState.DESTROYING &&
-        sandbox.state !== SandboxState.ARCHIVING &&
-        sandbox.state !== SandboxState.ERROR &&
-        sandbox.state !== SandboxState.BUILD_FAILED &&
-        sandbox.state !== SandboxState.UNKNOWN,
-    )
-
-    return (
-      usableItems.find((sandbox) => sandbox.state === SandboxState.STARTED) ??
-      usableItems.find(
-        (sandbox) => sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED,
-      ) ??
-      usableItems[0]
-    )
-  }, [sandboxesData?.items])
 
   useEffect(() => {
     if (sandboxesDataError) {
@@ -549,31 +527,6 @@ const Sandboxes: React.FC = () => {
     }
   }
 
-  const handleArchive = async (id: string) => {
-    setSandboxIsLoading((prev) => ({ ...prev, [id]: true }))
-    setSandboxStateIsTransitioning((prev) => ({ ...prev, [id]: true }))
-
-    const sandboxToArchive = sandboxesData?.items.find((s) => s.id === id)
-    const previousState = sandboxToArchive?.state
-
-    await cancelQueryRefetches(queryKey)
-    performSandboxStateOptimisticUpdate(id, SandboxState.ARCHIVING)
-
-    try {
-      await sandboxApi.archiveSandbox(id, selectedOrganization?.id)
-      toast.success(`Archiving box with ID: ${id}`)
-      await markAllSandboxQueriesAsStale()
-    } catch (error) {
-      handleApiError(error, 'Failed to archive box')
-      revertSandboxStateOptimisticUpdate(id, previousState)
-    } finally {
-      setSandboxIsLoading((prev) => ({ ...prev, [id]: false }))
-      setTimeout(() => {
-        setSandboxStateIsTransitioning((prev) => ({ ...prev, [id]: false }))
-      }, 2000)
-    }
-  }
-
   // todo(rpavlini): we should refactor this and move to react-query mutations
   const executeBulkAction = useCallback(
     async ({
@@ -687,20 +640,6 @@ const Sandboxes: React.FC = () => {
         errorTitle: `Failed to stop ${pluralize(ids.length, 'box', 'boxes')}.`,
         warningTitle: 'Failed to stop some boxes.',
         canceledTitle: 'Stop canceled.',
-      },
-    })
-
-  const handleBulkArchive = (ids: string[]) =>
-    executeBulkAction({
-      ids,
-      actionName: 'Archiving',
-      optimisticState: SandboxState.ARCHIVING,
-      apiCall: (id) => sandboxApi.archiveSandbox(id, selectedOrganization?.id),
-      toastMessages: {
-        successTitle: `${pluralize(ids.length, 'box', 'boxes')} archived.`,
-        errorTitle: `Failed to archive ${pluralize(ids.length, 'box', 'boxes')}.`,
-        warningTitle: 'Failed to archive some boxes.',
-        canceledTitle: 'Archive canceled.',
       },
     })
 
@@ -867,54 +806,16 @@ const Sandboxes: React.FC = () => {
     }, 220)
   }, [clearOnboardingUrlParam, userId])
 
-  const handleCreateSandboxOpenChange = useCallback((isOpen: boolean) => {
-    setCreateSandboxOpen(isOpen)
-    if (!isOpen && resumeOnboardingAfterCreateRef.current) {
-      resumeOnboardingAfterCreateRef.current = false
-      setOnboardingInitialStep('create')
-      setShowOnboardingDialog(true)
-    }
-  }, [])
-
-  const startFromOnboardingDialog = useCallback(() => {
-    resumeOnboardingAfterCreateRef.current = true
-    setShowOnboardingDialog(false)
-    setCreateSandboxOpen(true)
-    clearOnboardingUrlParam()
-  }, [clearOnboardingUrlParam])
-
   useEffect(() => {
     const state = location.state as SandboxesLocationState | null
     if (!state?.openCreateBox) {
       return
     }
 
-    resumeOnboardingAfterCreateRef.current = Boolean(state.resumeOnboardingAfterCreate)
     setShowOnboardingDialog(false)
     setCreateSandboxOpen(true)
     navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
   }, [location.pathname, location.search, location.state, navigate])
-
-  const openTerminalFromOnboardingDialog = useCallback(() => {
-    if (!primarySandboxForOnboarding) {
-      startFromOnboardingDialog()
-      return
-    }
-
-    updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
-    setShowOnboardingDialog(false)
-    clearOnboardingUrlParam()
-    navigate({
-      pathname: generatePath(RoutePath.BOX_DETAILS, { sandboxId: primarySandboxForOnboarding.id }),
-      search: `${createSearchParams({ tab: 'terminal' })}`,
-    })
-  }, [
-    clearOnboardingUrlParam,
-    navigate,
-    primarySandboxForOnboarding,
-    startFromOnboardingDialog,
-    updateOnboardingProgress,
-  ])
 
   return (
     <PageLayout>
@@ -927,13 +828,8 @@ const Sandboxes: React.FC = () => {
             setShowOnboardingDialog(true)
           }
         }}
-        onCreateBox={startFromOnboardingDialog}
-        onOpenTerminal={openTerminalFromOnboardingDialog}
         onProgressChange={updateOnboardingProgress}
         progress={onboardingProgress}
-        hasBoxes={hasBoxes}
-        initialStep={onboardingInitialStep}
-        onInitialStepConsumed={() => setOnboardingInitialStep(undefined)}
       />
       <PageContent size="full" className="min-h-0 flex-1 gap-3 max-h-[calc(100vh-65px)] pt-4">
         <SandboxTable
@@ -948,8 +844,6 @@ const Sandboxes: React.FC = () => {
           handleBulkDelete={handleBulkDelete}
           handleBulkStart={handleBulkStart}
           handleBulkStop={handleBulkStop}
-          handleBulkArchive={handleBulkArchive}
-          handleArchive={handleArchive}
           handleVnc={handleVnc}
           getWebTerminalUrl={getWebTerminalUrl}
           handleCreateSshAccess={openCreateSshDialog}
@@ -961,7 +855,7 @@ const Sandboxes: React.FC = () => {
           templates={templatesData || []}
           templatesDataIsLoading={templatesDataIsLoading}
           onRowClick={(sandbox: Sandbox) => {
-            navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id }))
+            navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: getSandboxRouteId(sandbox) }))
           }}
           pageCount={sandboxesData?.totalPages || 0}
           totalItems={sandboxesData?.total || 0}
@@ -981,9 +875,8 @@ const Sandboxes: React.FC = () => {
             authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES) ? (
               <CreateSandboxSheet
                 open={createSandboxOpen}
-                onOpenChange={handleCreateSandboxOpenChange}
+                onOpenChange={setCreateSandboxOpen}
                 onCreated={() => {
-                  resumeOnboardingAfterCreateRef.current = false
                   updateOnboardingProgress({ boxCreated: true })
                   setShowOnboardingDialog(false)
                 }}

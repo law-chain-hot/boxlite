@@ -17,7 +17,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ApiKeyTable } from '../components/ApiKeyTable'
 
-const MVP_API_KEY_PERMISSIONS = CREATE_API_KEY_PERMISSIONS_GROUPS.flatMap((group) => group.permissions)
+const DEFAULT_API_KEY_PERMISSIONS = CREATE_API_KEY_PERMISSIONS_GROUPS.flatMap((group) => group.permissions)
 
 const Keys: React.FC = () => {
   const { apiUrl } = useConfig()
@@ -32,12 +32,12 @@ const Keys: React.FC = () => {
       return []
     }
     if (authenticatedUserOrganizationMember.role === OrganizationUserRoleEnum.OWNER) {
-      return MVP_API_KEY_PERMISSIONS
+      return DEFAULT_API_KEY_PERMISSIONS
     }
     const assignedPermissions = new Set(
       authenticatedUserOrganizationMember.assignedRoles.flatMap((role) => role.permissions),
     )
-    return MVP_API_KEY_PERMISSIONS.filter((permission) => assignedPermissions.has(permission))
+    return DEFAULT_API_KEY_PERMISSIONS.filter((permission) => assignedPermissions.has(permission))
   }, [authenticatedUserOrganizationMember])
 
   const handleRevoke = async (key: ApiKeyList) => {
