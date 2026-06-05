@@ -46,7 +46,7 @@ export class BoxResponseDto {
 
   @ApiProperty({
     description: 'Approved image/template used for the box',
-    example: 'ubuntu:24.04',
+    example: 'boxlite/base',
   })
   image: string
 

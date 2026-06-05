@@ -23,6 +23,23 @@ const defaultConfig = {
   postgresContainer: 'boxlite-local-postgres',
   redisContainer: 'boxlite-local-redis',
   dexContainer: 'boxlite-local-dex',
+  registryContainer: 'boxlite-local-registry',
+  registryHost: process.env.BOXLITE_E2E_REGISTRY_HOST || 'localhost:5001',
+  runtimeImagePlatform: process.env.BOXLITE_E2E_RUNTIME_IMAGE_PLATFORM || defaultRuntimeImagePlatform(),
+  runtimeImageTag: process.env.BOXLITE_E2E_RUNTIME_IMAGE_TAG || '20260605-p0-r5-local',
+  runnerHomeDir: process.env.BOXLITE_E2E_RUNNER_HOME_DIR || '/tmp/blrt',
+  dockerConfigDir: process.env.BOXLITE_E2E_DOCKER_CONFIG || path.join(os.tmpdir(), 'boxlite-local-docker-config'),
+}
+
+function defaultRuntimeImagePlatform() {
+  switch (os.arch()) {
+    case 'arm64':
+      return 'linux/arm64'
+    case 'x64':
+      return 'linux/amd64'
+    default:
+      return `linux/${os.arch()}`
+  }
 }
 
 export async function runLocalDexEnvironment({ mode, command = [] }) {
@@ -32,9 +49,16 @@ export async function runLocalDexEnvironment({ mode, command = [] }) {
   ensurePostgres(defaultConfig)
   ensureRedis(defaultConfig)
   ensureDex(defaultConfig)
+  ensureRegistry(defaultConfig)
 
   await waitForTcp('localhost', 5432, 'Postgres')
   await waitForTcp('localhost', 6379, 'Redis')
+  await waitForTcp('localhost', 5001, 'Local registry')
+  ensureLocalDockerConfig(defaultConfig)
+  ensureDaemonRuntimeBinary(defaultConfig)
+  ensureRuntimeImages(defaultConfig)
+  ensureGoSdkDevNativeLibrary()
+  ensureGoBuildCacheTracksNativeLibrary()
   await waitForHttp(`${defaultConfig.dexIssuer}/.well-known/openid-configuration`, 'Dex')
 
   const appsProcess = startApps(defaultConfig)
@@ -73,7 +97,7 @@ function shellCommand(command) {
 }
 
 function ensureDocker() {
-  const result = spawnSync('docker', ['info'], {
+  const result = spawnSync('docker', ['ps'], {
     cwd: repoRoot,
     encoding: 'utf8',
     stdio: 'pipe',
@@ -145,6 +169,180 @@ function ensureDex(config) {
   })
 }
 
+function ensureRegistry(config) {
+  ensureContainer({
+    name: config.registryContainer,
+    image: 'registry:2',
+    args: ['-p', '5001:5000'],
+  })
+}
+
+function ensureRuntimeImages(config) {
+  const images = [
+    ['base', runtimeImageRef(config, 'base'), path.join(repoRoot, 'images', 'agent-runtime', 'base.Dockerfile')],
+    ['python', runtimeImageRef(config, 'python'), path.join(repoRoot, 'images', 'agent-runtime', 'python.Dockerfile')],
+    ['node', runtimeImageRef(config, 'node'), path.join(repoRoot, 'images', 'agent-runtime', 'node.Dockerfile')],
+  ]
+
+  for (const [name, imageRef, dockerfile] of images) {
+    if (!fs.existsSync(dockerfile)) {
+      throw new Error(`Missing ${name} runtime image Dockerfile: ${dockerfile}`)
+    }
+
+    if (registryImageExists(config, name)) {
+      continue
+    }
+
+    console.log(`[local-dex] building runtime image ${imageRef}`)
+    docker(['build', '--platform', config.runtimeImagePlatform, '-f', dockerfile, '-t', imageRef, repoRoot], {
+      stdio: 'inherit',
+    })
+    console.log(`[local-dex] pushing runtime image ${imageRef}`)
+    docker(['push', imageRef], { stdio: 'inherit', env: localDockerEnv(config) })
+  }
+}
+
+function runtimeImageRef(config, name) {
+  return `${config.registryHost}/boxlite/${name}:${config.runtimeImageTag}`
+}
+
+function ensureDaemonRuntimeBinary(config) {
+  const outputDir = path.join(appsRoot, 'dist', 'apps', 'daemon-runtime')
+  const outputPath = path.join(outputDir, 'boxlite-daemon')
+  fs.mkdirSync(outputDir, { recursive: true })
+
+  console.log(`[local-dex] building Linux daemon runtime binary for ${config.runtimeImagePlatform}`)
+  const result = spawnSync('go', ['build', '-o', outputPath, './daemon/cmd/daemon/main.go'], {
+    cwd: appsRoot,
+    encoding: 'utf8',
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      GOOS: 'linux',
+      GOARCH: runtimeImageGoarch(config),
+      CGO_ENABLED: '0',
+    },
+  })
+
+  if (result.status !== 0) {
+    throw new Error('go build daemon runtime binary failed; agent runtime images cannot include toolbox')
+  }
+}
+
+function runtimeImageGoarch(config) {
+  const arch = config.runtimeImagePlatform.split('/').pop()
+  switch (arch) {
+    case 'amd64':
+    case 'arm64':
+      return arch
+    default:
+      throw new Error(`Unsupported runtime image platform for daemon build: ${config.runtimeImagePlatform}`)
+  }
+}
+
+function ensureGoSdkDevNativeLibrary() {
+  const libPath = path.join(repoRoot, 'target', 'debug', 'libboxlite.a')
+  if (fs.existsSync(libPath)) {
+    return
+  }
+
+  console.log('[local-dex] building Go SDK native library for local runner')
+  const result = spawnSync('make', ['dev:go'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  })
+
+  if (result.status !== 0) {
+    throw new Error('make dev:go failed; local runner cannot start without target/debug/libboxlite.a')
+  }
+}
+
+function ensureGoBuildCacheTracksNativeLibrary() {
+  const libPath = path.join(repoRoot, 'target', 'debug', 'libboxlite.a')
+  if (!fs.existsSync(libPath)) {
+    return
+  }
+
+  const cacheDir = path.join(appsRoot, 'node_modules', '.cache')
+  const stampPath = path.join(cacheDir, 'boxlite-local-e2e-libboxlite.mtime')
+  const currentStamp = String(fs.statSync(libPath).mtimeMs)
+  const previousStamp = fs.existsSync(stampPath) ? fs.readFileSync(stampPath, 'utf8') : ''
+  if (previousStamp === currentStamp) {
+    return
+  }
+
+  console.log('[local-dex] clearing Go build cache because target/debug/libboxlite.a changed')
+  const result = spawnSync('go', ['clean', '-cache'], {
+    cwd: appsRoot,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  })
+  if (result.status !== 0) {
+    throw new Error('go clean -cache failed; local runner may link a stale target/debug/libboxlite.a')
+  }
+  fs.mkdirSync(cacheDir, { recursive: true })
+  fs.writeFileSync(stampPath, currentStamp)
+}
+
+function registryImageExists(config, name) {
+  const manifestUrl = `http://${config.registryHost}/v2/boxlite/${name}/manifests/${config.runtimeImageTag}`
+  const result = spawnSync(
+    'curl',
+    [
+      '-fsSI',
+      '--max-time',
+      '5',
+      '-H',
+      'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json',
+      manifestUrl,
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: 'ignore',
+    },
+  )
+
+  if (result.error) {
+    return false
+  }
+
+  return result.status === 0
+}
+
+function ensureLocalDockerConfig(config) {
+  fs.mkdirSync(config.dockerConfigDir, { recursive: true })
+  const configPath = path.join(config.dockerConfigDir, 'config.json')
+  if (!fs.existsSync(configPath)) {
+    fs.writeFileSync(configPath, `${JSON.stringify({ auths: {} }, null, 2)}\n`)
+  }
+}
+
+function localDockerEnv(config) {
+  return {
+    DOCKER_CONFIG: config.dockerConfigDir,
+  }
+}
+
+function docker(args, options = {}) {
+  const result = spawnSync('docker', args, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      ...options.env,
+    },
+    stdio: options.stdio || 'pipe',
+  })
+
+  if (result.status !== 0) {
+    throw new Error(`docker ${args.join(' ')} failed${result.stderr ? `:${os.EOL}${trimOutput(result.stderr)}` : ''}`)
+  }
+
+  return result.stdout?.trim() || ''
+}
+
 function ensureContainer({ name, image, args, command = [] }) {
   if (isContainerRunning(name)) {
     return
@@ -165,23 +363,12 @@ function isContainerRunning(name) {
   return docker(['ps', '--format', '{{.Names}}']).split(/\r?\n/).includes(name)
 }
 
-function docker(args, options = {}) {
-  const result = spawnSync('docker', args, {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: options.stdio || 'pipe',
-  })
-
-  if (result.status !== 0) {
-    throw new Error(`docker ${args.join(' ')} failed${result.stderr ? `:${os.EOL}${trimOutput(result.stderr)}` : ''}`)
-  }
-
-  return result.stdout?.trim() || ''
-}
-
 function startApps(config) {
+  fs.mkdirSync(config.runnerHomeDir, { recursive: true })
+
   const env = {
     ...process.env,
+    NX_TUI: 'false',
     NODE_ENV: 'development',
     ENVIRONMENT: 'development',
     PORT: '3001',
@@ -189,8 +376,51 @@ function startApps(config) {
     DASHBOARD_URL: config.dashboardUrl,
     DASHBOARD_BASE_API_URL: '',
     SKIP_CONNECTIONS: 'false',
-    DISABLE_CRON_JOBS: 'true',
+    DISABLE_CRON_JOBS: 'false',
     NOTIFICATION_GATEWAY_DISABLED: 'true',
+    DEFAULT_TEMPLATE: 'boxlite/base',
+    BOXLITE_SYSTEM_BASE_IMAGE: runtimeImageRef(config, 'base'),
+    BOXLITE_SYSTEM_PYTHON_IMAGE: runtimeImageRef(config, 'python'),
+    BOXLITE_SYSTEM_NODE_IMAGE: runtimeImageRef(config, 'node'),
+    ENCRYPTION_KEY: 'boxlite-local-e2e-encryption-key',
+    ENCRYPTION_SALT: 'boxlite-local-e2e-encryption-salt',
+    ADMIN_API_KEY: 'boxlite-local-admin-key',
+    ADMIN_TOTAL_CPU_QUOTA: '10',
+    ADMIN_TOTAL_MEMORY_QUOTA: '40',
+    ADMIN_TOTAL_DISK_QUOTA: '100',
+    ADMIN_MAX_CPU_PER_SANDBOX: '4',
+    ADMIN_MAX_MEMORY_PER_SANDBOX: '8',
+    ADMIN_MAX_DISK_PER_SANDBOX: '10',
+    ADMIN_TEMPLATE_QUOTA: '100',
+    ADMIN_MAX_TEMPLATE_SIZE: '100',
+    ADMIN_VOLUME_QUOTA: '100',
+    INTERNAL_REGISTRY_URL: config.registryHost,
+    INTERNAL_REGISTRY_ADMIN: 'boxlite-local-registry-user',
+    INTERNAL_REGISTRY_PASSWORD: 'boxlite-local-registry-password',
+    INTERNAL_REGISTRY_PROJECT_ID: 'boxlite',
+    DEFAULT_RUNNER_NAME: 'local-runner',
+    DEFAULT_RUNNER_API_KEY: 'boxlite-local-runner-key',
+    DEFAULT_RUNNER_API_VERSION: '2',
+    DEFAULT_RUNNER_DOMAIN: 'localhost',
+    DEFAULT_RUNNER_CPU: '4',
+    DEFAULT_RUNNER_MEMORY: '8',
+    DEFAULT_RUNNER_DISK: '50',
+    RUNNER_DECLARATIVE_BUILD_SCORE_THRESHOLD: '1',
+    RUNNER_AVAILABILITY_SCORE_THRESHOLD: '1',
+    RUNNER_START_SCORE_THRESHOLD: '1',
+    BOXLITE_RUNNER_TOKEN: 'boxlite-local-runner-key',
+    API_VERSION: '2',
+    API_PORT: '8080',
+    RUNNER_DOMAIN: 'localhost',
+    BOXLITE_HOME_DIR: config.runnerHomeDir,
+    INSECURE_REGISTRIES: config.registryHost,
+    RESOURCE_LIMITS_DISABLED: 'true',
+    PROXY_PORT: '4000',
+    PROXY_PROTOCOL: 'http',
+    PROXY_DOMAIN: 'localhost:4000',
+    PROXY_TEMPLATE_URL: 'http://localhost:4000/{{sandboxId}}/{{PORT}}',
+    PROXY_API_KEY: 'boxlite-local-proxy-key',
+    BOXLITE_API_URL: config.apiUrl,
     DB_HOST: 'localhost',
     DB_PORT: '5432',
     DB_USERNAME: 'postgres',

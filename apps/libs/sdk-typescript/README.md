@@ -100,7 +100,7 @@ import { BoxLite } from '@boxlite-ai/sdk'
 
 const boxlite = new BoxLite()
 const sandbox = await boxlite.create({
-  templateId: 'ubuntu:24.04',
+  templateId: 'boxlite/base',
   language: 'typescript',
 })
 ```

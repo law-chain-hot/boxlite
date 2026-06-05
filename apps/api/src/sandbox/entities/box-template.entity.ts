@@ -49,7 +49,7 @@ export class BoxTemplate {
   imageName: string
 
   @Column({ nullable: true })
-  artifactRef?: string
+  artifactRef?: string | null
 
   @Column({
     type: 'enum',
@@ -83,7 +83,7 @@ export class BoxTemplate {
   runners: RunnerArtifactCache[]
 
   @Column({ array: true, type: 'text', nullable: true })
-  entrypoint?: string[]
+  entrypoint?: string[] | null
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
@@ -103,7 +103,7 @@ export class BoxTemplate {
     eager: true,
   })
   @JoinColumn()
-  buildInfo?: BuildInfo
+  buildInfo?: BuildInfo | null
 
   @Column({ nullable: true })
   initialRunnerId?: string

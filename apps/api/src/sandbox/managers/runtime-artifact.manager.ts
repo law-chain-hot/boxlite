@@ -45,6 +45,7 @@ import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
 import { TypedConfigService } from '../../config/typed-config.service'
 import { createBoxLiteInternalArtifactRef } from '../utils/artifact-ref.util'
+import { getSystemTemplateDefinition } from '../constants/system-templates'
 
 const SYNC_AGAIN = 'sync-again'
 const DONT_SYNC_AGAIN = 'dont-sync-again'
@@ -1276,8 +1277,15 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
       }
     }
 
+    const isSystemTemplate = Boolean(getSystemTemplateDefinition(template.name))
+
+    if (isSystemTemplate && template.entrypoint?.length) {
+      shouldSave = true
+      template.entrypoint = null
+    }
+
     // If entrypoint is not explicitly set, set it from the artifact metadata.
-    if (!template.entrypoint) {
+    if (!isSystemTemplate && !template.entrypoint) {
       if (entrypoint && entrypoint.length > 0) {
         shouldSave = true
         if (Array.isArray(entrypoint)) {

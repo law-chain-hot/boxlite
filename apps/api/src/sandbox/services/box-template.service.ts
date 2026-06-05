@@ -18,8 +18,7 @@ import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { CreateBoxTemplateDto } from '../dto/create-box-template.dto'
-import { BuildInfo } from '../entities/build-info.entity'
-import { generateBuildInfoHash as generateBuildArtifactRef } from '../entities/build-info.entity'
+import { BuildInfo, generateBuildInfoHash as generateBuildArtifactRef } from '../entities/build-info.entity'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter'
 import { SandboxEvents } from '../constants/sandbox-events.constants'
@@ -53,7 +52,12 @@ import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
 import { LogExecution } from '../../common/decorators/log-execution.decorator'
 import { WithInstrumentation } from '../../common/decorators/otel.decorator'
-import { getSystemTemplateSortIndex, SYSTEM_TEMPLATES, SystemTemplateDefinition } from '../constants/system-templates'
+import {
+  getDeprecatedSystemTemplateAliases,
+  getSystemTemplateSortIndex,
+  SYSTEM_TEMPLATES,
+  SystemTemplateDefinition,
+} from '../constants/system-templates'
 import { isBoxLiteInternalArtifactRef } from '../utils/artifact-ref.util'
 
 const IMAGE_NAME_REGEX = /^[a-zA-Z0-9_.\-:]+(\/[a-zA-Z0-9_.\-:]+)*(@sha256:[a-f0-9]{64})?$/
@@ -249,13 +253,29 @@ export class BoxTemplateService {
       existingTemplate.state === BoxTemplateState.ACTIVE &&
       this.isPinnedToDifferentInternalRegistry(existingTemplate.artifactRef, internalRegistry?.url)
 
-    if (existingTemplate.imageName !== templateDefinition.imageName) {
-      existingTemplate.imageName = templateDefinition.imageName
+    const desiredImageName = templateDefinition.imageName
+    const switchedFromBuildInfo = Boolean(existingTemplate.buildInfo)
+    const imageNameChanged = existingTemplate.imageName !== desiredImageName
+
+    if (imageNameChanged || switchedFromBuildInfo) {
+      existingTemplate.imageName = desiredImageName
+      existingTemplate.buildInfo = null
+      existingTemplate.artifactRef = null
+      existingTemplate.entrypoint = null
+      existingTemplate.state = BoxTemplateState.PENDING
+      existingTemplate.errorReason = undefined
+      existingTemplate.initialRunnerId = null
+      existingTemplate.size = null
       shouldSaveTemplate = true
     }
 
     if (existingTemplate.hideFromUsers) {
       existingTemplate.hideFromUsers = false
+      shouldSaveTemplate = true
+    }
+
+    if (existingTemplate.entrypoint?.length) {
+      existingTemplate.entrypoint = null
       shouldSaveTemplate = true
     }
 
@@ -290,15 +310,37 @@ export class BoxTemplateService {
       ? await this.boxTemplateRepository.save(existingTemplate)
       : existingTemplate
 
-    if (
-      shouldReactivateSystemTemplate ||
-      activeSystemTemplateMissingRef ||
-      activeSystemTemplatePinnedToPreviousRegistry
-    ) {
+    const shouldProcessSystemTemplate = [
+      BoxTemplateState.PENDING,
+      BoxTemplateState.PULLING,
+      BoxTemplateState.BUILDING,
+    ].includes(savedTemplate.state)
+
+    if (shouldProcessSystemTemplate) {
       this.eventEmitter.emit(BoxTemplateEvents.ACTIVATED, new BoxTemplateActivatedEvent(savedTemplate))
     }
 
     return savedTemplate
+  }
+
+  async hideDeprecatedSystemTemplateAliases(): Promise<void> {
+    const deprecatedAliases = getDeprecatedSystemTemplateAliases()
+    if (deprecatedAliases.length === 0) {
+      return
+    }
+
+    const templates = await this.boxTemplateRepository.find({
+      where: {
+        general: true,
+        hideFromUsers: false,
+        name: In(deprecatedAliases),
+      },
+    })
+    if (templates.length === 0) {
+      return
+    }
+
+    await this.boxTemplateRepository.save(templates.map((template) => ({ ...template, hideFromUsers: true })))
   }
 
   private isPinnedToDifferentInternalRegistry(artifactRef?: string | null, internalRegistryUrl?: string | null) {

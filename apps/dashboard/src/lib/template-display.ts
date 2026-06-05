@@ -12,17 +12,17 @@ export interface TemplateDisplayMetadata {
 // The API still exposes BoxTemplate records. The Dashboard presents those
 // records as Images because users choose them as base images when creating Boxes.
 const BUILT_IN_TEMPLATES: Record<string, TemplateDisplayMetadata> = {
-  'ubuntu:24.04': {
-    displayName: 'Ubuntu 24.04 LTS',
-    description: 'General-purpose Linux image',
+  'boxlite/base': {
+    displayName: 'BoxLite Base',
+    description: 'General agent runtime with curl, git, jq, SSH, Python basics, and noninteractive apt.',
   },
-  'debian:13-slim': {
-    displayName: 'Debian 13 slim',
-    description: 'Small Debian-based image',
+  'boxlite/python': {
+    displayName: 'BoxLite Python',
+    description: 'Python runtime with pip, venv, build tools, and HTTPS-ready defaults.',
   },
-  'alpine:3.23': {
-    displayName: 'Alpine 3.23',
-    description: 'Minimal Linux image',
+  'boxlite/node': {
+    displayName: 'BoxLite Node',
+    description: 'Node.js 22 runtime with npm, corepack, and common agent tools.',
   },
 }
 

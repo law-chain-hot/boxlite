@@ -80,7 +80,7 @@ const rt = JsBoxlite.rest(new BoxliteRestOptions({
   credential: new ApiKeyCredential(apiKey),
 }))
 
-const box = await rt.create({ image: 'ubuntu:24.04' }, 'sdk-quickstart')
+const box = await rt.create({ image: 'boxlite/base' }, 'sdk-quickstart')
 await box.start()
 
 const exec = await box.exec('echo', ['Hello from BoxLite SDK'])
@@ -111,7 +111,7 @@ async def main():
         credential=ApiKeyCredential(api_key),
     ))
 
-    box = await rt.create(BoxOptions(image="ubuntu:24.04"), name="sdk-quickstart")
+    box = await rt.create(BoxOptions(image="boxlite/base"), name="sdk-quickstart")
     await box.start()
 
     execution = await box.exec("echo", args=["Hello from BoxLite SDK"])
@@ -166,7 +166,7 @@ func main() {
     }
     defer rt.Close()
 
-    box, err := rt.Create(ctx, "ubuntu:24.04", boxlite.WithName("sdk-quickstart"))
+    box, err := rt.Create(ctx, "boxlite/base", boxlite.WithName("sdk-quickstart"))
     if err != nil {
         log.Fatal(err)
     }
@@ -213,7 +213,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     let options = BoxOptions {
-        rootfs: RootfsSpec::Image("ubuntu:24.04".into()),
+        rootfs: RootfsSpec::Image("boxlite/base".into()),
         ..Default::default()
     };
     let box_handle = rt.create(options, Some("sdk-quickstart".into())).await?;
@@ -249,15 +249,7 @@ function LanguageOptionIcon({ option }: { option: OnboardingLanguageOption }) {
   )
 }
 
-function StepCard({
-  number,
-  title,
-  description,
-}: {
-  number: number
-  title: string
-  description: string
-}) {
+function StepCard({ number, title, description }: { number: number; title: string; description: string }) {
   return (
     <div className="rounded-md border bg-background p-3">
       <div className="flex items-center gap-2 text-sm font-semibold">
@@ -269,12 +261,7 @@ function StepCard({
   )
 }
 
-export function OnboardingGuideDialog({
-  open,
-  onOpenChange,
-  onProgressChange,
-  progress,
-}: OnboardingGuideDialogProps) {
+export function OnboardingGuideDialog({ open, onOpenChange, onProgressChange, progress }: OnboardingGuideDialogProps) {
   const { apiKeyApi } = useApi()
   const { apiUrl } = useConfig()
   const { selectedOrganization, authenticatedUserHasPermission } = useSelectedOrganization()
@@ -368,11 +355,7 @@ export function OnboardingGuideDialog({
                 title="Create a key"
                 description="Copy the one-time key from the dashboard. Do not commit it to source control."
               />
-              <StepCard
-                number={2}
-                title="Install the SDK"
-                description="Use the language tab that matches your app."
-              />
+              <StepCard number={2} title="Install the SDK" description="Use the language tab that matches your app." />
               <StepCard
                 number={3}
                 title="Run the script"
@@ -457,7 +440,11 @@ export function OnboardingGuideDialog({
                           className="flex-1"
                         />
                         <Button type="submit" disabled={isLoadingCreateKey}>
-                          {isLoadingCreateKey ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                          {isLoadingCreateKey ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Plus className="size-4" />
+                          )}
                           Create API key
                         </Button>
                       </div>

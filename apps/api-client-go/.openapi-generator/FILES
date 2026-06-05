@@ -32,6 +32,7 @@ model_api_key_list.go
 model_api_key_response.go
 model_artifact_registry_credentials.go
 model_audit_log.go
+model_box.go
 model_box_template_default_resources_dto.go
 model_box_template_dto.go
 model_box_template_state.go
@@ -89,6 +90,7 @@ model_job_type.go
 model_keyboard_hotkey_request.go
 model_keyboard_press_request.go
 model_keyboard_type_request.go
+model_list_boxes_response.go
 model_list_branch_response.go
 model_log_entry.go
 model_lsp_completion_params.go

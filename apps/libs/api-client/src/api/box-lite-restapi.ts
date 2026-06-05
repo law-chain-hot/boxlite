@@ -31,6 +31,12 @@ import {
 } from '../common'
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base'
+// @ts-ignore
+import type { Box } from '../models'
+// @ts-ignore
+import type { CreateBoxDto } from '../models'
+// @ts-ignore
+import type { ListBoxesResponse } from '../models'
 /**
  * BoxLiteRESTApi - axios parameter creator
  * @export
@@ -43,7 +49,7 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerCreateBox0: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerCreateBox0: async (body: CreateBoxDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'body' is not null or undefined
       assertParamExists('boxliteBoxControllerCreateBox0', 'body', body)
       const localVarPath = `/v1/boxes`
@@ -80,7 +86,7 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerCreateBox1: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerCreateBox1: async (body: CreateBoxDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'body' is not null or undefined
       assertParamExists('boxliteBoxControllerCreateBox1', 'body', body)
       const localVarPath = `/v1/{prefix}/boxes`
@@ -3565,9 +3571,9 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @throws {RequiredError}
      */
     async boxliteBoxControllerCreateBox0(
-      body: object,
+      body: CreateBoxDto,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerCreateBox0(body, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3587,9 +3593,9 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @throws {RequiredError}
      */
     async boxliteBoxControllerCreateBox1(
-      body: object,
+      body: CreateBoxDto,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerCreateBox1(body, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3611,7 +3617,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerGetBox0(
       boxId: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerGetBox0(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3633,7 +3639,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerGetBox1(
       boxId: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerGetBox1(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3699,7 +3705,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerListBoxes0(
       pageSize: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ListBoxesResponse>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerListBoxes0(pageSize, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3721,7 +3727,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerListBoxes1(
       pageSize: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ListBoxesResponse>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerListBoxes1(pageSize, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3787,7 +3793,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerStartBox0(
       boxId: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStartBox0(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3809,7 +3815,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerStartBox1(
       boxId: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStartBox1(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3831,7 +3837,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerStopBox0(
       boxId: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStopBox0(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -3853,7 +3859,7 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     async boxliteBoxControllerStopBox1(
       boxId: string,
       options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Box>> {
       const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStopBox1(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
@@ -5829,7 +5835,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerCreateBox0(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerCreateBox0(body: CreateBoxDto, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerCreateBox0(body, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5838,7 +5844,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerCreateBox1(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerCreateBox1(body: CreateBoxDto, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerCreateBox1(body, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5847,7 +5853,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerGetBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerGetBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerGetBox0(boxId, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5856,7 +5862,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerGetBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerGetBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerGetBox1(boxId, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5883,7 +5889,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerListBoxes0(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerListBoxes0(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<ListBoxesResponse> {
       return localVarFp.boxliteBoxControllerListBoxes0(pageSize, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5892,7 +5898,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerListBoxes1(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerListBoxes1(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<ListBoxesResponse> {
       return localVarFp.boxliteBoxControllerListBoxes1(pageSize, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5919,7 +5925,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStartBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerStartBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerStartBox0(boxId, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5928,7 +5934,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStartBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerStartBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerStartBox1(boxId, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5937,7 +5943,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStopBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerStopBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerStopBox0(boxId, options).then((request) => request(axios, basePath))
     },
     /**
@@ -5946,7 +5952,7 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStopBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+    boxliteBoxControllerStopBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<Box> {
       return localVarFp.boxliteBoxControllerStopBox1(boxId, options).then((request) => request(axios, basePath))
     },
     /**
@@ -6934,7 +6940,7 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerCreateBox0(body: object, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerCreateBox0(body: CreateBoxDto, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteBoxControllerCreateBox0(body, options)
       .then((request) => request(this.axios, this.basePath))
@@ -6947,7 +6953,7 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerCreateBox1(body: object, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerCreateBox1(body: CreateBoxDto, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteBoxControllerCreateBox1(body, options)
       .then((request) => request(this.axios, this.basePath))

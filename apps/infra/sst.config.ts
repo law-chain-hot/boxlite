@@ -259,7 +259,30 @@ export default $config({
         RUN_MIGRATIONS: "true",
         VERSION: "0.1.0",
         DEFAULT_REGION_ENFORCE_QUOTAS: "false",
-        DEFAULT_TEMPLATE: envOr("DEFAULT_TEMPLATE", "ubuntu:24.04"),
+        DEFAULT_TEMPLATE: envOr("DEFAULT_TEMPLATE", "boxlite/base"),
+        BOXLITE_SYSTEM_IMAGE_TAG: envOr("BOXLITE_SYSTEM_IMAGE_TAG", "20260605-p0-r2"),
+        BOXLITE_SYSTEM_BASE_IMAGE: envOr(
+          "BOXLITE_SYSTEM_BASE_IMAGE",
+          "ghcr.io/boxlite-ai/boxlite-agent-base:20260605-p0-r2",
+        ),
+        BOXLITE_SYSTEM_PYTHON_IMAGE: envOr(
+          "BOXLITE_SYSTEM_PYTHON_IMAGE",
+          "ghcr.io/boxlite-ai/boxlite-agent-python:20260605-p0-r2",
+        ),
+        BOXLITE_SYSTEM_NODE_IMAGE: envOr(
+          "BOXLITE_SYSTEM_NODE_IMAGE",
+          "ghcr.io/boxlite-ai/boxlite-agent-node:20260605-p0-r2",
+        ),
+        ...(process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_URL && {
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME: envOr(
+            "BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME",
+            "BoxLite System Source Registry",
+          ),
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_URL: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_URL,
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME: envOr("BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME", ""),
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD: envOr("BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD", ""),
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID: envOr("BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID", ""),
+        }),
 
         // Database (SST-linked)
         DB_HOST: db.host,

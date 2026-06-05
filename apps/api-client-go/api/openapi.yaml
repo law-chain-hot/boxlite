@@ -8753,7 +8753,11 @@ paths:
         style: form
       responses:
         "200":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListBoxesResponse'
+          description: List boxes
       security:
       - bearer: []
       tags:
@@ -8769,7 +8773,11 @@ paths:
         required: true
       responses:
         "201":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box created
       security:
       - bearer: []
       tags:
@@ -8787,7 +8795,11 @@ paths:
         style: form
       responses:
         "200":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListBoxesResponse'
+          description: List boxes
       security:
       - bearer: []
       tags:
@@ -8803,7 +8815,11 @@ paths:
         required: true
       responses:
         "201":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box created
       security:
       - bearer: []
       tags:
@@ -8838,7 +8854,11 @@ paths:
         style: simple
       responses:
         "200":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box details
       security:
       - bearer: []
       tags:
@@ -8890,7 +8910,11 @@ paths:
         style: simple
       responses:
         "200":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box details
       security:
       - bearer: []
       tags:
@@ -8925,7 +8949,11 @@ paths:
         style: simple
       responses:
         "201":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box start requested
       security:
       - bearer: []
       tags:
@@ -8943,7 +8971,11 @@ paths:
         style: simple
       responses:
         "201":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box start requested
       security:
       - bearer: []
       tags:
@@ -8961,7 +8993,11 @@ paths:
         style: simple
       responses:
         "201":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box stop requested
       security:
       - bearer: []
       tags:
@@ -8979,7 +9015,11 @@ paths:
         style: simple
       responses:
         "201":
-          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Box'
+          description: Box stop requested
       security:
       - bearer: []
       tags:
@@ -12076,7 +12116,7 @@ components:
       type: object
     Sandbox:
       example:
-        template: ubuntu:24.04
+        template: boxlite/base
         memory: 4
         buildInfo: ""
         toolboxProxyUrl: https://proxy.app.boxlite.io/toolbox
@@ -12135,7 +12175,7 @@ components:
           type: string
         template:
           description: The template used for the sandbox
-          example: ubuntu:24.04
+          example: boxlite/base
           type: string
         user:
           description: The user associated with the project
@@ -12290,7 +12330,7 @@ components:
         totalPages: 1.4658129805029452
         page: 6.027456183070403
         items:
-        - template: ubuntu:24.04
+        - template: boxlite/base
           memory: 4
           buildInfo: ""
           toolboxProxyUrl: https://proxy.app.boxlite.io/toolbox
@@ -12330,7 +12370,7 @@ components:
           name: MySandbox
           backupState: None
           user: boxlite
-        - template: ubuntu:24.04
+        - template: boxlite/base
           memory: 4
           buildInfo: ""
           toolboxProxyUrl: https://proxy.app.boxlite.io/toolbox
@@ -14818,6 +14858,9 @@ components:
       type: object
     BoxTemplateDto:
       example:
+        capabilities:
+        - capabilities
+        - capabilities
         artifactRef: artifactRef
         defaultResources:
           disk: 5.962133916683182
@@ -14853,6 +14896,11 @@ components:
           type: string
         description:
           type: string
+        capabilities:
+          description: Agent/runtime capabilities included in this official image
+          items:
+            type: string
+          type: array
         artifactRef:
           type: string
         state:
@@ -14927,7 +14975,7 @@ components:
       type: object
     Workspace:
       example:
-        template: ubuntu:24.04
+        template: boxlite/base
         memory: 4
         buildInfo: ""
         toolboxProxyUrl: https://proxy.app.boxlite.io/toolbox
@@ -14990,7 +15038,7 @@ components:
           type: string
         template:
           description: The template used for the sandbox
-          example: ubuntu:24.04
+          example: boxlite/base
           type: string
         user:
           description: The user associated with the project
@@ -16316,6 +16364,111 @@ components:
       type: object
     CreateBoxDto:
       properties: {}
+      type: object
+    Box:
+      example:
+        box_id: aB3cD4eF5gH6
+        image: boxlite/base
+        updated_at: 2026-06-04T12:05:00.000Z
+        cpus: 2
+        name: notebook-worker
+        created_at: 2026-06-04T12:00:00.000Z
+        pid: 12345
+        status: running
+        memory_mib: 4096
+        labels:
+          boxlite.io/public: "true"
+      properties:
+        box_id:
+          description: The public 12-character Box ID shown to users and SDK clients
+          example: aB3cD4eF5gH6
+          type: string
+        name:
+          description: User-provided box name
+          example: notebook-worker
+          type: string
+        status:
+          description: Box runtime status
+          example: running
+          type: string
+        created_at:
+          description: Creation timestamp
+          example: 2026-06-04T12:00:00.000Z
+          type: string
+        updated_at:
+          description: Last update timestamp
+          example: 2026-06-04T12:05:00.000Z
+          type: string
+        pid:
+          description: Runtime process ID when available
+          example: 12345
+          type: number
+        image:
+          description: Approved image/template used for the box
+          example: boxlite/base
+          type: string
+        cpus:
+          description: Allocated CPU count
+          example: 2
+          type: number
+        memory_mib:
+          description: Allocated memory in MiB
+          example: 4096
+          type: number
+        labels:
+          additionalProperties:
+            type: string
+          description: Labels attached to the box
+          example:
+            boxlite.io/public: "true"
+          type: object
+      required:
+      - box_id
+      - cpus
+      - created_at
+      - image
+      - labels
+      - memory_mib
+      - status
+      - updated_at
+      type: object
+    ListBoxesResponse:
+      example:
+        boxes:
+        - box_id: aB3cD4eF5gH6
+          image: boxlite/base
+          updated_at: 2026-06-04T12:05:00.000Z
+          cpus: 2
+          name: notebook-worker
+          created_at: 2026-06-04T12:00:00.000Z
+          pid: 12345
+          status: running
+          memory_mib: 4096
+          labels:
+            boxlite.io/public: "true"
+        - box_id: aB3cD4eF5gH6
+          image: boxlite/base
+          updated_at: 2026-06-04T12:05:00.000Z
+          cpus: 2
+          name: notebook-worker
+          created_at: 2026-06-04T12:00:00.000Z
+          pid: 12345
+          status: running
+          memory_mib: 4096
+          labels:
+            boxlite.io/public: "true"
+        next_page_token: eyJwYWdlIjoyfQ
+      properties:
+        boxes:
+          items:
+            $ref: '#/components/schemas/Box'
+          type: array
+        next_page_token:
+          description: Token for the next page when pagination is available
+          example: eyJwYWdlIjoyfQ
+          type: string
+      required:
+      - boxes
       type: object
     uploadFile_deprecated_request:
       properties:
