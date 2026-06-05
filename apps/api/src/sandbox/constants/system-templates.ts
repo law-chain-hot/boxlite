@@ -13,7 +13,7 @@ export interface SystemTemplateDefinition {
   aliases?: string[]
 }
 
-const SYSTEM_IMAGE_TAG = process.env.BOXLITE_SYSTEM_IMAGE_TAG?.trim() || '20260605-p0-r2'
+const SYSTEM_IMAGE_TAG = process.env.BOXLITE_SYSTEM_IMAGE_TAG?.trim() || '20260605-p0-r3'
 
 function systemImageRef(envName: string, repository: string): string {
   return process.env[envName]?.trim() || `ghcr.io/boxlite-ai/${repository}:${SYSTEM_IMAGE_TAG}`

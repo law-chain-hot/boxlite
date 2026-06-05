@@ -333,7 +333,10 @@ describe('BoxTemplateService system templates', () => {
       id: 'node-id',
       name: 'boxlite/node',
       state: BoxTemplateState.ERROR,
+      artifactRef: 'old-registry/boxlite/node:old',
       errorReason: 'Previous pull failed',
+      initialRunnerId: 'stale-runner-id',
+      size: 1.25,
       templateRegions: [templateRegion('node-id', 'us')],
     })
 
@@ -352,6 +355,9 @@ describe('BoxTemplateService system templates', () => {
       expect.objectContaining({
         state: BoxTemplateState.PENDING,
         errorReason: undefined,
+        artifactRef: null,
+        initialRunnerId: null,
+        size: null,
       }),
     )
     expect(eventEmitter.emit).toHaveBeenCalledWith(BoxTemplateEvents.ACTIVATED, expect.any(Object))

@@ -288,7 +288,7 @@ export class BoxTemplateService {
       existingTemplate.errorReason = undefined
       shouldSaveTemplate = true
 
-      if (activeSystemTemplatePinnedToPreviousRegistry) {
+      if (shouldReactivateSystemTemplate || activeSystemTemplatePinnedToPreviousRegistry) {
         existingTemplate.artifactRef = null
         existingTemplate.initialRunnerId = null
         existingTemplate.size = null
