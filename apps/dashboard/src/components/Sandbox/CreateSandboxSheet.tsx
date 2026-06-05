@@ -103,6 +103,19 @@ const getTemplateLabel = (template: BoxTemplate) => {
   return template.displayName || getTemplateDisplayMetadata(templateName)?.displayName || templateName
 }
 
+const getTemplateDescription = (template: BoxTemplate) => {
+  const templateName = getTemplateName(template)
+  return template.description || getTemplateDisplayMetadata(templateName)?.description
+}
+
+const getTemplateCapabilities = (template: BoxTemplate) => template.capabilities ?? []
+
+const formatCapability = (capability: string) =>
+  capability
+    .split('-')
+    .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
+    .join(' ')
+
 type ResourceFieldName = 'cpu' | 'memory' | 'disk'
 
 const RESOURCE_FIELDS: Array<{
@@ -303,18 +316,61 @@ export const CreateSandboxSheet = ({
                         {templates.map((template) => {
                           const templateName = getTemplateName(template)
                           const templateLabel = getTemplateLabel(template)
+                          const templateDescription = getTemplateDescription(template)
                           const isDefault = template.name === defaultTemplate || template.id === defaultTemplate
 
                           return (
-                            <SelectItem key={template.id} value={template.id}>
-                              {templateLabel}
-                              {isDefault ? ' (Default)' : ''}
-                              {templateName !== templateLabel ? ` - ${templateName}` : ''}
+                            <SelectItem
+                              key={template.id}
+                              value={template.id}
+                              textValue={`${templateLabel} ${templateName}`}
+                              className="items-start py-2"
+                            >
+                              <span className="flex min-w-0 flex-col gap-0.5">
+                                <span className="truncate font-medium">
+                                  {templateLabel}
+                                  {isDefault ? ' (Default)' : ''}
+                                  {templateName !== templateLabel ? ` - ${templateName}` : ''}
+                                </span>
+                                {templateDescription && (
+                                  <span className="line-clamp-2 text-xs leading-4 text-muted-foreground">
+                                    {templateDescription}
+                                  </span>
+                                )}
+                              </span>
                             </SelectItem>
                           )
                         })}
                       </SelectContent>
                     </Select>
+                    {field.state.value &&
+                      templates
+                        .filter((template) => template.id === field.state.value)
+                        .map((template) => {
+                          const description = getTemplateDescription(template)
+                          const capabilities = getTemplateCapabilities(template)
+
+                          return (
+                            <div
+                              key={template.id}
+                              className="rounded-md border bg-muted/25 p-3 text-xs text-muted-foreground"
+                            >
+                              {description && <p className="leading-5">{description}</p>}
+                              {capabilities.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {capabilities.map((capability) => (
+                                    <span
+                                      key={capability}
+                                      className="rounded-sm border bg-background px-1.5 py-0.5 font-medium text-foreground/75"
+                                    >
+                                      {formatCapability(capability)}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
                     {!templatesLoading && templates.length === 0 && (
                       <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
                         No images are available for this organization.

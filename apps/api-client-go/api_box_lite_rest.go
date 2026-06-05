@@ -31,7 +31,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerCreateBox0(ctx context.Context) BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request
 
 	// BoxliteBoxControllerCreateBox0Execute executes the request
-	BoxliteBoxControllerCreateBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerCreateBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerCreateBox1 Method for BoxliteBoxControllerCreateBox1
@@ -42,7 +43,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerCreateBox1(ctx context.Context) BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request
 
 	// BoxliteBoxControllerCreateBox1Execute executes the request
-	BoxliteBoxControllerCreateBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerCreateBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerGetBox0 Method for BoxliteBoxControllerGetBox0
@@ -54,7 +56,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerGetBox0(ctx context.Context, boxId string) BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request
 
 	// BoxliteBoxControllerGetBox0Execute executes the request
-	BoxliteBoxControllerGetBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerGetBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerGetBox1 Method for BoxliteBoxControllerGetBox1
@@ -66,7 +69,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerGetBox1(ctx context.Context, boxId string) BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request
 
 	// BoxliteBoxControllerGetBox1Execute executes the request
-	BoxliteBoxControllerGetBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerGetBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerHeadBox0 Method for BoxliteBoxControllerHeadBox0
@@ -101,7 +105,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerListBoxes0(ctx context.Context) BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request
 
 	// BoxliteBoxControllerListBoxes0Execute executes the request
-	BoxliteBoxControllerListBoxes0Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) (*http.Response, error)
+	//  @return ListBoxesResponse
+	BoxliteBoxControllerListBoxes0Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) (*ListBoxesResponse, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerListBoxes1 Method for BoxliteBoxControllerListBoxes1
@@ -112,7 +117,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerListBoxes1(ctx context.Context) BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request
 
 	// BoxliteBoxControllerListBoxes1Execute executes the request
-	BoxliteBoxControllerListBoxes1Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) (*http.Response, error)
+	//  @return ListBoxesResponse
+	BoxliteBoxControllerListBoxes1Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) (*ListBoxesResponse, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerRemoveBox0 Method for BoxliteBoxControllerRemoveBox0
@@ -148,7 +154,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerStartBox0(ctx context.Context, boxId string) BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request
 
 	// BoxliteBoxControllerStartBox0Execute executes the request
-	BoxliteBoxControllerStartBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerStartBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerStartBox1 Method for BoxliteBoxControllerStartBox1
@@ -160,7 +167,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerStartBox1(ctx context.Context, boxId string) BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request
 
 	// BoxliteBoxControllerStartBox1Execute executes the request
-	BoxliteBoxControllerStartBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerStartBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerStopBox0 Method for BoxliteBoxControllerStopBox0
@@ -172,7 +180,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerStopBox0(ctx context.Context, boxId string) BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request
 
 	// BoxliteBoxControllerStopBox0Execute executes the request
-	BoxliteBoxControllerStopBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerStopBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteBoxControllerStopBox1 Method for BoxliteBoxControllerStopBox1
@@ -184,7 +193,8 @@ type BoxLiteRESTAPI interface {
 	BoxliteBoxControllerStopBox1(ctx context.Context, boxId string) BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request
 
 	// BoxliteBoxControllerStopBox1Execute executes the request
-	BoxliteBoxControllerStopBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request) (*http.Response, error)
+	//  @return Box
+	BoxliteBoxControllerStopBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request) (*Box, *http.Response, error)
 
 	/*
 		BoxliteConfigControllerGetConfig Method for BoxliteConfigControllerGetConfig
@@ -1143,7 +1153,7 @@ func (r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) Body(body map[strin
 	return r
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerCreateBox0Execute(r)
 }
 
@@ -1161,16 +1171,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0(ctx context.Conte
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox0Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodPost
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerCreateBox0")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/boxes"
@@ -1179,7 +1192,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0Execute(r BoxLiteR
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.body == nil {
-		return nil, reportError("body is required and must be specified")
+		return localVarReturnValue, nil, reportError("body is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -1192,7 +1205,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0Execute(r BoxLiteR
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -1203,19 +1216,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0Execute(r BoxLiteR
 	localVarPostBody = r.body
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1223,10 +1236,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox0Execute(r BoxLiteR
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request struct {
@@ -1240,7 +1262,7 @@ func (r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) Body(body map[strin
 	return r
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerCreateBox1Execute(r)
 }
 
@@ -1258,16 +1280,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1(ctx context.Conte
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerCreateBox1Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodPost
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerCreateBox1")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/{prefix}/boxes"
@@ -1276,7 +1301,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1Execute(r BoxLiteR
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.body == nil {
-		return nil, reportError("body is required and must be specified")
+		return localVarReturnValue, nil, reportError("body is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -1289,7 +1314,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1Execute(r BoxLiteR
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -1300,19 +1325,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1Execute(r BoxLiteR
 	localVarPostBody = r.body
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1320,10 +1345,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerCreateBox1Execute(r BoxLiteR
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request struct {
@@ -1332,7 +1366,7 @@ type BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request struct {
 	boxId      string
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerGetBox0Execute(r)
 }
 
@@ -1352,16 +1386,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox0(ctx context.Context,
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox0Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodGet
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerGetBox0")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/boxes/{boxId}"
@@ -1381,7 +1418,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox0Execute(r BoxLiteREST
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -1390,19 +1427,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox0Execute(r BoxLiteREST
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1410,10 +1447,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox0Execute(r BoxLiteREST
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request struct {
@@ -1422,7 +1468,7 @@ type BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request struct {
 	boxId      string
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerGetBox1Execute(r)
 }
 
@@ -1442,16 +1488,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox1(ctx context.Context,
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerGetBox1Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodGet
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerGetBox1")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/{prefix}/boxes/{boxId}"
@@ -1471,7 +1520,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox1Execute(r BoxLiteREST
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -1480,19 +1529,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox1Execute(r BoxLiteREST
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1500,10 +1549,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerGetBox1Execute(r BoxLiteREST
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerHeadBox0Request struct {
@@ -1697,7 +1755,7 @@ func (r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) PageSize(pageSize s
 	return r
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) Execute() (*ListBoxesResponse, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerListBoxes0Execute(r)
 }
 
@@ -1715,16 +1773,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0(ctx context.Conte
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) (*http.Response, error) {
+//
+//	@return ListBoxesResponse
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes0Request) (*ListBoxesResponse, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodGet
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ListBoxesResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerListBoxes0")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/boxes"
@@ -1733,7 +1794,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0Execute(r BoxLiteR
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.pageSize == nil {
-		return nil, reportError("pageSize is required and must be specified")
+		return localVarReturnValue, nil, reportError("pageSize is required and must be specified")
 	}
 
 	parameterAddToHeaderOrQuery(localVarQueryParams, "pageSize", r.pageSize, "form", "")
@@ -1747,7 +1808,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0Execute(r BoxLiteR
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -1756,19 +1817,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0Execute(r BoxLiteR
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1776,10 +1837,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes0Execute(r BoxLiteR
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request struct {
@@ -1793,7 +1863,7 @@ func (r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) PageSize(pageSize s
 	return r
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) Execute() (*ListBoxesResponse, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerListBoxes1Execute(r)
 }
 
@@ -1811,16 +1881,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1(ctx context.Conte
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) (*http.Response, error) {
+//
+//	@return ListBoxesResponse
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1Execute(r BoxLiteRESTAPIBoxliteBoxControllerListBoxes1Request) (*ListBoxesResponse, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodGet
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ListBoxesResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerListBoxes1")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/{prefix}/boxes"
@@ -1829,7 +1902,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1Execute(r BoxLiteR
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.pageSize == nil {
-		return nil, reportError("pageSize is required and must be specified")
+		return localVarReturnValue, nil, reportError("pageSize is required and must be specified")
 	}
 
 	parameterAddToHeaderOrQuery(localVarQueryParams, "pageSize", r.pageSize, "form", "")
@@ -1843,7 +1916,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1Execute(r BoxLiteR
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -1852,19 +1925,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1Execute(r BoxLiteR
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1872,10 +1945,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerListBoxes1Execute(r BoxLiteR
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerRemoveBox0Request struct {
@@ -2064,7 +2146,7 @@ type BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request struct {
 	boxId      string
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerStartBox0Execute(r)
 }
 
@@ -2084,16 +2166,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox0(ctx context.Contex
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox0Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodPost
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerStartBox0")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/boxes/{boxId}/start"
@@ -2113,7 +2198,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox0Execute(r BoxLiteRE
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -2122,19 +2207,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox0Execute(r BoxLiteRE
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2142,10 +2227,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox0Execute(r BoxLiteRE
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request struct {
@@ -2154,7 +2248,7 @@ type BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request struct {
 	boxId      string
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerStartBox1Execute(r)
 }
 
@@ -2174,16 +2268,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox1(ctx context.Contex
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStartBox1Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodPost
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerStartBox1")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/{prefix}/boxes/{boxId}/start"
@@ -2203,7 +2300,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox1Execute(r BoxLiteRE
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -2212,19 +2309,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox1Execute(r BoxLiteRE
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2232,10 +2329,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStartBox1Execute(r BoxLiteRE
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request struct {
@@ -2244,7 +2350,7 @@ type BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request struct {
 	boxId      string
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerStopBox0Execute(r)
 }
 
@@ -2264,16 +2370,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox0(ctx context.Context
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox0Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox0Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodPost
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerStopBox0")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/boxes/{boxId}/stop"
@@ -2293,7 +2402,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox0Execute(r BoxLiteRES
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -2302,19 +2411,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox0Execute(r BoxLiteRES
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2322,10 +2431,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox0Execute(r BoxLiteRES
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request struct {
@@ -2334,7 +2452,7 @@ type BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request struct {
 	boxId      string
 }
 
-func (r BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request) Execute() (*http.Response, error) {
+func (r BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request) Execute() (*Box, *http.Response, error) {
 	return r.ApiService.BoxliteBoxControllerStopBox1Execute(r)
 }
 
@@ -2354,16 +2472,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox1(ctx context.Context
 }
 
 // Execute executes the request
-func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request) (*http.Response, error) {
+//
+//	@return Box
+func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox1Execute(r BoxLiteRESTAPIBoxliteBoxControllerStopBox1Request) (*Box, *http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodPost
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Box
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "BoxLiteRESTAPIService.BoxliteBoxControllerStopBox1")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/v1/{prefix}/boxes/{boxId}/stop"
@@ -2383,7 +2504,7 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox1Execute(r BoxLiteRES
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{}
+	localVarHTTPHeaderAccepts := []string{"application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -2392,19 +2513,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox1Execute(r BoxLiteRES
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2412,10 +2533,19 @@ func (a *BoxLiteRESTAPIService) BoxliteBoxControllerStopBox1Execute(r BoxLiteRES
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type BoxLiteRESTAPIBoxliteConfigControllerGetConfigRequest struct {

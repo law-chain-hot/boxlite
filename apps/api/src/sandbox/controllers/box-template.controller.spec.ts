@@ -46,7 +46,7 @@ describe('BoxTemplateController', () => {
     )
 
     expect(Array.isArray(result)).toBe(true)
-    expect(result).toEqual([expect.objectContaining({ id: 'template-id', name: 'ubuntu:24.04' })])
+    expect(result).toEqual([expect.objectContaining({ id: 'template-id', name: 'boxlite/base' })])
     expect(boxTemplateService.getSystemTemplates).toHaveBeenCalledWith('org-id')
     expect(boxTemplateService.getAllBoxTemplates).not.toHaveBeenCalled()
   })
@@ -76,7 +76,7 @@ describe('BoxTemplateController', () => {
     )
 
     expect(result).toEqual({
-      items: [expect.objectContaining({ id: 'template-id', name: 'ubuntu:24.04' })],
+      items: [expect.objectContaining({ id: 'template-id', name: 'boxlite/base' })],
       total: 1,
       page: 1,
       totalPages: 1,
@@ -99,9 +99,9 @@ function createTemplate() {
     id: 'template-id',
     organizationId: undefined,
     general: true,
-    name: 'ubuntu:24.04',
-    imageName: 'ubuntu:24.04',
-    artifactRef: 'registry.local/ubuntu:24.04',
+    name: 'boxlite/base',
+    imageName: '',
+    artifactRef: 'registry.local/boxlite/runtime-base@sha256:abc',
     state: BoxTemplateState.ACTIVE,
     errorReason: undefined,
     cpu: 1,

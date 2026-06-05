@@ -79,6 +79,13 @@ const configuration = {
     password: process.env.INTERNAL_REGISTRY_PASSWORD,
     projectId: process.env.INTERNAL_REGISTRY_PROJECT_ID,
   },
+  systemSourceRegistry: {
+    name: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME || 'BoxLite System Source Registry',
+    url: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_URL,
+    username: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME,
+    password: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD,
+    projectId: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID || '',
+  },
   s3: {
     endpoint: process.env.S3_ENDPOINT,
     stsEndpoint: process.env.S3_STS_ENDPOINT,

@@ -68,3 +68,23 @@ func TestSanitizeImageReferenceStripsScheme(t *testing.T) {
 		t.Fatalf("expected %q, got %q", want, got)
 	}
 }
+
+func TestLinuxArchitectureForGoarch(t *testing.T) {
+	tests := []struct {
+		name   string
+		goarch string
+		want   string
+	}{
+		{name: "apple silicon runner uses arm64 image manifests", goarch: "arm64", want: "arm64"},
+		{name: "x86 runner uses amd64 image manifests", goarch: "amd64", want: "amd64"},
+		{name: "unknown goarch passes through", goarch: "riscv64", want: "riscv64"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := linuxArchitectureForGoarch(tt.goarch); got != tt.want {
+				t.Fatalf("linuxArchitectureForGoarch(%q) = %q, want %q", tt.goarch, got, tt.want)
+			}
+		})
+	}
+}

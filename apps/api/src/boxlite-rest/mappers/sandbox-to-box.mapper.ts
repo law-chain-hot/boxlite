@@ -9,7 +9,7 @@ import { SandboxState } from '../../sandbox/enums/sandbox-state.enum'
 import { BoxResponseDto } from '../dto/box-response.dto'
 import { CreateBoxDto } from '../dto/create-box.dto'
 import { CreateSandboxDto } from '../../sandbox/dto/create-sandbox.dto'
-import { SYSTEM_TEMPLATES, getSystemTemplateDefinition } from '../../sandbox/constants/system-templates'
+import { resolveSystemTemplateName } from '../../sandbox/constants/system-templates'
 
 export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
   return {
@@ -39,12 +39,7 @@ export function createBoxToCreateSandbox(dto: CreateBoxDto, target?: string): Cr
 }
 
 export function resolveBoxTemplateId(image?: string): string | undefined {
-  const imageName = image?.trim()
-  if (!imageName) {
-    return SYSTEM_TEMPLATES[0]?.name
-  }
-
-  return getSystemTemplateDefinition(imageName)?.name
+  return resolveSystemTemplateName(image)
 }
 
 function mapState(state: string | SandboxState | undefined): string {

@@ -16,7 +16,6 @@ import {
   HttpCode,
   UseGuards,
   Logger,
-  NotFoundException,
   Res,
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
@@ -37,6 +36,7 @@ import { Audit, MASKED_AUDIT_VALUE, TypedRequest } from '../audit/decorators/aud
 import { AuditAction } from '../audit/enums/audit-action.enum'
 import { AuditTarget } from '../audit/enums/audit-target.enum'
 import { BadRequestError } from '../exceptions/bad-request.exception'
+import { getAllowedSystemTemplateNames } from '../sandbox/constants/system-templates'
 
 @ApiTags('BoxLite REST')
 @Controller(['v1/boxes', 'v1/:prefix/boxes'])
@@ -87,7 +87,9 @@ export class BoxliteBoxController {
     const organization = authContext.organization
     const createSandboxDto = createBoxToCreateSandbox(dto)
     if (dto.image && !createSandboxDto.templateId) {
-      throw new BadRequestError('Choose one of the approved Linux templates to create a box')
+      throw new BadRequestError(
+        `Choose one of the approved images to create a box. Allowed images: ${getAllowedSystemTemplateNames()}`,
+      )
     }
 
     let sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)

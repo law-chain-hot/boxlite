@@ -7,6 +7,7 @@ package boxlite
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/boxlite-ai/runner/pkg/api/dto"
@@ -16,7 +17,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
-var linuxAmd64Platform = v1.Platform{OS: "linux", Architecture: "amd64"}
+var linuxRunnerPlatform = v1.Platform{OS: "linux", Architecture: runnerLinuxArchitecture()}
 
 // PullArtifact pulls an artifact image and mirrors it to the destination registry when requested.
 func (c *Client) PullArtifact(ctx context.Context, req dto.PullArtifactRequestDTO) error {
@@ -167,7 +168,7 @@ func (c *Client) parseReference(imageName string, registry *dto.RegistryDTO) (na
 func (c *Client) remoteOptions(ctx context.Context, registry *dto.RegistryDTO) []remote.Option {
 	opts := []remote.Option{
 		remote.WithContext(ctx),
-		remote.WithPlatform(linuxAmd64Platform),
+		remote.WithPlatform(linuxRunnerPlatform),
 	}
 
 	if registry != nil && registry.HasAuth() {
@@ -178,6 +179,21 @@ func (c *Client) remoteOptions(ctx context.Context, registry *dto.RegistryDTO) [
 	}
 
 	return opts
+}
+
+func runnerLinuxArchitecture() string {
+	return linuxArchitectureForGoarch(runtime.GOARCH)
+}
+
+func linuxArchitectureForGoarch(goarch string) string {
+	switch goarch {
+	case "arm64":
+		return "arm64"
+	case "amd64":
+		return "amd64"
+	default:
+		return goarch
+	}
 }
 
 func (c *Client) nameOptions(registry *dto.RegistryDTO) []name.Option {

@@ -11,7 +11,7 @@
 //!
 //! See `docs/investigations/concurrent-exec-deadlock.md` for full analysis.
 
-use super::capabilities::capability_names;
+use super::capabilities::{capability_names, default_capabilities};
 use boxlite_shared::errors::{BoxliteError, BoxliteResult};
 use libcontainer::container::builder::ContainerBuilder;
 use libcontainer::syscall::syscall::SyscallType;
@@ -20,12 +20,18 @@ use nix::sys::socket::{
     SockFlag, SockType,
 };
 use nix::unistd::{fork, ForkResult, Pid};
+use oci_spec::runtime::{
+    LinuxCapabilitiesBuilder, PosixRlimitBuilder, PosixRlimitType, Process, ProcessBuilder,
+    UserBuilder,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 use std::io::{IoSlice, IoSliceMut};
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Global zygote instance. Initialized once in main() before tokio starts.
 pub(crate) static ZYGOTE: OnceLock<Zygote> = OnceLock::new();
@@ -58,6 +64,7 @@ pub(crate) struct BuildSpec {
     pub args: Vec<String>,
     pub uid: u32,
     pub gid: u32,
+    pub terminal: bool,
 }
 
 /// Build outcome. Invalid states are unrepresentable.
@@ -255,7 +262,13 @@ fn do_build(spec: BuildSpec, fds: Option<[RawFd; 3]>) -> BuildResult {
                 .with_stderr(stderr);
         }
 
-        let pid = builder
+        let process_spec_path = if spec.terminal {
+            Some(write_tenant_process_spec(&spec)?)
+        } else {
+            None
+        };
+
+        let mut tenant = builder
             .as_tenant()
             .with_capabilities(capability_names())
             .with_no_new_privs(false)
@@ -264,9 +277,19 @@ fn do_build(spec: BuildSpec, fds: Option<[RawFd; 3]>) -> BuildResult {
             .with_env(spec.env)
             .with_container_args(spec.args)
             .with_user(Some(spec.uid))
-            .with_group(Some(spec.gid))
-            .build()
-            .map_err(|e| format!("build failed: {e:?}"))?;
+            .with_group(Some(spec.gid));
+
+        if let Some(path) = process_spec_path.as_ref() {
+            tenant = tenant.with_process(Some(path.clone()));
+        }
+
+        let build_result = tenant.build().map_err(|e| format!("build failed: {e:?}"));
+
+        if let Some(path) = process_spec_path {
+            let _ = fs::remove_file(path);
+        }
+
+        let pid = build_result?;
 
         Ok(pid)
     };
@@ -279,6 +302,67 @@ fn do_build(spec: BuildSpec, fds: Option<[RawFd; 3]>) -> BuildResult {
 
 fn build_detach_mode(spec: &BuildSpec) -> bool {
     spec.console_socket.is_some()
+}
+
+fn write_tenant_process_spec(spec: &BuildSpec) -> Result<PathBuf, String> {
+    let process = build_tenant_process_spec(spec)?;
+    let path = tenant_process_spec_path(spec);
+    let data =
+        serde_json::to_vec(&process).map_err(|e| format!("serialize PTY process spec: {e}"))?;
+    fs::write(&path, data)
+        .map_err(|e| format!("write PTY process spec {}: {e}", path.display()))?;
+    Ok(path)
+}
+
+fn tenant_process_spec_path(spec: &BuildSpec) -> PathBuf {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or_default();
+    spec.state_root.join(&spec.container_id).join(format!(
+        "boxlite-tenant-process-{}-{nanos}.json",
+        std::process::id()
+    ))
+}
+
+fn build_tenant_process_spec(spec: &BuildSpec) -> Result<Process, String> {
+    let env = spec
+        .env
+        .iter()
+        .map(|(key, value)| format!("{key}={value}"))
+        .collect::<Vec<_>>();
+    let user = UserBuilder::default()
+        .uid(spec.uid)
+        .gid(spec.gid)
+        .build()
+        .map_err(|e| format!("build PTY process user: {e}"))?;
+    let rlimits = vec![PosixRlimitBuilder::default()
+        .typ(PosixRlimitType::RlimitNofile)
+        .hard(1024u64 * 1024u64)
+        .soft(1024u64 * 1024u64)
+        .build()
+        .map_err(|e| format!("build PTY process rlimit: {e}"))?];
+    let caps = default_capabilities();
+    let capabilities = LinuxCapabilitiesBuilder::default()
+        .bounding(caps.clone())
+        .effective(caps.clone())
+        .inheritable(caps.clone())
+        .permitted(caps.clone())
+        .ambient(caps)
+        .build()
+        .map_err(|e| format!("build PTY process capabilities: {e}"))?;
+
+    ProcessBuilder::default()
+        .terminal(spec.terminal)
+        .user(user)
+        .args(spec.args.clone())
+        .env(env)
+        .cwd(spec.cwd.to_string_lossy().to_string())
+        .capabilities(capabilities)
+        .rlimits(rlimits)
+        .no_new_privileges(false)
+        .build()
+        .map_err(|e| format!("build PTY process spec: {e}"))
 }
 
 /// Check if a container process has exited (non-blocking).
@@ -454,6 +538,7 @@ mod tests {
             ],
             uid: 1000,
             gid: 1000,
+            terminal: true,
         }
     }
 
@@ -549,6 +634,7 @@ mod tests {
             args: vec![],
             uid: 0,
             gid: 0,
+            terminal: false,
         };
         let json = serde_json::to_vec(&spec).unwrap();
         let decoded: BuildSpec = serde_json::from_slice(&json).unwrap();
@@ -570,8 +656,36 @@ mod tests {
     fn pipe_builds_without_console_socket_run_attached() {
         let mut spec = sample_spec();
         spec.console_socket = None;
+        spec.terminal = false;
 
         assert!(!build_detach_mode(&spec));
+    }
+
+    #[test]
+    fn tenant_process_spec_preserves_pty_terminal_config() {
+        let spec = sample_spec();
+
+        let process = build_tenant_process_spec(&spec).unwrap();
+
+        assert_eq!(process.terminal(), Some(true));
+        assert_eq!(
+            process.args().as_ref().unwrap(),
+            &vec![
+                "sh".to_string(),
+                "-c".to_string(),
+                "echo hello world".to_string()
+            ]
+        );
+        assert_eq!(process.cwd(), &PathBuf::from("/workspace"));
+        assert_eq!(process.user().uid(), 1000);
+        assert_eq!(process.user().gid(), 1000);
+        assert!(process
+            .env()
+            .as_ref()
+            .unwrap()
+            .contains(&"HOME=/root".to_string()));
+        assert!(process.capabilities().is_some());
+        assert_eq!(process.no_new_privileges(), Some(false));
     }
 
     // ========================================================================
@@ -788,6 +902,7 @@ mod tests {
             args,
             uid: 65534,
             gid: 65534,
+            terminal: true,
         };
 
         send_request(fd_a, &ZygoteRequest::Build(spec.clone()), None).unwrap();
@@ -817,6 +932,7 @@ mod tests {
             args: vec![],
             uid: 0,
             gid: 0,
+            terminal: false,
         };
 
         let (a, _b) = socketpair(
@@ -969,6 +1085,7 @@ mod tests {
                     args: vec!["echo".to_string()],
                     uid: 0,
                     gid: 0,
+                    terminal: false,
                 };
                 z.build(spec, None).unwrap()
             }));

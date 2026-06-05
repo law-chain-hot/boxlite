@@ -22,12 +22,14 @@ var _ MappedNullable = &BoxTemplateDto{}
 
 // BoxTemplateDto struct for BoxTemplateDto
 type BoxTemplateDto struct {
-	Id               string                         `json:"id"`
-	OrganizationId   *string                        `json:"organizationId,omitempty"`
-	General          bool                           `json:"general"`
-	Name             string                         `json:"name"`
-	DisplayName      string                         `json:"displayName"`
-	Description      *string                        `json:"description,omitempty"`
+	Id             string  `json:"id"`
+	OrganizationId *string `json:"organizationId,omitempty"`
+	General        bool    `json:"general"`
+	Name           string  `json:"name"`
+	DisplayName    string  `json:"displayName"`
+	Description    *string `json:"description,omitempty"`
+	// Agent/runtime capabilities included in this official image
+	Capabilities     []string                       `json:"capabilities,omitempty"`
 	ArtifactRef      *string                        `json:"artifactRef,omitempty"`
 	State            BoxTemplateState               `json:"state"`
 	ErrorReason      *string                        `json:"errorReason,omitempty"`
@@ -229,6 +231,38 @@ func (o *BoxTemplateDto) HasDescription() bool {
 // SetDescription gets a reference to the given string and assigns it to the Description field.
 func (o *BoxTemplateDto) SetDescription(v string) {
 	o.Description = &v
+}
+
+// GetCapabilities returns the Capabilities field value if set, zero value otherwise.
+func (o *BoxTemplateDto) GetCapabilities() []string {
+	if o == nil || IsNil(o.Capabilities) {
+		var ret []string
+		return ret
+	}
+	return o.Capabilities
+}
+
+// GetCapabilitiesOk returns a tuple with the Capabilities field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *BoxTemplateDto) GetCapabilitiesOk() ([]string, bool) {
+	if o == nil || IsNil(o.Capabilities) {
+		return nil, false
+	}
+	return o.Capabilities, true
+}
+
+// HasCapabilities returns a boolean if a field has been set.
+func (o *BoxTemplateDto) HasCapabilities() bool {
+	if o != nil && !IsNil(o.Capabilities) {
+		return true
+	}
+
+	return false
+}
+
+// SetCapabilities gets a reference to the given []string and assigns it to the Capabilities field.
+func (o *BoxTemplateDto) SetCapabilities(v []string) {
+	o.Capabilities = v
 }
 
 // GetArtifactRef returns the ArtifactRef field value if set, zero value otherwise.
@@ -539,6 +573,9 @@ func (o BoxTemplateDto) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Description) {
 		toSerialize["description"] = o.Description
 	}
+	if !IsNil(o.Capabilities) {
+		toSerialize["capabilities"] = o.Capabilities
+	}
 	if !IsNil(o.ArtifactRef) {
 		toSerialize["artifactRef"] = o.ArtifactRef
 	}
@@ -617,6 +654,7 @@ func (o *BoxTemplateDto) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "name")
 		delete(additionalProperties, "displayName")
 		delete(additionalProperties, "description")
+		delete(additionalProperties, "capabilities")
 		delete(additionalProperties, "artifactRef")
 		delete(additionalProperties, "state")
 		delete(additionalProperties, "errorReason")

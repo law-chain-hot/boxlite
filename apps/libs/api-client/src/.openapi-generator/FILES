@@ -1,5 +1,6 @@
 .gitignore
 .npmignore
+.openapi-generator-ignore
 api.ts
 api/admin-api.ts
 api/api-keys-api.ts
@@ -37,6 +38,7 @@ models/audit-log.ts
 models/box-template-default-resources-dto.ts
 models/box-template-dto.ts
 models/box-template-state.ts
+models/box.ts
 models/boxlite-configuration.ts
 models/build-info.ts
 models/command.ts
@@ -92,6 +94,7 @@ models/job.ts
 models/keyboard-hotkey-request.ts
 models/keyboard-press-request.ts
 models/keyboard-type-request.ts
+models/list-boxes-response.ts
 models/list-branch-response.ts
 models/log-entry.ts
 models/lsp-completion-params.ts
