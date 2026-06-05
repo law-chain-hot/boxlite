@@ -5,6 +5,7 @@
 
 import { CodeSnippetGenerator } from './types'
 import { joinGroupedSections } from './utils'
+import { getLanguageCodeToRun } from '@/lib/playground'
 
 export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
   getImports(p) {
@@ -91,7 +92,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
     return [
       `\n\n${ind}// Run code securely inside the Box`,
       `${ind}const codeRunResponse = await box.process.codeRun(\``,
-      `${(p.state['codeRunParams'].languageCode ?? '').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}`, // Escape backticks and ${ to prevent breaking the template literal
+      `${getLanguageCodeToRun(p.actions.codeSnippetLanguage).replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}`,
       `${ind}\`)`,
       `${ind}if (codeRunResponse.exitCode !== 0) {`,
       `${ind + '\t'}console.error("Error running code:", codeRunResponse.exitCode, codeRunResponse.result)`,

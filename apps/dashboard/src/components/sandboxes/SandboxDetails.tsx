@@ -33,6 +33,7 @@ import { useMatchMedia } from '@/hooks/useMatchMedia'
 import { useRegions } from '@/hooks/useRegions'
 import { useSandboxWsSync } from '@/hooks/useSandboxWsSync'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
+import { isDashboardVncEnabled, isSandboxContentTabAvailable } from '@/lib/dashboard-features'
 import { handleApiError } from '@/lib/error-handling'
 import { setLocalStorageItem } from '@/lib/local-storage'
 import {
@@ -75,6 +76,7 @@ export default function SandboxDetails() {
   const { getRegionName } = useRegions()
 
   const experimentsEnabled = useFeatureFlagEnabled(FeatureFlags.ORGANIZATION_EXPERIMENTS)
+  const vncEnabled = isDashboardVncEnabled(useFeatureFlagEnabled(FeatureFlags.DASHBOARD_VNC))
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createSshDialogOpen, setCreateSshDialogOpen] = useState(false)
@@ -153,12 +155,12 @@ export default function SandboxDetails() {
     }
   }, [isDesktop, tab, setTab, experimentsEnabled])
 
-  // When experiments are disabled, coerce experimental tabs back to a supported default
+  // Coerce hidden tabs back to a supported default.
   useEffect(() => {
-    if (!experimentsEnabled && (tab === 'logs' || tab === 'traces' || tab === 'metrics' || tab === 'spending')) {
+    if (!isSandboxContentTabAvailable(tab, { experimentsEnabled, vncEnabled })) {
       setTab('terminal')
     }
-  }, [experimentsEnabled, tab, setTab])
+  }, [experimentsEnabled, tab, setTab, vncEnabled])
 
   const { data: sandbox, isLoading, isError, error, refetch, isFetching } = useSandboxQuery(sandboxId ?? '')
   const isNotFound = isError && isAxiosError(error.cause) && error.cause?.status === 404
@@ -188,10 +190,7 @@ export default function SandboxDetails() {
   const deletePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.DELETE_SANDBOXES)
   const transitioning = sandbox ? isTransitioning(sandbox) : false
   const anyMutating =
-    startMutation.isPending ||
-    stopMutation.isPending ||
-    recoverMutation.isPending ||
-    deleteMutation.isPending
+    startMutation.isPending || stopMutation.isPending || recoverMutation.isPending || deleteMutation.isPending
   const actionsDisabled = anyMutating || transitioning
 
   const handleStart = async () => {
@@ -375,6 +374,7 @@ export default function SandboxDetails() {
               sandbox={sandbox}
               isLoading={isLoading}
               experimentsEnabled={experimentsEnabled}
+              vncEnabled={vncEnabled}
               tab={tab}
               onTabChange={setTab}
             />

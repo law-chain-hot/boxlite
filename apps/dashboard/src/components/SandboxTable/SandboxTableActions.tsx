@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
+import { FeatureFlags } from '@/enums/FeatureFlags'
 import { RoutePath } from '@/enums/RoutePath'
+import { isDashboardVncEnabled } from '@/lib/dashboard-features'
 import { getSandboxRouteId } from '@/lib/sandbox-identity'
 import { SandboxState } from '@boxlite-ai/api-client'
 import { Terminal, MoreVertical, Play, Square, Loader2, Wrench } from 'lucide-react'
+import { useFeatureFlagEnabled } from 'posthog-js/react'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { useMemo } from 'react'
 import TooltipButton from '../TooltipButton'
@@ -38,6 +41,7 @@ export function SandboxTableActions({
   onScreenRecordings,
 }: SandboxTableActionsProps) {
   const navigate = useNavigate()
+  const vncEnabled = isDashboardVncEnabled(useFeatureFlagEnabled(FeatureFlags.DASHBOARD_VNC))
   const isTransitioning = sandbox.state === SandboxState.STARTING || sandbox.state === SandboxState.STOPPING
 
   const primaryAction = useMemo(() => {
@@ -90,12 +94,14 @@ export function SandboxTableActions({
           onClick: () => onOpenWebTerminal(sandbox.id),
           disabled: isLoading,
         })
-        items.push({
-          key: 'vnc',
-          label: 'VNC',
-          onClick: () => onVnc(getSandboxRouteId(sandbox)),
-          disabled: isLoading,
-        })
+        if (vncEnabled) {
+          items.push({
+            key: 'vnc',
+            label: 'VNC',
+            onClick: () => onVnc(getSandboxRouteId(sandbox)),
+            disabled: isLoading,
+          })
+        }
         items.push({
           key: 'screen-recordings',
           label: 'Screen Recordings',
@@ -171,6 +177,7 @@ export function SandboxTableActions({
     onRevokeSshAccess,
     onRecover,
     onScreenRecordings,
+    vncEnabled,
     navigate,
   ])
 

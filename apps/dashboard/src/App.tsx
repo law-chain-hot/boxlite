@@ -9,7 +9,7 @@ import { NotificationSocketProvider } from '@/providers/NotificationSocketProvid
 import { OrganizationsProvider } from '@/providers/OrganizationsProvider'
 import { SelectedOrganizationProvider } from '@/providers/SelectedOrganizationProvider'
 import { initPylon } from '@/vendor/pylon'
-import { usePostHog } from 'posthog-js/react'
+import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react'
 import React, { Suspense, useEffect } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { generatePath, Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
@@ -26,8 +26,10 @@ import {
   DialogTitle,
 } from './components/ui/dialog'
 import { BOXLITE_DOCS_URL, BOXLITE_SLACK_URL } from './constants/ExternalLinks'
+import { FeatureFlags } from './enums/FeatureFlags'
 import { RoutePath, getRouteSubPath } from './enums/RoutePath'
 import { useConfig } from './hooks/useConfig'
+import { isDashboardVncEnabled } from './lib/dashboard-features'
 import Dashboard from './pages/Dashboard'
 import EmailVerify from './pages/EmailVerify'
 import Keys from './pages/Keys'
@@ -91,6 +93,16 @@ const LegacySandboxRedirect = ({
   return <Navigate to={`${generatePath(route, { sandboxId })}${location.search}`} replace />
 }
 
+const SandboxVncFeatureRoute = ({ enabled }: { enabled: boolean }) => {
+  const { sandboxId } = useParams()
+
+  if (!enabled) {
+    return <Navigate to={sandboxId ? generatePath(RoutePath.BOX_DETAILS, { sandboxId }) : RoutePath.BOXES} replace />
+  }
+
+  return <SandboxVncFullscreen />
+}
+
 // Same-origin OIDC silent-renew iframes are legitimate, so frame refusal
 // belongs in deployment headers. The terminal Paste action also refuses to
 // read clipboard when the dashboard itself is framed.
@@ -99,6 +111,7 @@ function App() {
   const config = useConfig()
   const location = useLocation()
   const posthog = usePostHog()
+  const vncEnabled = isDashboardVncEnabled(useFeatureFlagEnabled(FeatureFlags.DASHBOARD_VNC))
   const { error: authError, isAuthenticated, user, removeUser } = useAuth()
   const boxesRedirect = `${RoutePath.BOXES}${location.search}`
 
@@ -214,7 +227,7 @@ function App() {
           }
         >
           <Route path={getRouteSubPath(RoutePath.BOX_TERMINAL)} element={<SandboxTerminalFullscreen />} />
-          <Route path={getRouteSubPath(RoutePath.BOX_VNC)} element={<SandboxVncFullscreen />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_VNC)} element={<SandboxVncFeatureRoute enabled={vncEnabled} />} />
           <Route path={getRouteSubPath(RoutePath.BOX_DETAILS)} element={<SandboxDetails />} />
           <Route
             path={getRouteSubPath(RoutePath.LEGACY_SANDBOX_TERMINAL)}
@@ -222,7 +235,7 @@ function App() {
           />
           <Route
             path={getRouteSubPath(RoutePath.LEGACY_SANDBOX_VNC)}
-            element={<LegacySandboxRedirect route={RoutePath.BOX_VNC} />}
+            element={<LegacySandboxRedirect route={vncEnabled ? RoutePath.BOX_VNC : RoutePath.BOX_DETAILS} />}
           />
           <Route
             path={getRouteSubPath(RoutePath.LEGACY_SANDBOX_DETAILS)}

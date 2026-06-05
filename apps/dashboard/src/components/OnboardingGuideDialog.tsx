@@ -20,6 +20,7 @@ import { useApi } from '@/hooks/useApi'
 import { useConfig } from '@/hooks/useConfig'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { handleApiError } from '@/lib/error-handling'
+import { getOnboardingCodeExamples, type OnboardingLanguage } from '@/lib/onboarding-code-examples'
 import type { OnboardingProgress } from '@/lib/onboarding-progress'
 import {
   CreateApiKeyPermissionsEnum,
@@ -37,8 +38,6 @@ interface OnboardingGuideDialogProps {
   progress: OnboardingProgress
 }
 
-type OnboardingLanguage = 'python' | 'typescript' | 'go' | 'rust'
-
 interface OnboardingLanguageOption {
   value: OnboardingLanguage
   label: string
@@ -53,190 +52,6 @@ const languageOptions: OnboardingLanguageOption[] = [
   { value: 'rust', label: 'Rust', iconSrc: rustIcon },
 ]
 
-const codeExamples: Record<
-  OnboardingLanguage,
-  { install: string; run: string; example: string; codeLanguage: string }
-> = {
-  typescript: {
-    install: 'npm install @boxlite-ai/boxlite tsx',
-    run: 'npx tsx index.mts',
-    codeLanguage: 'typescript',
-    example: `import { createInterface } from 'node:readline/promises'
-import { stdin as input, stdout as output } from 'node:process'
-import { ApiKeyCredential, BoxliteRestOptions, JsBoxlite } from '@boxlite-ai/boxlite'
-
-async function readBoxLiteApiKey() {
-  const readline = createInterface({ input, output })
-  try {
-    return (await readline.question('Paste your BoxLite API key: ')).trim()
-  } finally {
-    readline.close()
-  }
-}
-
-const apiKey = await readBoxLiteApiKey()
-const rt = JsBoxlite.rest(new BoxliteRestOptions({
-  url: 'your-api-url',
-  credential: new ApiKeyCredential(apiKey),
-}))
-
-const box = await rt.create({ image: 'ubuntu:24.04' }, 'sdk-quickstart')
-await box.start()
-
-const exec = await box.exec('echo', ['Hello from BoxLite SDK'])
-const stdout = await exec.stdout()
-let output = ''
-let chunk: string | null
-while ((chunk = await stdout.next()) !== null) {
-  output += chunk
-}
-const result = await exec.wait()
-console.log('Exit code:', result.exitCode)
-console.log(output)
-
-await rt.remove(box.id, true)`,
-  },
-  python: {
-    install: 'pip install boxlite',
-    run: 'python main.py',
-    codeLanguage: 'python',
-    example: `import asyncio
-from getpass import getpass
-from boxlite import ApiKeyCredential, Boxlite, BoxliteRestOptions, BoxOptions
-
-async def main():
-    api_key = getpass("Paste your BoxLite API key: ").strip()
-    rt = Boxlite.rest(BoxliteRestOptions(
-        url="your-api-url",
-        credential=ApiKeyCredential(api_key),
-    ))
-
-    box = await rt.create(BoxOptions(image="ubuntu:24.04"), name="sdk-quickstart")
-    await box.start()
-
-    execution = await box.exec("echo", args=["Hello from BoxLite SDK"])
-    output = ""
-    async for line in execution.stdout():
-        output += line
-    result = await execution.wait()
-    print(f"Exit code: {result.exit_code}")
-    print(output)
-
-    await rt.remove(box.id, force=True)
-
-asyncio.run(main())`,
-  },
-  go: {
-    install: `go get github.com/boxlite-ai/boxlite/sdks/go
-go run github.com/boxlite-ai/boxlite/sdks/go/cmd/setup`,
-    run: 'go run .',
-    codeLanguage: 'go',
-    example: `package main
-
-import (
-    "bufio"
-    "context"
-    "fmt"
-    "log"
-    "os"
-    "strings"
-
-    boxlite "github.com/boxlite-ai/boxlite/sdks/go"
-)
-
-func readBoxLiteAPIKey() (string, error) {
-    fmt.Print("Paste your BoxLite API key: ")
-    value, err := bufio.NewReader(os.Stdin).ReadString('\\n')
-    return strings.TrimSpace(value), err
-}
-
-func main() {
-    ctx := context.Background()
-    apiKey, err := readBoxLiteAPIKey()
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    rt, err := boxlite.NewRest(boxlite.BoxliteRestOptions{
-        URL:        "your-api-url",
-        Credential: boxlite.NewApiKeyCredential(apiKey),
-    })
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer rt.Close()
-
-    box, err := rt.Create(ctx, "ubuntu:24.04", boxlite.WithName("sdk-quickstart"))
-    if err != nil {
-        log.Fatal(err)
-    }
-    if err := box.Start(ctx); err != nil {
-        log.Fatal(err)
-    }
-
-    result, err := box.Exec(ctx, "echo", "Hello from BoxLite SDK")
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println("Exit code:", result.ExitCode)
-    fmt.Print(result.Stdout)
-
-    if err := rt.ForceRemove(ctx, box.ID()); err != nil {
-        log.Fatal(err)
-    }
-}`,
-  },
-  rust: {
-    install: `cargo add boxlite --features rest
-cargo add tokio --features macros,rt-multi-thread
-cargo add futures`,
-    run: 'cargo run',
-    codeLanguage: 'rust',
-    example: `use boxlite::{BoxCommand, BoxOptions, BoxliteRestOptions, BoxliteRuntime, RootfsSpec};
-use futures::StreamExt;
-use std::io::{self, Write};
-
-fn read_boxlite_api_key() -> io::Result<String> {
-    print!("Paste your BoxLite API key: ");
-    io::stdout().flush()?;
-
-    let mut api_key = String::new();
-    io::stdin().read_line(&mut api_key)?;
-    Ok(api_key.trim().to_owned())
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let api_key = read_boxlite_api_key()?;
-    let rt = BoxliteRuntime::rest(
-        BoxliteRestOptions::new("your-api-url").with_api_key(api_key),
-    )?;
-
-    let options = BoxOptions {
-        rootfs: RootfsSpec::Image("ubuntu:24.04".into()),
-        ..Default::default()
-    };
-    let box_handle = rt.create(options, Some("sdk-quickstart".into())).await?;
-    box_handle.start().await?;
-
-    let exec = box_handle
-        .exec(BoxCommand::new("echo").arg("Hello from BoxLite SDK"))
-        .await?;
-    let mut stdout = exec.stdout().expect("stdout stream should be available");
-    let mut output = String::new();
-    while let Some(line) = stdout.next().await {
-        output.push_str(&line);
-    }
-    let result = exec.wait().await?;
-    println!("Exit code: {}", result.exit_code);
-    print!("{output}");
-
-    rt.remove(&box_handle.id().to_string(), true).await?;
-    Ok(())
-}`,
-  },
-}
-
 function LanguageOptionIcon({ option }: { option: OnboardingLanguageOption }) {
   return (
     <span className="flex size-5 shrink-0 items-center justify-center">
@@ -249,15 +64,7 @@ function LanguageOptionIcon({ option }: { option: OnboardingLanguageOption }) {
   )
 }
 
-function StepCard({
-  number,
-  title,
-  description,
-}: {
-  number: number
-  title: string
-  description: string
-}) {
+function StepCard({ number, title, description }: { number: number; title: string; description: string }) {
   return (
     <div className="rounded-md border bg-background p-3">
       <div className="flex items-center gap-2 text-sm font-semibold">
@@ -269,12 +76,7 @@ function StepCard({
   )
 }
 
-export function OnboardingGuideDialog({
-  open,
-  onOpenChange,
-  onProgressChange,
-  progress,
-}: OnboardingGuideDialogProps) {
+export function OnboardingGuideDialog({ open, onOpenChange, onProgressChange, progress }: OnboardingGuideDialogProps) {
   const { apiKeyApi } = useApi()
   const { apiUrl } = useConfig()
   const { selectedOrganization, authenticatedUserHasPermission } = useSelectedOrganization()
@@ -284,6 +86,7 @@ export function OnboardingGuideDialog({
   const [isApiKeyCopied, setIsApiKeyCopied] = useState(false)
   const [isLoadingCreateKey, setIsLoadingCreateKey] = useState(false)
   const canCreateApiKey = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES)
+  const codeExamples = getOnboardingCodeExamples()
   const activeExample = codeExamples[language]
   const renderedExample = useMemo(
     () => activeExample.example.replaceAll('your-api-url', apiUrl),
@@ -368,15 +171,11 @@ export function OnboardingGuideDialog({
                 title="Create a key"
                 description="Copy the one-time key from the dashboard. Do not commit it to source control."
               />
-              <StepCard
-                number={2}
-                title="Install the SDK"
-                description="Use the language tab that matches your app."
-              />
+              <StepCard number={2} title="Install the SDK" description="Use the language tab that matches your app." />
               <StepCard
                 number={3}
                 title="Run the script"
-                description="Paste the key only when the script asks for it."
+                description="Export the key in your environment before running the script."
               />
             </div>
           </aside>
@@ -413,7 +212,8 @@ export function OnboardingGuideDialog({
                   {createdApiKey ? (
                     <div className="grid gap-2">
                       <p className="text-sm text-muted-foreground">
-                        This key is visible once. Copy it now, then paste it only when your script prompts for it.
+                        This key is visible once. Copy it now, then export it as BOXLITE_API_KEY before running the
+                        script.
                       </p>
                       <div className="relative">
                         <Textarea
@@ -457,7 +257,11 @@ export function OnboardingGuideDialog({
                           className="flex-1"
                         />
                         <Button type="submit" disabled={isLoadingCreateKey}>
-                          {isLoadingCreateKey ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                          {isLoadingCreateKey ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Plus className="size-4" />
+                          )}
                           Create API key
                         </Button>
                       </div>
@@ -477,8 +281,8 @@ export function OnboardingGuideDialog({
                     <div className="min-w-0">
                       <div className="text-sm font-semibold">Secret handling</div>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        Keep the API key outside your source files. These examples prompt at runtime so the key never
-                        appears in code or a checked-in env file.
+                        Keep the API key outside your source files. These examples read BOXLITE_API_KEY at runtime so
+                        the key never appears in code or a checked-in env file.
                       </p>
                     </div>
                   </div>

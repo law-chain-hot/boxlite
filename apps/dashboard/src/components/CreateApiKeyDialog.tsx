@@ -23,10 +23,11 @@ import { CheckIcon, CopyIcon, InfoIcon } from 'lucide-react'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
-import { Textarea } from '@/components/ui/textarea'
 import { useCreateApiKeyMutation } from '@/hooks/mutations/useCreateApiKeyMutation'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import { getCreatedApiKeyCopyButtonLabel } from '@/lib/api-key-dialog'
 import { handleApiError } from '@/lib/error-handling'
+import { cn } from '@/lib/utils'
 import { ApiKeyResponse, CreateApiKeyPermissionsEnum } from '@boxlite-ai/api-client'
 import { useForm } from '@tanstack/react-form'
 import { Plus } from 'lucide-react'
@@ -121,7 +122,7 @@ export const CreateApiKeyDialog: React.FC<CreateApiKeyDialogProps> = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl">
+      <DialogContent className={cn(createdKey ? 'sm:max-w-5xl' : 'sm:max-w-2xl')}>
         <DialogHeader>
           <DialogTitle>{createdKey ? 'API Key Created' : 'Create New API Key'}</DialogTitle>
           <DialogDescription>
@@ -241,6 +242,8 @@ const iconProps = {
 function CreatedKeyDisplay({ createdKey, apiUrl }: { createdKey: ApiKeyResponse; apiUrl: string }) {
   const [copiedApiKey, copyApiKey] = useCopyToClipboard()
   const [copiedApiUrl, copyApiUrl] = useCopyToClipboard()
+  const apiKeyCopyLabel = getCreatedApiKeyCopyButtonLabel({ copiedText: copiedApiKey, apiKey: createdKey.value })
+  const apiKeyCopied = copiedApiKey === createdKey.value
 
   return (
     <div className="space-y-6">
@@ -250,33 +253,43 @@ function CreatedKeyDisplay({ createdKey, apiUrl }: { createdKey: ApiKeyResponse;
       </Alert>
       <FieldGroup className="gap-4">
         <Field>
-          <FieldLabel htmlFor="api-key">API Key</FieldLabel>
+          <FieldLabel id="api-key-label">API Key</FieldLabel>
 
-          <div className="relative">
-            <Textarea
-              id="api-key"
-              value={createdKey.value}
-              readOnly
-              rows={4}
-              className="min-h-24 resize-none break-all pr-12 font-mono text-xs leading-5"
-            />
+          <div
+            role="group"
+            aria-labelledby="api-key-label"
+            className="flex flex-col gap-3 rounded-md border border-primary/20 bg-primary/5 p-3 sm:flex-row sm:items-center"
+          >
+            <div className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-3 shadow-xs">
+              <code
+                id="api-key"
+                className="block overflow-x-auto whitespace-nowrap font-mono text-sm leading-6 text-foreground scrollbar-sm"
+              >
+                {createdKey.value}
+              </code>
+            </div>
             <Button
               type="button"
-              variant="ghost"
-              size="icon-xs"
+              variant="default"
+              size="lg"
               aria-label="Copy API key"
-              className="absolute right-2 top-2"
+              className={cn(
+                'h-12 w-full min-w-40 px-6 text-sm shadow-sm transition-[background-color,transform,box-shadow] active:scale-[0.98] sm:w-auto',
+                apiKeyCopied && 'bg-success text-white hover:bg-success/90',
+              )}
               onClick={() => copyApiKey(createdKey.value)}
             >
               <AnimatePresence initial={false} mode="wait">
-                {copiedApiKey ? (
-                  <MotionCheckIcon className="h-4 w-4" key="copied" {...iconProps} />
+                {apiKeyCopied ? (
+                  <MotionCheckIcon className="size-5" key="copied" {...iconProps} />
                 ) : (
-                  <MotionCopyIcon className="h-4 w-4" key="copy" {...iconProps} />
+                  <MotionCopyIcon className="size-5" key="copy" {...iconProps} />
                 )}
               </AnimatePresence>
+              {apiKeyCopyLabel}
             </Button>
           </div>
+          <FieldDescription>This is the only time the full key is shown. Copy it before closing.</FieldDescription>
         </Field>
 
         <Field>

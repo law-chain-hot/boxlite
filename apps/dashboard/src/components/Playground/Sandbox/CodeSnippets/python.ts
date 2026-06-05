@@ -5,6 +5,7 @@
 
 import { CodeSnippetGenerator } from './types'
 import { joinGroupedSections } from './utils'
+import { getLanguageCodeToRun } from '@/lib/playground'
 
 export const PythonSnippetGenerator: CodeSnippetGenerator = {
   getImports(p) {
@@ -95,7 +96,7 @@ export const PythonSnippetGenerator: CodeSnippetGenerator = {
     return [
       '\n\n# Run code securely inside the Box',
       'codeRunResponse = box.process.code_run(',
-      `'''${p.state['codeRunParams'].languageCode}'''`,
+      `'''${getLanguageCodeToRun(p.actions.codeSnippetLanguage)}'''`,
       ')',
       'if codeRunResponse.exit_code != 0:',
       `${ind}print(f"Error: {codeRunResponse.exit_code} {codeRunResponse.result}")`,
