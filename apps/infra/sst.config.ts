@@ -282,6 +282,9 @@ export default $config({
         OIDC_CLIENT_ID: envOr("OIDC_CLIENT_ID", "boxlite"),
         OIDC_AUDIENCE: envOr("OIDC_AUDIENCE", "boxlite"),
         OIDC_ISSUER_BASE_URL: requireOidcIssuer(),
+        ...(process.env.PUBLIC_OIDC_DOMAIN && {
+          PUBLIC_OIDC_DOMAIN: process.env.PUBLIC_OIDC_DOMAIN,
+        }),
         // Optional: Auth0 Management API (enables account linking etc.)
         ...(process.env.OIDC_MANAGEMENT_API_ENABLED === "true" && {
           OIDC_MANAGEMENT_API_ENABLED: "true",

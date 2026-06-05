@@ -17,6 +17,7 @@
     "start:storybook": "npm --prefix apps run start:storybook",
     "dev:dex": "node apps/scripts/dev-dex.mjs",
     "e2e:local": "node apps/scripts/e2e-local.mjs",
+    "e2e:dev": "node apps/scripts/e2e-dev-smoke.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
