@@ -143,15 +143,6 @@ export class CreateSandboxDto {
   autoStopInterval?: number
 
   @ApiPropertyOptional({
-    description: 'Auto-archive interval in minutes (0 means the maximum interval will be used)',
-    example: 7 * 24 * 60,
-    type: 'integer',
-  })
-  @IsOptional()
-  @IsNumber()
-  autoArchiveInterval?: number
-
-  @ApiPropertyOptional({
     description:
       'Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)',
     example: 30,

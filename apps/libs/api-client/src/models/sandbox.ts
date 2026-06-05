@@ -32,11 +32,17 @@ import type { SandboxVolume } from './sandbox-volume'
  */
 export interface Sandbox {
   /**
-   * The ID of the sandbox
+   * The internal UUID of the sandbox
    * @type {string}
    * @memberof Sandbox
    */
   id: string
+  /**
+   * The public Box ID shown to users and SDK clients
+   * @type {string}
+   * @memberof Sandbox
+   */
+  boxId: string
   /**
    * The organization ID of the sandbox
    * @type {string}
@@ -163,12 +169,6 @@ export interface Sandbox {
    * @memberof Sandbox
    */
   autoStopInterval?: number
-  /**
-   * Auto-archive interval in minutes
-   * @type {number}
-   * @memberof Sandbox
-   */
-  autoArchiveInterval?: number
   /**
    * Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)
    * @type {number}

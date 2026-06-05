@@ -18,26 +18,25 @@ import (
 )
 
 type CreateSandboxArgs struct {
-	Id                  *string                    `json:"id,omitempty"`
-	Name                *string                    `json:"name,omitempty"`
-	Target              *string                    `json:"target,omitempty"`
-	TemplateId          *string                    `json:"templateId,omitempty"`
-	Snapshot            *string                    `json:"snapshot,omitempty"`
-	User                *string                    `json:"user,omitempty"`
-	Env                 *map[string]string         `json:"env,omitempty"`
-	Labels              *map[string]string         `json:"labels,omitempty"`
-	Public              *bool                      `json:"public,omitempty"`
-	Cpu                 *int32                     `json:"cpu,omitempty"`
-	Gpu                 *int32                     `json:"gpu,omitempty"`
-	Memory              *int32                     `json:"memory,omitempty"`
-	Disk                *int32                     `json:"disk,omitempty"`
-	AutoStopInterval    *int32                     `json:"autoStopInterval,omitempty"`
-	AutoArchiveInterval *int32                     `json:"autoArchiveInterval,omitempty"`
-	AutoDeleteInterval  *int32                     `json:"autoDeleteInterval,omitempty"`
-	Volumes             *[]apiclient.SandboxVolume `json:"volumes,omitempty"`
-	BuildInfo           *apiclient.CreateBuildInfo `json:"buildInfo,omitempty"`
-	NetworkBlockAll     *bool                      `json:"networkBlockAll,omitempty"`
-	NetworkAllowList    *string                    `json:"networkAllowList,omitempty"`
+	Id                 *string                    `json:"id,omitempty"`
+	Name               *string                    `json:"name,omitempty"`
+	Target             *string                    `json:"target,omitempty"`
+	TemplateId         *string                    `json:"templateId,omitempty"`
+	Snapshot           *string                    `json:"snapshot,omitempty"`
+	User               *string                    `json:"user,omitempty"`
+	Env                *map[string]string         `json:"env,omitempty"`
+	Labels             *map[string]string         `json:"labels,omitempty"`
+	Public             *bool                      `json:"public,omitempty"`
+	Cpu                *int32                     `json:"cpu,omitempty"`
+	Gpu                *int32                     `json:"gpu,omitempty"`
+	Memory             *int32                     `json:"memory,omitempty"`
+	Disk               *int32                     `json:"disk,omitempty"`
+	AutoStopInterval   *int32                     `json:"autoStopInterval,omitempty"`
+	AutoDeleteInterval *int32                     `json:"autoDeleteInterval,omitempty"`
+	Volumes            *[]apiclient.SandboxVolume `json:"volumes,omitempty"`
+	BuildInfo          *apiclient.CreateBuildInfo `json:"buildInfo,omitempty"`
+	NetworkBlockAll    *bool                      `json:"networkBlockAll,omitempty"`
+	NetworkAllowList   *string                    `json:"networkAllowList,omitempty"`
 }
 
 func GetCreateSandboxTool() mcp.Tool {
@@ -56,7 +55,6 @@ func GetCreateSandboxTool() mcp.Tool {
 		mcp.WithNumber("memory", mcp.Description("Memory allocated to the sandbox in GB."), mcp.Max(8)),
 		mcp.WithNumber("disk", mcp.Description("Disk space allocated to the sandbox in GB."), mcp.Max(10)),
 		mcp.WithNumber("autoStopInterval", mcp.DefaultNumber(15), mcp.Min(0), mcp.Description("Auto-stop interval in minutes (0 means disabled) for the sandbox.")),
-		mcp.WithNumber("autoArchiveInterval", mcp.DefaultNumber(10080), mcp.Min(0), mcp.Description("Auto-archive interval in minutes (0 means the maximum interval will be used) for the sandbox.")),
 		mcp.WithNumber("autoDeleteInterval", mcp.DefaultNumber(-1), mcp.Description("Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping) for the sandbox.")),
 		mcp.WithArray("volumes", mcp.Description("Volumes to attach to the sandbox."), mcp.Items(map[string]any{"type": "object", "properties": map[string]any{"volumeId": map[string]any{"type": "string"}, "mountPath": map[string]any{"type": "string"}}})),
 		mcp.WithObject("buildInfo", mcp.Description("Build information for the sandbox."), mcp.Properties(map[string]any{"dockerfileContent": map[string]any{"type": "string"}, "contextHashes": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})),
@@ -152,10 +150,6 @@ func createSandboxRequest(args CreateSandboxArgs) (*apiclient.CreateSandbox, err
 
 	if args.AutoStopInterval != nil {
 		createSandbox.SetAutoStopInterval(*args.AutoStopInterval)
-	}
-
-	if args.AutoArchiveInterval != nil {
-		createSandbox.SetAutoArchiveInterval(*args.AutoArchiveInterval)
 	}
 
 	if args.AutoDeleteInterval != nil {

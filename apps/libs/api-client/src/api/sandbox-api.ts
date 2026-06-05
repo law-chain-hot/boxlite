@@ -71,54 +71,6 @@ export const SandboxApiAxiosParamCreator = function (configuration?: Configurati
   return {
     /**
      *
-     * @summary Archive sandbox
-     * @param {string} sandboxIdOrName
-     * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    archiveSandbox: async (
-      sandboxIdOrName: string,
-      xBoxLiteOrganizationID?: string,
-      options: RawAxiosRequestConfig = {},
-    ): Promise<RequestArgs> => {
-      // verify required parameter 'sandboxIdOrName' is not null or undefined
-      assertParamExists('archiveSandbox', 'sandboxIdOrName', sandboxIdOrName)
-      const localVarPath = `/sandbox/{sandboxIdOrName}/archive`.replace(
-        `{${'sandboxIdOrName'}}`,
-        encodeURIComponent(String(sandboxIdOrName)),
-      )
-      // use dummy base URL string because the URL constructor only accepts absolute URLs.
-      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
-      let baseOptions
-      if (configuration) {
-        baseOptions = configuration.baseOptions
-      }
-
-      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
-      const localVarHeaderParameter = {} as any
-      const localVarQueryParameter = {} as any
-
-      // authentication bearer required
-      // http bearer authentication required
-      await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-      // authentication oauth2 required
-
-      if (xBoxLiteOrganizationID != null) {
-        localVarHeaderParameter['X-BoxLite-Organization-ID'] = String(xBoxLiteOrganizationID)
-      }
-      setSearchParams(localVarUrlObj, localVarQueryParameter)
-      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
-      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
-
-      return {
-        url: toPathString(localVarUrlObj),
-        options: localVarRequestOptions,
-      }
-    },
-    /**
-     *
      * @summary Create sandbox backup
      * @param {string} sandboxIdOrName ID or name of the sandbox
      * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
@@ -1087,7 +1039,7 @@ export const SandboxApiAxiosParamCreator = function (configuration?: Configurati
      * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
      * @param {number} [page] Page number of the results
      * @param {number} [limit] Number of results per page
-     * @param {string} [id] Filter by partial ID match
+     * @param {string} [id] Filter by partial Box ID, internal UUID, or name match
      * @param {string} [name] Filter by partial name match
      * @param {string} [labels] JSON encoded labels to filter by
      * @param {boolean} [includeErroredDeleted] Include results with errored state and deleted desired state
@@ -1437,57 +1389,6 @@ export const SandboxApiAxiosParamCreator = function (configuration?: Configurati
       if (token !== undefined) {
         localVarQueryParameter['token'] = token
       }
-
-      if (xBoxLiteOrganizationID != null) {
-        localVarHeaderParameter['X-BoxLite-Organization-ID'] = String(xBoxLiteOrganizationID)
-      }
-      setSearchParams(localVarUrlObj, localVarQueryParameter)
-      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
-      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
-
-      return {
-        url: toPathString(localVarUrlObj),
-        options: localVarRequestOptions,
-      }
-    },
-    /**
-     *
-     * @summary Set sandbox auto-archive interval
-     * @param {string} sandboxIdOrName ID or name of the sandbox
-     * @param {number} interval Auto-archive interval in minutes (0 means the maximum interval will be used)
-     * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    setAutoArchiveInterval: async (
-      sandboxIdOrName: string,
-      interval: number,
-      xBoxLiteOrganizationID?: string,
-      options: RawAxiosRequestConfig = {},
-    ): Promise<RequestArgs> => {
-      // verify required parameter 'sandboxIdOrName' is not null or undefined
-      assertParamExists('setAutoArchiveInterval', 'sandboxIdOrName', sandboxIdOrName)
-      // verify required parameter 'interval' is not null or undefined
-      assertParamExists('setAutoArchiveInterval', 'interval', interval)
-      const localVarPath = `/sandbox/{sandboxIdOrName}/autoarchive/{interval}`
-        .replace(`{${'sandboxIdOrName'}}`, encodeURIComponent(String(sandboxIdOrName)))
-        .replace(`{${'interval'}}`, encodeURIComponent(String(interval)))
-      // use dummy base URL string because the URL constructor only accepts absolute URLs.
-      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
-      let baseOptions
-      if (configuration) {
-        baseOptions = configuration.baseOptions
-      }
-
-      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
-      const localVarHeaderParameter = {} as any
-      const localVarQueryParameter = {} as any
-
-      // authentication bearer required
-      // http bearer authentication required
-      await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-      // authentication oauth2 required
 
       if (xBoxLiteOrganizationID != null) {
         localVarHeaderParameter['X-BoxLite-Organization-ID'] = String(xBoxLiteOrganizationID)
@@ -1918,35 +1819,6 @@ export const SandboxApiAxiosParamCreator = function (configuration?: Configurati
 export const SandboxApiFp = function (configuration?: Configuration) {
   const localVarAxiosParamCreator = SandboxApiAxiosParamCreator(configuration)
   return {
-    /**
-     *
-     * @summary Archive sandbox
-     * @param {string} sandboxIdOrName
-     * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    async archiveSandbox(
-      sandboxIdOrName: string,
-      xBoxLiteOrganizationID?: string,
-      options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Sandbox>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.archiveSandbox(
-        sandboxIdOrName,
-        xBoxLiteOrganizationID,
-        options,
-      )
-      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
-      const localVarOperationServerBasePath =
-        operationServerMap['SandboxApi.archiveSandbox']?.[localVarOperationServerIndex]?.url
-      return (axios, basePath) =>
-        createRequestFunction(
-          localVarAxiosArgs,
-          globalAxios,
-          BASE_PATH,
-          configuration,
-        )(axios, localVarOperationServerBasePath || basePath)
-    },
     /**
      *
      * @summary Create sandbox backup
@@ -2522,7 +2394,7 @@ export const SandboxApiFp = function (configuration?: Configuration) {
      * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
      * @param {number} [page] Page number of the results
      * @param {number} [limit] Number of results per page
-     * @param {string} [id] Filter by partial ID match
+     * @param {string} [id] Filter by partial Box ID, internal UUID, or name match
      * @param {string} [name] Filter by partial name match
      * @param {string} [labels] JSON encoded labels to filter by
      * @param {boolean} [includeErroredDeleted] Include results with errored state and deleted desired state
@@ -2716,38 +2588,6 @@ export const SandboxApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['SandboxApi.revokeSshAccess']?.[localVarOperationServerIndex]?.url
-      return (axios, basePath) =>
-        createRequestFunction(
-          localVarAxiosArgs,
-          globalAxios,
-          BASE_PATH,
-          configuration,
-        )(axios, localVarOperationServerBasePath || basePath)
-    },
-    /**
-     *
-     * @summary Set sandbox auto-archive interval
-     * @param {string} sandboxIdOrName ID or name of the sandbox
-     * @param {number} interval Auto-archive interval in minutes (0 means the maximum interval will be used)
-     * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    async setAutoArchiveInterval(
-      sandboxIdOrName: string,
-      interval: number,
-      xBoxLiteOrganizationID?: string,
-      options?: RawAxiosRequestConfig,
-    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Sandbox>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.setAutoArchiveInterval(
-        sandboxIdOrName,
-        interval,
-        xBoxLiteOrganizationID,
-        options,
-      )
-      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
-      const localVarOperationServerBasePath =
-        operationServerMap['SandboxApi.setAutoArchiveInterval']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -3013,23 +2853,6 @@ export const SandboxApiFp = function (configuration?: Configuration) {
 export const SandboxApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
   const localVarFp = SandboxApiFp(configuration)
   return {
-    /**
-     *
-     * @summary Archive sandbox
-     * @param {string} sandboxIdOrName
-     * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    archiveSandbox(
-      sandboxIdOrName: string,
-      xBoxLiteOrganizationID?: string,
-      options?: RawAxiosRequestConfig,
-    ): AxiosPromise<Sandbox> {
-      return localVarFp
-        .archiveSandbox(sandboxIdOrName, xBoxLiteOrganizationID, options)
-        .then((request) => request(axios, basePath))
-    },
     /**
      *
      * @summary Create sandbox backup
@@ -3376,7 +3199,7 @@ export const SandboxApiFactory = function (configuration?: Configuration, basePa
      * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
      * @param {number} [page] Page number of the results
      * @param {number} [limit] Number of results per page
-     * @param {string} [id] Filter by partial ID match
+     * @param {string} [id] Filter by partial Box ID, internal UUID, or name match
      * @param {string} [name] Filter by partial name match
      * @param {string} [labels] JSON encoded labels to filter by
      * @param {boolean} [includeErroredDeleted] Include results with errored state and deleted desired state
@@ -3517,25 +3340,6 @@ export const SandboxApiFactory = function (configuration?: Configuration, basePa
     ): AxiosPromise<Sandbox> {
       return localVarFp
         .revokeSshAccess(sandboxIdOrName, xBoxLiteOrganizationID, token, options)
-        .then((request) => request(axios, basePath))
-    },
-    /**
-     *
-     * @summary Set sandbox auto-archive interval
-     * @param {string} sandboxIdOrName ID or name of the sandbox
-     * @param {number} interval Auto-archive interval in minutes (0 means the maximum interval will be used)
-     * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    setAutoArchiveInterval(
-      sandboxIdOrName: string,
-      interval: number,
-      xBoxLiteOrganizationID?: string,
-      options?: RawAxiosRequestConfig,
-    ): AxiosPromise<Sandbox> {
-      return localVarFp
-        .setAutoArchiveInterval(sandboxIdOrName, interval, xBoxLiteOrganizationID, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3694,21 +3498,6 @@ export const SandboxApiFactory = function (configuration?: Configuration, basePa
  * @extends {BaseAPI}
  */
 export class SandboxApi extends BaseAPI {
-  /**
-   *
-   * @summary Archive sandbox
-   * @param {string} sandboxIdOrName
-   * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-   * @param {*} [options] Override http request option.
-   * @throws {RequiredError}
-   * @memberof SandboxApi
-   */
-  public archiveSandbox(sandboxIdOrName: string, xBoxLiteOrganizationID?: string, options?: RawAxiosRequestConfig) {
-    return SandboxApiFp(this.configuration)
-      .archiveSandbox(sandboxIdOrName, xBoxLiteOrganizationID, options)
-      .then((request) => request(this.axios, this.basePath))
-  }
-
   /**
    *
    * @summary Create sandbox backup
@@ -4069,7 +3858,7 @@ export class SandboxApi extends BaseAPI {
    * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
    * @param {number} [page] Page number of the results
    * @param {number} [limit] Number of results per page
-   * @param {string} [id] Filter by partial ID match
+   * @param {string} [id] Filter by partial Box ID, internal UUID, or name match
    * @param {string} [name] Filter by partial name match
    * @param {string} [labels] JSON encoded labels to filter by
    * @param {boolean} [includeErroredDeleted] Include results with errored state and deleted desired state
@@ -4215,27 +4004,6 @@ export class SandboxApi extends BaseAPI {
   ) {
     return SandboxApiFp(this.configuration)
       .revokeSshAccess(sandboxIdOrName, xBoxLiteOrganizationID, token, options)
-      .then((request) => request(this.axios, this.basePath))
-  }
-
-  /**
-   *
-   * @summary Set sandbox auto-archive interval
-   * @param {string} sandboxIdOrName ID or name of the sandbox
-   * @param {number} interval Auto-archive interval in minutes (0 means the maximum interval will be used)
-   * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-   * @param {*} [options] Override http request option.
-   * @throws {RequiredError}
-   * @memberof SandboxApi
-   */
-  public setAutoArchiveInterval(
-    sandboxIdOrName: string,
-    interval: number,
-    xBoxLiteOrganizationID?: string,
-    options?: RawAxiosRequestConfig,
-  ) {
-    return SandboxApiFp(this.configuration)
-      .setAutoArchiveInterval(sandboxIdOrName, interval, xBoxLiteOrganizationID, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4418,6 +4186,7 @@ export type ListSandboxesPaginatedStatesEnum =
  */
 export const ListSandboxesPaginatedSortEnum = {
   ID: 'id',
+  BOX_ID: 'boxId',
   NAME: 'name',
   STATE: 'state',
   TEMPLATE: 'template',

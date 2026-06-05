@@ -195,6 +195,7 @@ export class RunnerAdapterV0 implements RunnerAdapter {
   ): Promise<StartSandboxResponse | undefined> {
     const createSandboxDto: CreateSandboxDTO = {
       id: sandbox.id,
+      boxId: sandbox.boxId,
       userId: sandbox.organizationId,
       artifactRef,
       osUser: sandbox.osUser,
@@ -219,7 +220,7 @@ export class RunnerAdapterV0 implements RunnerAdapter {
       })),
       networkBlockAll: sandbox.networkBlockAll,
       networkAllowList: sandbox.networkAllowList,
-      metadata: metadata,
+      metadata: { ...(metadata ?? {}), boxId: sandbox.boxId },
       authToken: sandbox.authToken,
       otelEndpoint,
       skipStart: skipStart,

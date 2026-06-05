@@ -146,7 +146,6 @@ export type TemplateResources = Pick<Resources, 'cpu' | 'memory' | 'disk'>
  * @property {Record<string, string>} [labels] - Sandbox labels
  * @property {boolean} [public] - Is the Sandbox port preview public
  * @property {number} [autoStopInterval] - Auto-stop interval in minutes (0 means disabled). Default is 15 minutes.
- * @property {number} [autoArchiveInterval] - Auto-archive interval in minutes (0 means the maximum interval will be used). Default is 7 days.
  * @property {number} [autoDeleteInterval] - Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping). By default, auto-delete is disabled.
  * @property {VolumeMount[]} [volumes] - Optional array of volumes to mount to the Sandbox
  * @property {boolean} [networkBlockAll] - Whether to block all network access for the Sandbox
@@ -161,7 +160,6 @@ export type CreateSandboxBaseParams = {
   labels?: Record<string, string>
   public?: boolean
   autoStopInterval?: number
-  autoArchiveInterval?: number
   autoDeleteInterval?: number
   volumes?: VolumeMount[]
   networkBlockAll?: boolean
@@ -383,7 +381,6 @@ export class BoxLite implements AsyncDisposable {
    *         DEBUG: 'true'
    *     },
    *     autoStopInterval: 60,
-   *     autoArchiveInterval: 60,
    *     autoDeleteInterval: 120
    * };
    * const sandbox = await boxlite.create(params, { timeout: 100 });
@@ -418,7 +415,6 @@ export class BoxLite implements AsyncDisposable {
    *         memory: 4 // 4GB RAM
    *     },
    *     autoStopInterval: 60,
-   *     autoArchiveInterval: 60,
    *     autoDeleteInterval: 120
    * };
    * const sandbox = await boxlite.create(params, { timeout: 100, onTemplateCreateLogs: console.log });
@@ -468,13 +464,6 @@ export class BoxLite implements AsyncDisposable {
       params.autoDeleteInterval = 0
     }
 
-    if (
-      params.autoArchiveInterval !== undefined &&
-      (!Number.isInteger(params.autoArchiveInterval) || params.autoArchiveInterval < 0)
-    ) {
-      throw new BoxliteError('autoArchiveInterval must be a non-negative integer')
-    }
-
     const codeToolbox = this.getCodeToolbox(params.language as CodeLanguage)
 
     try {
@@ -521,7 +510,6 @@ export class BoxLite implements AsyncDisposable {
           memory: resources?.memory,
           disk: resources?.disk,
           autoStopInterval: params.autoStopInterval,
-          autoArchiveInterval: params.autoArchiveInterval,
           autoDeleteInterval: params.autoDeleteInterval,
           volumes: params.volumes,
           networkBlockAll: params.networkBlockAll,

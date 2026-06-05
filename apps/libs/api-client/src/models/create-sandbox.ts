@@ -116,12 +116,6 @@ export interface CreateSandbox {
    */
   autoStopInterval?: number
   /**
-   * Auto-archive interval in minutes (0 means the maximum interval will be used)
-   * @type {number}
-   * @memberof CreateSandbox
-   */
-  autoArchiveInterval?: number
-  /**
    * Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)
    * @type {number}
    * @memberof CreateSandbox

@@ -43,9 +43,46 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerCreateBox: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerCreateBox0: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'body' is not null or undefined
-      assertParamExists('boxliteBoxControllerCreateBox', 'body', body)
+      assertParamExists('boxliteBoxControllerCreateBox0', 'body', body)
+      const localVarPath = `/v1/boxes`
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      localVarHeaderParameter['Content-Type'] = 'application/json'
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+      localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {object} body
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerCreateBox1: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+      // verify required parameter 'body' is not null or undefined
+      assertParamExists('boxliteBoxControllerCreateBox1', 'body', body)
       const localVarPath = `/v1/{prefix}/boxes`
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -80,9 +117,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerGetBox: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerGetBox0: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteBoxControllerGetBox', 'boxId', boxId)
+      assertParamExists('boxliteBoxControllerGetBox0', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerGetBox1: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteBoxControllerGetBox1', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -114,9 +185,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerHeadBox: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerHeadBox0: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteBoxControllerHeadBox', 'boxId', boxId)
+      assertParamExists('boxliteBoxControllerHeadBox0', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'HEAD', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerHeadBox1: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteBoxControllerHeadBox1', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -148,12 +253,53 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerListBoxes: async (
+    boxliteBoxControllerListBoxes0: async (
       pageSize: string,
       options: RawAxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       // verify required parameter 'pageSize' is not null or undefined
-      assertParamExists('boxliteBoxControllerListBoxes', 'pageSize', pageSize)
+      assertParamExists('boxliteBoxControllerListBoxes0', 'pageSize', pageSize)
+      const localVarPath = `/v1/boxes`
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      if (pageSize !== undefined) {
+        localVarQueryParameter['pageSize'] = pageSize
+      }
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} pageSize
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerListBoxes1: async (
+      pageSize: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'pageSize' is not null or undefined
+      assertParamExists('boxliteBoxControllerListBoxes1', 'pageSize', pageSize)
       const localVarPath = `/v1/{prefix}/boxes`
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -189,9 +335,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerRemoveBox: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerRemoveBox0: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteBoxControllerRemoveBox', 'boxId', boxId)
+      assertParamExists('boxliteBoxControllerRemoveBox0', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerRemoveBox1: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteBoxControllerRemoveBox1', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -223,9 +409,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStartBox: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerStartBox0: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteBoxControllerStartBox', 'boxId', boxId)
+      assertParamExists('boxliteBoxControllerStartBox0', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/start`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerStartBox1: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteBoxControllerStartBox1', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/start`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -257,9 +477,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStopBox: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+    boxliteBoxControllerStopBox0: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteBoxControllerStopBox', 'boxId', boxId)
+      assertParamExists('boxliteBoxControllerStopBox0', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/stop`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerStopBox1: async (boxId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteBoxControllerStopBox1', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/stop`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -355,6 +609,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecDelete', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecDelete_1: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecDelete_1', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -392,6 +683,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecGet', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecGet_2: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecGet_2', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -429,6 +757,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecHead', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'HEAD', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecHead_3: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecHead_3', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -461,15 +826,58 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteProxyControllerProxyExecKill: async (
+    boxliteProxyControllerProxyExecKill0: async (
       boxId: string,
       execId: string,
       options: RawAxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteProxyControllerProxyExecKill', 'boxId', boxId)
+      assertParamExists('boxliteProxyControllerProxyExecKill0', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
-      assertParamExists('boxliteProxyControllerProxyExecKill', 'execId', execId)
+      assertParamExists('boxliteProxyControllerProxyExecKill0', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecKill1: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecKill1', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecKill1', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -509,6 +917,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecOptions', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'OPTIONS', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecOptions_4: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecOptions_4', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -546,6 +991,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecPatch', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecPatch_5: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecPatch_5', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -583,6 +1065,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecPost', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecPost_6: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecPost_6', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -620,6 +1139,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecPut', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecPut_7: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecPut_7', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/exec`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -661,6 +1217,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizeDelete', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizeDelete', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizeDelete_8: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeDelete_8', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeDelete_8', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -704,6 +1303,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizeGet', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizeGet', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizeGet_9: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeGet_9', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeGet_9', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -747,6 +1389,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizeHead', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizeHead', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'HEAD', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizeHead_10: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeHead_10', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeHead_10', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -790,6 +1475,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizeOptions', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizeOptions', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'OPTIONS', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizeOptions_11: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeOptions_11', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizeOptions_11', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -833,6 +1561,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizePatch', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizePatch', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizePatch_12: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizePatch_12', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizePatch_12', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -876,6 +1647,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizePost', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizePost', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizePost_13: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizePost_13', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizePost_13', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -919,6 +1733,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecResizePut', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecResizePut', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/resize`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizePut_14: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizePut_14', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecResizePut_14', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/resize`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -962,6 +1819,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalDelete', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalDelete', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalDelete_15: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalDelete_15', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalDelete_15', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1005,6 +1905,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalGet', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalGet', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalGet_16: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalGet_16', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalGet_16', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1048,6 +1991,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalHead', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalHead', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'HEAD', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalHead_17: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalHead_17', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalHead_17', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1091,6 +2077,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalOptions', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalOptions', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'OPTIONS', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalOptions_18: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalOptions_18', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalOptions_18', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1134,6 +2163,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalPatch', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalPatch', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalPatch_19: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalPatch_19', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalPatch_19', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1177,6 +2249,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalPost', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalPost', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalPost_20: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalPost_20', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalPost_20', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1220,6 +2335,49 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
       assertParamExists('boxliteProxyControllerProxyExecSignalPut', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyExecSignalPut', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}/signal`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalPut_21: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalPut_21', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecSignalPut_21', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}/signal`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1254,15 +2412,58 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteProxyControllerProxyExecStatus: async (
+    boxliteProxyControllerProxyExecStatus0: async (
       boxId: string,
       execId: string,
       options: RawAxiosRequestConfig = {},
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
-      assertParamExists('boxliteProxyControllerProxyExecStatus', 'boxId', boxId)
+      assertParamExists('boxliteProxyControllerProxyExecStatus0', 'boxId', boxId)
       // verify required parameter 'execId' is not null or undefined
-      assertParamExists('boxliteProxyControllerProxyExecStatus', 'execId', execId)
+      assertParamExists('boxliteProxyControllerProxyExecStatus0', 'execId', execId)
+      const localVarPath = `/v1/boxes/{boxId}/executions/{execId}`
+        .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+        .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecStatus1: async (
+      boxId: string,
+      execId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecStatus1', 'boxId', boxId)
+      // verify required parameter 'execId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyExecStatus1', 'execId', execId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/executions/{execId}`
         .replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
         .replace(`{${'execId'}}`, encodeURIComponent(String(execId)))
@@ -1302,6 +2503,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesDelete', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesDelete_22: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesDelete_22', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1339,6 +2577,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesGet', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesGet_23: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesGet_23', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1376,6 +2651,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesHead', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'HEAD', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesHead_24: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesHead_24', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1413,6 +2725,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesOptions', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'OPTIONS', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesOptions_25: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesOptions_25', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1450,6 +2799,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesPatch', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesPatch_26: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesPatch_26', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1487,6 +2873,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesPost', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesPost_27: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesPost_27', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1524,6 +2947,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyFilesPut', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesPut_28: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyFilesPut_28', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/files`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
@@ -1561,6 +3021,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsDelete', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsDelete_29: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsDelete_29', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1601,6 +3098,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsGet', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsGet_30: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsGet_30', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1641,6 +3175,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsHead', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'HEAD', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsHead_31: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsHead_31', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1681,6 +3252,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsOptions', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'OPTIONS', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsOptions_32: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsOptions_32', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1721,6 +3329,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsPatch', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsPatch_33: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsPatch_33', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1761,6 +3406,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsPost', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsPost_34: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsPost_34', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1801,6 +3483,43 @@ export const BoxLiteRESTApiAxiosParamCreator = function (configuration?: Configu
     ): Promise<RequestArgs> => {
       // verify required parameter 'boxId' is not null or undefined
       assertParamExists('boxliteProxyControllerProxyMetricsPut', 'boxId', boxId)
+      const localVarPath = `/v1/boxes/{boxId}/metrics`.replace(`{${'boxId'}}`, encodeURIComponent(String(boxId)))
+      // use dummy base URL string because the URL constructor only accepts absolute URLs.
+      const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL)
+      let baseOptions
+      if (configuration) {
+        baseOptions = configuration.baseOptions
+      }
+
+      const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options }
+      const localVarHeaderParameter = {} as any
+      const localVarQueryParameter = {} as any
+
+      // authentication bearer required
+      // http bearer authentication required
+      await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+      setSearchParams(localVarUrlObj, localVarQueryParameter)
+      let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {}
+      localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers }
+
+      return {
+        url: toPathString(localVarUrlObj),
+        options: localVarRequestOptions,
+      }
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsPut_35: async (
+      boxId: string,
+      options: RawAxiosRequestConfig = {},
+    ): Promise<RequestArgs> => {
+      // verify required parameter 'boxId' is not null or undefined
+      assertParamExists('boxliteProxyControllerProxyMetricsPut_35', 'boxId', boxId)
       const localVarPath = `/v1/{prefix}/boxes/{boxId}/metrics`.replace(
         `{${'boxId'}}`,
         encodeURIComponent(String(boxId)),
@@ -1845,14 +3564,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerCreateBox(
+    async boxliteBoxControllerCreateBox0(
       body: object,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerCreateBox(body, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerCreateBox0(body, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerCreateBox']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerCreateBox0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {object} body
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerCreateBox1(
+      body: object,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerCreateBox1(body, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerCreateBox1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -1867,14 +3608,14 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerGetBox(
+    async boxliteBoxControllerGetBox0(
       boxId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerGetBox(boxId, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerGetBox0(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerGetBox']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerGetBox0']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -1889,14 +3630,58 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerHeadBox(
+    async boxliteBoxControllerGetBox1(
       boxId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerHeadBox(boxId, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerGetBox1(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerHeadBox']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerGetBox1']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerHeadBox0(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerHeadBox0(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerHeadBox0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerHeadBox1(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerHeadBox1(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerHeadBox1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -1911,14 +3696,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerListBoxes(
+    async boxliteBoxControllerListBoxes0(
       pageSize: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerListBoxes(pageSize, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerListBoxes0(pageSize, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerListBoxes']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerListBoxes0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} pageSize
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerListBoxes1(
+      pageSize: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerListBoxes1(pageSize, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerListBoxes1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -1933,14 +3740,14 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerRemoveBox(
+    async boxliteBoxControllerRemoveBox0(
       boxId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerRemoveBox(boxId, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerRemoveBox0(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerRemoveBox']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerRemoveBox0']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -1955,14 +3762,14 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerStartBox(
+    async boxliteBoxControllerRemoveBox1(
       boxId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStartBox(boxId, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerRemoveBox1(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerStartBox']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerRemoveBox1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -1977,14 +3784,80 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteBoxControllerStopBox(
+    async boxliteBoxControllerStartBox0(
       boxId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStopBox(boxId, options)
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStartBox0(boxId, options)
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerStopBox']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerStartBox0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerStartBox1(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStartBox1(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerStartBox1']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerStopBox0(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStopBox0(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerStopBox0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteBoxControllerStopBox1(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteBoxControllerStopBox1(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteBoxControllerStopBox1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2061,6 +3934,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecDelete_1(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecDelete_1(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecDelete_1']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecGet(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2069,6 +3965,28 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecGet']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecGet_2(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecGet_2(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecGet_2']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2102,23 +4020,73 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
     /**
      *
      * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecHead_3(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecHead_3(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecHead_3']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
      * @param {string} execId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteProxyControllerProxyExecKill(
+    async boxliteProxyControllerProxyExecKill0(
       boxId: string,
       execId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecKill(
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecKill0(
         boxId,
         execId,
         options,
       )
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecKill']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecKill0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecKill1(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecKill1(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecKill1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2155,6 +4123,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecOptions_4(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecOptions_4(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecOptions_4']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecPatch(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2163,6 +4154,28 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecPatch']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecPatch_5(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecPatch_5(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecPatch_5']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2199,6 +4212,28 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecPost_6(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecPost_6(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecPost_6']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecPut(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2207,6 +4242,28 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecPut']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecPut_7(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecPut_7(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecPut_7']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2251,6 +4308,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecResizeDelete_8(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizeDelete_8(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizeDelete_8']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecResizeGet(
       boxId: string,
       execId: string,
@@ -2264,6 +4351,35 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizeGet']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecResizeGet_9(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizeGet_9(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizeGet_9']?.[localVarOperationServerIndex]
           ?.url
       return (axios, basePath) =>
         createRequestFunction(
@@ -2309,6 +4425,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecResizeHead_10(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizeHead_10(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizeHead_10']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecResizeOptions(
       boxId: string,
       execId: string,
@@ -2322,6 +4468,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizeOptions']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecResizeOptions_11(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizeOptions_11(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizeOptions_11']?.[
           localVarOperationServerIndex
         ]?.url
       return (axios, basePath) =>
@@ -2368,6 +4544,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecResizePatch_12(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizePatch_12(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizePatch_12']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecResizePost(
       boxId: string,
       execId: string,
@@ -2397,6 +4603,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecResizePost_13(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizePost_13(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizePost_13']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecResizePut(
       boxId: string,
       execId: string,
@@ -2410,6 +4646,35 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizePut']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecResizePut_14(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecResizePut_14(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecResizePut_14']?.[localVarOperationServerIndex]
           ?.url
       return (axios, basePath) =>
         createRequestFunction(
@@ -2455,6 +4720,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecSignalDelete_15(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalDelete_15(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalDelete_15']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecSignalGet(
       boxId: string,
       execId: string,
@@ -2468,6 +4763,35 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalGet']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecSignalGet_16(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalGet_16(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalGet_16']?.[localVarOperationServerIndex]
           ?.url
       return (axios, basePath) =>
         createRequestFunction(
@@ -2513,6 +4837,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecSignalHead_17(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalHead_17(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalHead_17']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecSignalOptions(
       boxId: string,
       execId: string,
@@ -2526,6 +4880,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalOptions']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecSignalOptions_18(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalOptions_18(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalOptions_18']?.[
           localVarOperationServerIndex
         ]?.url
       return (axios, basePath) =>
@@ -2572,6 +4956,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyExecSignalPatch_19(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalPatch_19(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalPatch_19']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyExecSignalPost(
       boxId: string,
       execId: string,
@@ -2586,6 +5000,36 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalPost']?.[localVarOperationServerIndex]
           ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecSignalPost_20(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalPost_20(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalPost_20']?.[
+          localVarOperationServerIndex
+        ]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2630,19 +5074,76 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async boxliteProxyControllerProxyExecStatus(
+    async boxliteProxyControllerProxyExecSignalPut_21(
       boxId: string,
       execId: string,
       options?: RawAxiosRequestConfig,
     ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecStatus(
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecSignalPut_21(
         boxId,
         execId,
         options,
       )
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
-        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecStatus']?.[localVarOperationServerIndex]?.url
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecSignalPut_21']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecStatus0(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecStatus0(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecStatus0']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyExecStatus1(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyExecStatus1(
+        boxId,
+        execId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyExecStatus1']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2679,6 +5180,32 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyFilesDelete_22(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesDelete_22(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesDelete_22']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyFilesGet(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2701,6 +5228,28 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyFilesGet_23(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesGet_23(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesGet_23']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyFilesHead(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2709,6 +5258,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesHead']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyFilesHead_24(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesHead_24(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesHead_24']?.[localVarOperationServerIndex]
+          ?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2746,6 +5318,32 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyFilesOptions_25(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesOptions_25(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesOptions_25']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyFilesPatch(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2754,6 +5352,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesPatch']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyFilesPatch_26(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesPatch_26(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesPatch_26']?.[localVarOperationServerIndex]
+          ?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2790,6 +5411,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyFilesPost_27(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesPost_27(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesPost_27']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyFilesPut(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2798,6 +5442,28 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesPut']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyFilesPut_28(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyFilesPut_28(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyFilesPut_28']?.[localVarOperationServerIndex]?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2835,6 +5501,32 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyMetricsDelete_29(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsDelete_29(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsDelete_29']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyMetricsGet(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2857,6 +5549,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyMetricsGet_30(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsGet_30(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsGet_30']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyMetricsHead(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2865,6 +5580,32 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsHead']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyMetricsHead_31(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsHead_31(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsHead_31']?.[localVarOperationServerIndex]
+          ?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2905,6 +5646,33 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyMetricsOptions_32(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsOptions_32(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsOptions_32']?.[
+          localVarOperationServerIndex
+        ]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyMetricsPatch(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2913,6 +5681,32 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsPatch']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyMetricsPatch_33(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsPatch_33(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsPatch_33']?.[localVarOperationServerIndex]
           ?.url
       return (axios, basePath) =>
         createRequestFunction(
@@ -2950,6 +5744,32 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    async boxliteProxyControllerProxyMetricsPost_34(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsPost_34(
+        boxId,
+        options,
+      )
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsPost_34']?.[localVarOperationServerIndex]
+          ?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     async boxliteProxyControllerProxyMetricsPut(
       boxId: string,
       options?: RawAxiosRequestConfig,
@@ -2958,6 +5778,29 @@ export const BoxLiteRESTApiFp = function (configuration?: Configuration) {
       const localVarOperationServerIndex = configuration?.serverIndex ?? 0
       const localVarOperationServerBasePath =
         operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsPut']?.[localVarOperationServerIndex]?.url
+      return (axios, basePath) =>
+        createRequestFunction(
+          localVarAxiosArgs,
+          globalAxios,
+          BASE_PATH,
+          configuration,
+        )(axios, localVarOperationServerBasePath || basePath)
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    async boxliteProxyControllerProxyMetricsPut_35(
+      boxId: string,
+      options?: RawAxiosRequestConfig,
+    ): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+      const localVarAxiosArgs = await localVarAxiosParamCreator.boxliteProxyControllerProxyMetricsPut_35(boxId, options)
+      const localVarOperationServerIndex = configuration?.serverIndex ?? 0
+      const localVarOperationServerBasePath =
+        operationServerMap['BoxLiteRESTApi.boxliteProxyControllerProxyMetricsPut_35']?.[localVarOperationServerIndex]
+          ?.url
       return (axios, basePath) =>
         createRequestFunction(
           localVarAxiosArgs,
@@ -2986,8 +5829,17 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerCreateBox(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerCreateBox(body, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerCreateBox0(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerCreateBox0(body, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {object} body
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerCreateBox1(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerCreateBox1(body, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -2995,8 +5847,8 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerGetBox(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerGetBox(boxId, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerGetBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerGetBox0(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3004,8 +5856,26 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerHeadBox(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerHeadBox(boxId, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerGetBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerGetBox1(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerHeadBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerHeadBox0(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerHeadBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerHeadBox1(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3013,8 +5883,17 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerListBoxes(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerListBoxes(pageSize, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerListBoxes0(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerListBoxes0(pageSize, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} pageSize
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerListBoxes1(pageSize: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerListBoxes1(pageSize, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3022,8 +5901,8 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerRemoveBox(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerRemoveBox(boxId, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerRemoveBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerRemoveBox0(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3031,8 +5910,8 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStartBox(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerStartBox(boxId, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerRemoveBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerRemoveBox1(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3040,8 +5919,35 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteBoxControllerStopBox(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-      return localVarFp.boxliteBoxControllerStopBox(boxId, options).then((request) => request(axios, basePath))
+    boxliteBoxControllerStartBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerStartBox0(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerStartBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerStartBox1(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerStopBox0(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerStopBox0(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteBoxControllerStopBox1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteBoxControllerStopBox1(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3076,8 +5982,28 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecDelete_1(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecDelete_1(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecGet(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp.boxliteProxyControllerProxyExecGet(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecGet_2(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteProxyControllerProxyExecGet_2(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3091,17 +6017,44 @@ export const BoxLiteRESTApiFactory = function (
     /**
      *
      * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecHead_3(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecHead_3(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
      * @param {string} execId
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteProxyControllerProxyExecKill(
+    boxliteProxyControllerProxyExecKill0(
       boxId: string,
       execId: string,
       options?: RawAxiosRequestConfig,
     ): AxiosPromise<void> {
       return localVarFp
-        .boxliteProxyControllerProxyExecKill(boxId, execId, options)
+        .boxliteProxyControllerProxyExecKill0(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecKill1(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecKill1(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3121,8 +6074,30 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecOptions_4(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecOptions_4(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecPatch(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp.boxliteProxyControllerProxyExecPatch(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecPatch_5(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecPatch_5(boxId, options)
+        .then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3139,8 +6114,28 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecPost_6(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecPost_6(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecPut(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp.boxliteProxyControllerProxyExecPut(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecPut_7(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp.boxliteProxyControllerProxyExecPut_7(boxId, options).then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3156,6 +6151,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecResizeDelete(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizeDelete_8(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizeDelete_8(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3181,6 +6192,22 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecResizeGet_9(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizeGet_9(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecResizeHead(
       boxId: string,
       execId: string,
@@ -3188,6 +6215,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecResizeHead(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizeHead_10(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizeHead_10(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3213,6 +6256,22 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecResizeOptions_11(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizeOptions_11(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecResizePatch(
       boxId: string,
       execId: string,
@@ -3220,6 +6279,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecResizePatch(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizePatch_12(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizePatch_12(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3245,6 +6320,22 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecResizePost_13(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizePost_13(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecResizePut(
       boxId: string,
       execId: string,
@@ -3252,6 +6343,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecResizePut(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecResizePut_14(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecResizePut_14(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3277,6 +6384,22 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecSignalDelete_15(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecSignalDelete_15(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecSignalGet(
       boxId: string,
       execId: string,
@@ -3284,6 +6407,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecSignalGet(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalGet_16(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecSignalGet_16(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3309,6 +6448,22 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecSignalHead_17(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecSignalHead_17(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecSignalOptions(
       boxId: string,
       execId: string,
@@ -3316,6 +6471,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecSignalOptions(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalOptions_18(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecSignalOptions_18(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3341,6 +6512,22 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyExecSignalPatch_19(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecSignalPatch_19(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyExecSignalPost(
       boxId: string,
       execId: string,
@@ -3348,6 +6535,22 @@ export const BoxLiteRESTApiFactory = function (
     ): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyExecSignalPost(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecSignalPost_20(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecSignalPost_20(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3373,13 +6576,45 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    boxliteProxyControllerProxyExecStatus(
+    boxliteProxyControllerProxyExecSignalPut_21(
       boxId: string,
       execId: string,
       options?: RawAxiosRequestConfig,
     ): AxiosPromise<void> {
       return localVarFp
-        .boxliteProxyControllerProxyExecStatus(boxId, execId, options)
+        .boxliteProxyControllerProxyExecSignalPut_21(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecStatus0(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecStatus0(boxId, execId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {string} execId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyExecStatus1(
+      boxId: string,
+      execId: string,
+      options?: RawAxiosRequestConfig,
+    ): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyExecStatus1(boxId, execId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3399,8 +6634,30 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyFilesDelete_22(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesDelete_22(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyFilesGet(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp.boxliteProxyControllerProxyFilesGet(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesGet_23(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesGet_23(boxId, options)
+        .then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3417,9 +6674,31 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyFilesHead_24(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesHead_24(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyFilesOptions(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyFilesOptions(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesOptions_25(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesOptions_25(boxId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3439,8 +6718,30 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyFilesPatch_26(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesPatch_26(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyFilesPost(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp.boxliteProxyControllerProxyFilesPost(boxId, options).then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyFilesPost_27(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesPost_27(boxId, options)
+        .then((request) => request(axios, basePath))
     },
     /**
      *
@@ -3457,9 +6758,31 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyFilesPut_28(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyFilesPut_28(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyMetricsDelete(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyMetricsDelete(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsDelete_29(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsDelete_29(boxId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3479,9 +6802,31 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyMetricsGet_30(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsGet_30(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyMetricsHead(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyMetricsHead(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsHead_31(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsHead_31(boxId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3501,9 +6846,31 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyMetricsOptions_32(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsOptions_32(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyMetricsPatch(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyMetricsPatch(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsPatch_33(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsPatch_33(boxId, options)
         .then((request) => request(axios, basePath))
     },
     /**
@@ -3523,9 +6890,31 @@ export const BoxLiteRESTApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    boxliteProxyControllerProxyMetricsPost_34(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsPost_34(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     boxliteProxyControllerProxyMetricsPut(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
       return localVarFp
         .boxliteProxyControllerProxyMetricsPut(boxId, options)
+        .then((request) => request(axios, basePath))
+    },
+    /**
+     *
+     * @param {string} boxId
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    boxliteProxyControllerProxyMetricsPut_35(boxId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+      return localVarFp
+        .boxliteProxyControllerProxyMetricsPut_35(boxId, options)
         .then((request) => request(axios, basePath))
     },
   }
@@ -3545,9 +6934,22 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerCreateBox(body: object, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerCreateBox0(body: object, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerCreateBox(body, options)
+      .boxliteBoxControllerCreateBox0(body, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {object} body
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerCreateBox1(body: object, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerCreateBox1(body, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3558,9 +6960,9 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerGetBox(boxId: string, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerGetBox0(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerGetBox(boxId, options)
+      .boxliteBoxControllerGetBox0(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3571,9 +6973,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerHeadBox(boxId: string, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerGetBox1(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerHeadBox(boxId, options)
+      .boxliteBoxControllerGetBox1(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerHeadBox0(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerHeadBox0(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerHeadBox1(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerHeadBox1(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3584,9 +7012,22 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerListBoxes(pageSize: string, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerListBoxes0(pageSize: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerListBoxes(pageSize, options)
+      .boxliteBoxControllerListBoxes0(pageSize, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} pageSize
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerListBoxes1(pageSize: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerListBoxes1(pageSize, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3597,9 +7038,9 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerRemoveBox(boxId: string, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerRemoveBox0(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerRemoveBox(boxId, options)
+      .boxliteBoxControllerRemoveBox0(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3610,9 +7051,9 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerStartBox(boxId: string, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerRemoveBox1(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerStartBox(boxId, options)
+      .boxliteBoxControllerRemoveBox1(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3623,9 +7064,48 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteBoxControllerStopBox(boxId: string, options?: RawAxiosRequestConfig) {
+  public boxliteBoxControllerStartBox0(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteBoxControllerStopBox(boxId, options)
+      .boxliteBoxControllerStartBox0(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerStartBox1(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerStartBox1(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerStopBox0(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerStopBox0(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteBoxControllerStopBox1(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteBoxControllerStopBox1(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3673,9 +7153,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecDelete_1(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecDelete_1(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecGet(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecGet(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecGet_2(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecGet_2(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3695,14 +7201,41 @@ export class BoxLiteRESTApi extends BaseAPI {
   /**
    *
    * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecHead_3(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecHead_3(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
    * @param {string} execId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteProxyControllerProxyExecKill(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+  public boxliteProxyControllerProxyExecKill0(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteProxyControllerProxyExecKill(boxId, execId, options)
+      .boxliteProxyControllerProxyExecKill0(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecKill1(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecKill1(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3726,9 +7259,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecOptions_4(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecOptions_4(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecPatch(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecPatch(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecPatch_5(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecPatch_5(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3752,9 +7311,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecPost_6(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecPost_6(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecPut(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecPut(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecPut_7(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecPut_7(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3780,9 +7365,37 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecResizeDelete_8(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizeDelete_8(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecResizeGet(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecResizeGet(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecResizeGet_9(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizeGet_9(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3808,9 +7421,41 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecResizeHead_10(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizeHead_10(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecResizeOptions(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecResizeOptions(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecResizeOptions_11(
+    boxId: string,
+    execId: string,
+    options?: RawAxiosRequestConfig,
+  ) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizeOptions_11(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3836,9 +7481,37 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecResizePatch_12(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizePatch_12(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecResizePost(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecResizePost(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecResizePost_13(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizePost_13(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3864,9 +7537,41 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecResizePut_14(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecResizePut_14(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecSignalDelete(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecSignalDelete(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecSignalDelete_15(
+    boxId: string,
+    execId: string,
+    options?: RawAxiosRequestConfig,
+  ) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecSignalDelete_15(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3892,9 +7597,37 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecSignalGet_16(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecSignalGet_16(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecSignalHead(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecSignalHead(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecSignalHead_17(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecSignalHead_17(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3920,9 +7653,41 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecSignalOptions_18(
+    boxId: string,
+    execId: string,
+    options?: RawAxiosRequestConfig,
+  ) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecSignalOptions_18(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecSignalPatch(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecSignalPatch(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecSignalPatch_19(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecSignalPatch_19(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3948,6 +7713,20 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyExecSignalPost_20(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecSignalPost_20(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyExecSignalPut(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyExecSignalPut(boxId, execId, options)
@@ -3962,9 +7741,37 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
-  public boxliteProxyControllerProxyExecStatus(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+  public boxliteProxyControllerProxyExecSignalPut_21(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
-      .boxliteProxyControllerProxyExecStatus(boxId, execId, options)
+      .boxliteProxyControllerProxyExecSignalPut_21(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecStatus0(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecStatus0(boxId, execId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {string} execId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyExecStatus1(boxId: string, execId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyExecStatus1(boxId, execId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -3988,9 +7795,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyFilesDelete_22(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesDelete_22(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyFilesGet(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyFilesGet(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyFilesGet_23(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesGet_23(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4014,9 +7847,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyFilesHead_24(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesHead_24(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyFilesOptions(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyFilesOptions(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyFilesOptions_25(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesOptions_25(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4040,9 +7899,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyFilesPatch_26(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesPatch_26(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyFilesPost(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyFilesPost(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyFilesPost_27(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesPost_27(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4066,9 +7951,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyFilesPut_28(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyFilesPut_28(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyMetricsDelete(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyMetricsDelete(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyMetricsDelete_29(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsDelete_29(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4092,9 +8003,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyMetricsGet_30(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsGet_30(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyMetricsHead(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyMetricsHead(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyMetricsHead_31(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsHead_31(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4118,9 +8055,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyMetricsOptions_32(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsOptions_32(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyMetricsPatch(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyMetricsPatch(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyMetricsPatch_33(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsPatch_33(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 
@@ -4144,9 +8107,35 @@ export class BoxLiteRESTApi extends BaseAPI {
    * @throws {RequiredError}
    * @memberof BoxLiteRESTApi
    */
+  public boxliteProxyControllerProxyMetricsPost_34(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsPost_34(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
   public boxliteProxyControllerProxyMetricsPut(boxId: string, options?: RawAxiosRequestConfig) {
     return BoxLiteRESTApiFp(this.configuration)
       .boxliteProxyControllerProxyMetricsPut(boxId, options)
+      .then((request) => request(this.axios, this.basePath))
+  }
+
+  /**
+   *
+   * @param {string} boxId
+   * @param {*} [options] Override http request option.
+   * @throws {RequiredError}
+   * @memberof BoxLiteRESTApi
+   */
+  public boxliteProxyControllerProxyMetricsPut_35(boxId: string, options?: RawAxiosRequestConfig) {
+    return BoxLiteRESTApiFp(this.configuration)
+      .boxliteProxyControllerProxyMetricsPut_35(boxId, options)
       .then((request) => request(this.axios, this.basePath))
   }
 }

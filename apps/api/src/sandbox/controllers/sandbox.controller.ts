@@ -267,7 +267,6 @@ export class SandboxController {
         memory: req.body?.memory,
         disk: req.body?.disk,
         autoStopInterval: req.body?.autoStopInterval,
-        autoArchiveInterval: req.body?.autoArchiveInterval,
         autoDeleteInterval: req.body?.autoDeleteInterval,
         volumes: req.body?.volumes,
         buildInfo: req.body?.buildInfo,
@@ -478,7 +477,7 @@ export class SandboxController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Sandbox has been started or is being restored from archived state',
+    description: 'Sandbox has been started',
     type: SandboxDto,
   })
   @RequiredOrganizationResourcePermissions([OrganizationResourcePermission.WRITE_SANDBOXES])
@@ -496,7 +495,7 @@ export class SandboxController {
     const sbx = await this.sandboxService.start(sandboxIdOrName, authContext.organization)
     let sandbox = await this.sandboxService.toSandboxDto(sbx)
 
-    if (![SandboxState.ARCHIVED, SandboxState.RESTORING, SandboxState.STARTED].includes(sandbox.state)) {
+    if (![SandboxState.RESTORING, SandboxState.STARTED].includes(sandbox.state)) {
       sandbox = await this.waitForSandboxStarted(sandbox, 30)
     }
 
@@ -798,52 +797,6 @@ export class SandboxController {
     return this.sandboxService.toSandboxDto(sandbox)
   }
 
-  @Post(':sandboxIdOrName/autoarchive/:interval')
-  @ApiOperation({
-    summary: 'Set sandbox auto-archive interval',
-    operationId: 'setAutoArchiveInterval',
-  })
-  @ApiParam({
-    name: 'sandboxIdOrName',
-    description: 'ID or name of the sandbox',
-    type: 'string',
-  })
-  @ApiParam({
-    name: 'interval',
-    description: 'Auto-archive interval in minutes (0 means the maximum interval will be used)',
-    type: 'number',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Auto-archive interval has been set',
-    type: SandboxDto,
-  })
-  @RequiredOrganizationResourcePermissions([OrganizationResourcePermission.WRITE_SANDBOXES])
-  @UseGuards(SandboxAccessGuard)
-  @Audit({
-    action: AuditAction.SET_AUTO_ARCHIVE_INTERVAL,
-    targetType: AuditTarget.SANDBOX,
-    targetIdFromRequest: (req) => req.params.sandboxIdOrName,
-    targetIdFromResult: (result: SandboxDto) => result?.id,
-    requestMetadata: {
-      params: (req) => ({
-        interval: req.params.interval,
-      }),
-    },
-  })
-  async setAutoArchiveInterval(
-    @AuthContext() authContext: OrganizationAuthContext,
-    @Param('sandboxIdOrName') sandboxIdOrName: string,
-    @Param('interval') interval: number,
-  ): Promise<SandboxDto> {
-    const sandbox = await this.sandboxService.setAutoArchiveInterval(
-      sandboxIdOrName,
-      interval,
-      authContext.organizationId,
-    )
-    return this.sandboxService.toSandboxDto(sandbox)
-  }
-
   @Post(':sandboxIdOrName/autodelete/:interval')
   @ApiOperation({
     summary: 'Set sandbox auto-delete interval',
@@ -934,35 +887,6 @@ export class SandboxController {
   //   )
   //   return SandboxDto.fromSandbox(sandbox, '')
   // }
-
-  @Post(':sandboxIdOrName/archive')
-  @HttpCode(200)
-  @SkipThrottle({ authenticated: true })
-  @ThrottlerScope('sandbox-lifecycle')
-  @ApiOperation({
-    summary: 'Archive sandbox',
-    operationId: 'archiveSandbox',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Sandbox has been archived',
-    type: SandboxDto,
-  })
-  @RequiredOrganizationResourcePermissions([OrganizationResourcePermission.WRITE_SANDBOXES])
-  @UseGuards(SandboxAccessGuard)
-  @Audit({
-    action: AuditAction.ARCHIVE,
-    targetType: AuditTarget.SANDBOX,
-    targetIdFromRequest: (req) => req.params.sandboxIdOrName,
-    targetIdFromResult: (result: SandboxDto) => result?.id,
-  })
-  async archiveSandbox(
-    @AuthContext() authContext: OrganizationAuthContext,
-    @Param('sandboxIdOrName') sandboxIdOrName: string,
-  ): Promise<SandboxDto> {
-    const sandbox = await this.sandboxService.archive(sandboxIdOrName, authContext.organizationId)
-    return this.sandboxService.toSandboxDto(sandbox)
-  }
 
   @Get(':sandboxIdOrName/ports/:port/preview-url')
   @ApiOperation({

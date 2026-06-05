@@ -35,7 +35,6 @@ import { SandboxBackupCreatedEvent } from '../events/sandbox-backup-created.even
 import { SandboxDestroyedEvent } from '../events/sandbox-destroyed.event'
 import { SandboxStartedEvent } from '../events/sandbox-started.event'
 import { SandboxStoppedEvent } from '../events/sandbox-stopped.event'
-import { SandboxArchivedEvent } from '../events/sandbox-archived.event'
 import { OrganizationService } from '../../organization/services/organization.service'
 import { OrganizationEvents } from '../../organization/constants/organization-events.constant'
 import { OrganizationSuspendedSandboxStoppedEvent } from '../../organization/events/organization-suspended-sandbox-stopped.event'
@@ -60,7 +59,7 @@ import { createRangeFilter } from '../../common/utils/range-filter'
 import { LogExecution } from '../../common/decorators/log-execution.decorator'
 import {
   UPGRADE_TIER_MESSAGE,
-  ARCHIVE_SANDBOXES_MESSAGE,
+  STORAGE_LIMIT_MESSAGE,
   PER_SANDBOX_LIMIT_MESSAGE,
 } from '../../common/constants/error-messages'
 import { RedisLockProvider } from '../common/redis-lock.provider'
@@ -79,8 +78,10 @@ import {
   SANDBOX_LOOKUP_CACHE_TTL_MS,
   SANDBOX_ORG_ID_CACHE_TTL_MS,
   TOOLBOX_PROXY_URL_CACHE_TTL_S,
+  sandboxLookupCacheKeyByBoxId,
   sandboxLookupCacheKeyById,
   sandboxLookupCacheKeyByName,
+  sandboxOrgIdCacheKeyByBoxId,
   sandboxOrgIdCacheKeyById,
   sandboxOrgIdCacheKeyByName,
   toolboxProxyUrlCacheKey,
@@ -221,7 +222,7 @@ export class SandboxService {
 
       if (usageOverview.currentDiskUsage + usageOverview.pendingDiskUsage > regionQuota.totalDiskQuota) {
         throw new ForbiddenException(
-          `Total disk limit exceeded. Maximum allowed: ${regionQuota.totalDiskQuota}GiB.\n${ARCHIVE_SANDBOXES_MESSAGE}\n${upgradeTierMessage}`,
+          `Total disk limit exceeded. Maximum allowed: ${regionQuota.totalDiskQuota}GiB.\n${STORAGE_LIMIT_MESSAGE}\n${upgradeTierMessage}`,
         )
       }
     } catch (error) {
@@ -264,41 +265,6 @@ export class SandboxService {
     } catch (error) {
       this.logger.error(`Error rolling back pending sandbox usage: ${error}`)
     }
-  }
-
-  async archive(sandboxIdOrName: string, organizationId?: string): Promise<Sandbox> {
-    const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
-
-    this.assertSandboxNotErrored(sandbox)
-
-    if (String(sandbox.state) !== String(sandbox.desiredState)) {
-      throw new SandboxError('State change in progress')
-    }
-
-    if (sandbox.state !== SandboxState.STOPPED) {
-      throw new SandboxError('Sandbox is not stopped')
-    }
-
-    if (sandbox.pending) {
-      throw new SandboxError('Sandbox state change in progress')
-    }
-
-    if (sandbox.autoDeleteInterval === 0) {
-      throw new SandboxError('Ephemeral sandboxes cannot be archived')
-    }
-
-    const updateData: Partial<Sandbox> = {
-      state: SandboxState.ARCHIVING,
-      desiredState: SandboxDesiredState.ARCHIVED,
-    }
-
-    const updatedSandbox = await this.sandboxRepository.updateWhere(sandbox.id, {
-      updateData,
-      whereCondition: { pending: false, state: SandboxState.STOPPED },
-    })
-
-    this.eventEmitter.emit(SandboxEvents.ARCHIVED, new SandboxArchivedEvent(updatedSandbox))
-    return updatedSandbox
   }
 
   async createForWarmPool(warmPoolItem: WarmPool): Promise<Sandbox> {
@@ -491,10 +457,6 @@ export class SandboxService {
         sandbox.autoStopInterval = this.resolveAutoStopInterval(createSandboxDto.autoStopInterval)
       }
 
-      if (createSandboxDto.autoArchiveInterval !== undefined) {
-        sandbox.autoArchiveInterval = this.resolveAutoArchiveInterval(createSandboxDto.autoArchiveInterval)
-      }
-
       if (createSandboxDto.autoDeleteInterval !== undefined) {
         sandbox.autoDeleteInterval = createSandboxDto.autoDeleteInterval
       }
@@ -556,10 +518,6 @@ export class SandboxService {
       updateData.autoStopInterval = this.resolveAutoStopInterval(createSandboxDto.autoStopInterval)
     }
 
-    if (createSandboxDto.autoArchiveInterval !== undefined) {
-      updateData.autoArchiveInterval = this.resolveAutoArchiveInterval(createSandboxDto.autoArchiveInterval)
-    }
-
     if (createSandboxDto.autoDeleteInterval !== undefined) {
       updateData.autoDeleteInterval = createSandboxDto.autoDeleteInterval
     }
@@ -599,6 +557,7 @@ export class SandboxService {
     // Defensive invalidation of orgId cache since the sandbox moved from unassigned to a real organization
     this.sandboxLookupCacheInvalidationService.invalidateOrgId({
       sandboxId: warmPoolSandbox.id,
+      boxId: warmPoolSandbox.boxId,
       organizationId: organization.id,
       name: warmPoolSandbox.name,
       previousOrganizationId: SANDBOX_WARM_POOL_UNASSIGNED_ORGANIZATION,
@@ -672,10 +631,6 @@ export class SandboxService {
 
       if (createSandboxDto.autoStopInterval !== undefined) {
         sandbox.autoStopInterval = this.resolveAutoStopInterval(createSandboxDto.autoStopInterval)
-      }
-
-      if (createSandboxDto.autoArchiveInterval !== undefined) {
-        sandbox.autoArchiveInterval = this.resolveAutoArchiveInterval(createSandboxDto.autoArchiveInterval)
       }
 
       if (createSandboxDto.autoDeleteInterval !== undefined) {
@@ -852,8 +807,6 @@ export class SandboxService {
 
     const baseFindOptions: FindOptionsWhere<Sandbox> = {
       organizationId,
-      ...(id ? { id: ILike(`${id}%`) } : {}),
-      ...(name ? { name: ILike(`${name}%`) } : {}),
       ...(labels ? { labels: JsonContains(labels) } : {}),
       ...(templates ? { template: In(templates) } : {}),
       ...(regionIds ? { region: In(regionIds) } : {}),
@@ -871,20 +824,25 @@ export class SandboxService {
     const errorStatesToInclude = statesToInclude.filter((state) => errorStates.includes(state))
 
     const where: FindOptionsWhere<Sandbox>[] = []
+    const searchFindOptions = this.getSandboxSearchFindOptions(baseFindOptions, id, name)
 
     if (nonErrorStatesToInclude.length > 0) {
-      where.push({
-        ...baseFindOptions,
-        state: In(nonErrorStatesToInclude),
-      })
+      where.push(
+        ...searchFindOptions.map((findOptions) => ({
+          ...findOptions,
+          state: In(nonErrorStatesToInclude),
+        })),
+      )
     }
 
     if (errorStatesToInclude.length > 0) {
-      where.push({
-        ...baseFindOptions,
-        state: In(errorStatesToInclude),
-        ...(includeErroredDestroyed ? {} : { desiredState: Not(SandboxDesiredState.DESTROYED) }),
-      })
+      where.push(
+        ...searchFindOptions.map((findOptions) => ({
+          ...findOptions,
+          state: In(errorStatesToInclude),
+          ...(includeErroredDestroyed ? {} : { desiredState: Not(SandboxDesiredState.DESTROYED) }),
+        })),
+      )
     }
 
     const [items, total] = await this.sandboxRepository.findAndCount({
@@ -908,14 +866,48 @@ export class SandboxService {
     }
   }
 
+  private getSandboxSearchFindOptions(
+    baseFindOptions: FindOptionsWhere<Sandbox>,
+    id?: string,
+    name?: string,
+  ): FindOptionsWhere<Sandbox>[] {
+    const nameFilter = name ? { name: ILike(`${name}%`) } : {}
+
+    if (!id) {
+      return [
+        {
+          ...baseFindOptions,
+          ...nameFilter,
+        },
+      ]
+    }
+
+    const idFilter = ILike(`${id}%`)
+    return [
+      {
+        ...baseFindOptions,
+        ...nameFilter,
+        boxId: idFilter,
+      },
+      {
+        ...baseFindOptions,
+        ...nameFilter,
+        id: idFilter,
+      },
+      {
+        ...baseFindOptions,
+        ...nameFilter,
+        name: idFilter,
+      },
+    ]
+  }
+
   private getExpectedDesiredStateForState(state: SandboxState): SandboxDesiredState | undefined {
     switch (state) {
       case SandboxState.STARTED:
         return SandboxDesiredState.STARTED
       case SandboxState.STOPPED:
         return SandboxDesiredState.STOPPED
-      case SandboxState.ARCHIVED:
-        return SandboxDesiredState.ARCHIVED
       case SandboxState.DESTROYED:
         return SandboxDesiredState.DESTROYED
       default:
@@ -957,32 +949,47 @@ export class SandboxService {
 
   async findOneByIdOrName(
     sandboxIdOrName: string,
-    organizationId: string,
+    organizationId?: string,
     returnDestroyed?: boolean,
   ): Promise<Sandbox> {
     const stateFilter = returnDestroyed ? {} : { state: Not(SandboxState.DESTROYED) }
+    const organizationFilter = organizationId ? { organizationId } : {}
     const relations: ['buildInfo'] = ['buildInfo']
 
-    // Try lookup by ID first
+    // Public Box ID is the user-facing stable identity. UUID and name are legacy-compatible fallbacks.
     let sandbox = await this.sandboxRepository.findOne({
       where: {
-        id: sandboxIdOrName,
-        organizationId,
+        boxId: sandboxIdOrName,
+        ...organizationFilter,
         ...stateFilter,
       },
       relations,
       cache: {
-        id: sandboxLookupCacheKeyById({ organizationId, returnDestroyed, sandboxId: sandboxIdOrName }),
+        id: sandboxLookupCacheKeyByBoxId({ organizationId, returnDestroyed, boxId: sandboxIdOrName }),
         milliseconds: SANDBOX_LOOKUP_CACHE_TTL_MS,
       },
     })
 
-    // Fallback to lookup by name
+    if (!sandbox) {
+      sandbox = await this.sandboxRepository.findOne({
+        where: {
+          id: sandboxIdOrName,
+          ...organizationFilter,
+          ...stateFilter,
+        },
+        relations,
+        cache: {
+          id: sandboxLookupCacheKeyById({ organizationId, returnDestroyed, sandboxId: sandboxIdOrName }),
+          milliseconds: SANDBOX_LOOKUP_CACHE_TTL_MS,
+        },
+      })
+    }
+
     if (!sandbox) {
       sandbox = await this.sandboxRepository.findOne({
         where: {
           name: sandboxIdOrName,
-          organizationId,
+          ...organizationFilter,
           ...stateFilter,
         },
         relations,
@@ -999,7 +1006,7 @@ export class SandboxService {
         [SandboxState.ERROR, SandboxState.BUILD_FAILED].includes(sandbox.state) &&
         sandbox.desiredState === SandboxDesiredState.DESTROYED)
     ) {
-      throw new NotFoundException(`Sandbox with ID or name ${sandboxIdOrName} not found`)
+      throw new NotFoundException(`Sandbox with Box ID, UUID, or name ${sandboxIdOrName} not found`)
     }
 
     return sandbox
@@ -1026,17 +1033,33 @@ export class SandboxService {
   }
 
   async getOrganizationId(sandboxIdOrName: string, organizationId?: string): Promise<string> {
+    const organizationFilter = organizationId ? { organizationId: organizationId } : {}
+
     let sandbox = await this.sandboxRepository.findOne({
       where: {
-        id: sandboxIdOrName,
-        ...(organizationId ? { organizationId: organizationId } : {}),
+        boxId: sandboxIdOrName,
+        ...organizationFilter,
       },
       select: ['organizationId'],
       cache: {
-        id: sandboxOrgIdCacheKeyById({ organizationId, sandboxId: sandboxIdOrName }),
+        id: sandboxOrgIdCacheKeyByBoxId({ organizationId, boxId: sandboxIdOrName }),
         milliseconds: SANDBOX_ORG_ID_CACHE_TTL_MS,
       },
     })
+
+    if (!sandbox) {
+      sandbox = await this.sandboxRepository.findOne({
+        where: {
+          id: sandboxIdOrName,
+          ...organizationFilter,
+        },
+        select: ['organizationId'],
+        cache: {
+          id: sandboxOrgIdCacheKeyById({ organizationId, sandboxId: sandboxIdOrName }),
+          milliseconds: SANDBOX_ORG_ID_CACHE_TTL_MS,
+        },
+      })
+    }
 
     if (!sandbox && organizationId) {
       sandbox = await this.sandboxRepository.findOne({
@@ -1053,39 +1076,35 @@ export class SandboxService {
     }
 
     if (!sandbox || !sandbox.organizationId) {
-      throw new NotFoundException(`Sandbox with ID or name ${sandboxIdOrName} not found`)
+      throw new NotFoundException(`Sandbox with Box ID, UUID, or name ${sandboxIdOrName} not found`)
     }
 
     return sandbox.organizationId
   }
 
-  async getRunnerId(sandboxId: string): Promise<string | null> {
+  async getRunnerId(sandboxIdOrName: string): Promise<string | null> {
     const sandbox = await this.sandboxRepository.findOne({
-      where: {
-        id: sandboxId,
-      },
+      where: [{ boxId: sandboxIdOrName }, { id: sandboxIdOrName }, { name: sandboxIdOrName }],
       select: ['runnerId'],
       loadEagerRelations: false,
     })
 
     if (!sandbox) {
-      throw new NotFoundException(`Sandbox with ID ${sandboxId} not found`)
+      throw new NotFoundException(`Sandbox with Box ID, UUID, or name ${sandboxIdOrName} not found`)
     }
 
     return sandbox.runnerId || null
   }
 
-  async getRegionId(sandboxId: string): Promise<string> {
+  async getRegionId(sandboxIdOrName: string): Promise<string> {
     const sandbox = await this.sandboxRepository.findOne({
-      where: {
-        id: sandboxId,
-      },
+      where: [{ boxId: sandboxIdOrName }, { id: sandboxIdOrName }, { name: sandboxIdOrName }],
       select: ['region'],
       loadEagerRelations: false,
     })
 
     if (!sandbox) {
-      throw new NotFoundException(`Sandbox with ID ${sandboxId} not found`)
+      throw new NotFoundException(`Sandbox with Box ID, UUID, or name ${sandboxIdOrName} not found`)
     }
 
     return sandbox.region
@@ -1099,31 +1118,7 @@ export class SandboxService {
     const proxyDomain = this.configService.getOrThrow('proxy.domain')
     const proxyProtocol = this.configService.getOrThrow('proxy.protocol')
 
-    const where: FindOptionsWhere<Sandbox> = {
-      organizationId: organizationId,
-      state: Not(SandboxState.DESTROYED),
-    }
-
-    const sandbox = await this.sandboxRepository.findOne({
-      where: [
-        {
-          id: sandboxIdOrName,
-          ...where,
-        },
-        {
-          name: sandboxIdOrName,
-          ...where,
-        },
-      ],
-      cache: {
-        id: `sandbox:${sandboxIdOrName}:organization:${organizationId}`,
-        milliseconds: 1000,
-      },
-    })
-
-    if (!sandbox) {
-      throw new NotFoundException(`Sandbox with ID or name ${sandboxIdOrName} not found`)
-    }
+    const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
 
     let url = `${proxyProtocol}://${port}-${sandbox.id}.${proxyDomain}`
 
@@ -1157,31 +1152,7 @@ export class SandboxService {
     const proxyDomain = this.configService.getOrThrow('proxy.domain')
     const proxyProtocol = this.configService.getOrThrow('proxy.protocol')
 
-    const where: FindOptionsWhere<Sandbox> = {
-      organizationId: organizationId,
-      state: Not(SandboxState.DESTROYED),
-    }
-
-    const sandbox = await this.sandboxRepository.findOne({
-      where: [
-        {
-          id: sandboxIdOrName,
-          ...where,
-        },
-        {
-          name: sandboxIdOrName,
-          ...where,
-        },
-      ],
-      cache: {
-        id: `sandbox:${sandboxIdOrName}:organization:${organizationId}`,
-        milliseconds: 1000,
-      },
-    })
-
-    if (!sandbox) {
-      throw new NotFoundException(`Sandbox with ID or name ${sandboxIdOrName} not found`)
-    }
+    const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
 
     const token = customNanoid(urlAlphabet.replace('_', '').replace('-', ''))(16).toLocaleLowerCase()
 
@@ -1266,16 +1237,10 @@ export class SandboxService {
       this.assertSandboxNotErrored(sandbox)
 
       if (String(sandbox.state) !== String(sandbox.desiredState)) {
-        // Allow start of stopped | archived and archiving | archived sandboxes
-        if (
-          sandbox.desiredState !== SandboxDesiredState.ARCHIVED ||
-          (sandbox.state !== SandboxState.STOPPED && sandbox.state !== SandboxState.ARCHIVING)
-        ) {
-          throw new SandboxError('State change in progress')
-        }
+        throw new SandboxError('State change in progress')
       }
 
-      if (![SandboxState.STOPPED, SandboxState.ARCHIVED, SandboxState.ARCHIVING].includes(sandbox.state)) {
+      if (sandbox.state !== SandboxState.STOPPED) {
         throw new SandboxError('Sandbox is not in valid state')
       }
 
@@ -1875,16 +1840,6 @@ export class SandboxService {
     return await this.sandboxRepository.update(sandbox.id, { updateData, entity: sandbox })
   }
 
-  async setAutoArchiveInterval(sandboxIdOrName: string, interval: number, organizationId?: string): Promise<Sandbox> {
-    const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
-
-    const updateData: Partial<Sandbox> = {
-      autoArchiveInterval: this.resolveAutoArchiveInterval(interval),
-    }
-
-    return await this.sandboxRepository.update(sandbox.id, { updateData, entity: sandbox })
-  }
-
   async setAutoDeleteInterval(sandboxIdOrName: string, interval: number, organizationId?: string): Promise<Sandbox> {
     const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
 
@@ -2051,20 +2006,6 @@ export class SandboxService {
     }
 
     return autoStopInterval
-  }
-
-  private resolveAutoArchiveInterval(autoArchiveInterval: number): number {
-    if (autoArchiveInterval < 0) {
-      throw new BadRequestError('Auto-archive interval must be non-negative')
-    }
-
-    const maxAutoArchiveInterval = this.configService.getOrThrow('maxAutoArchiveInterval')
-
-    if (autoArchiveInterval === 0) {
-      return maxAutoArchiveInterval
-    }
-
-    return Math.min(autoArchiveInterval, maxAutoArchiveInterval)
   }
 
   private resolveNetworkAllowList(networkAllowList: string): string {

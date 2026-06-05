@@ -255,21 +255,6 @@ export class JobStateHandlerService {
           updateData.errorReason = errorReason || 'Failed to destroy sandbox'
           updateData.recoverable = recoverable
         }
-      } else if (
-        sandbox.desiredState === SandboxDesiredState.ARCHIVED &&
-        sandbox.backupState === BackupState.COMPLETED
-      ) {
-        if (job.status === JobStatus.COMPLETED) {
-          this.logger.debug(
-            `DESTROY_SANDBOX job ${job.id} completed during archiving, marking sandbox ${sandboxId} as ARCHIVED`,
-          )
-        } else if (job.status === JobStatus.FAILED) {
-          this.logger.warn(
-            `DESTROY_SANDBOX job ${job.id} failed during archiving for sandbox ${sandboxId}: ${job.errorMessage}. Marking as ARCHIVED since backup is complete.`,
-          )
-        }
-        updateData.state = SandboxState.ARCHIVED
-        updateData.errorReason = null
       } else {
         return
       }

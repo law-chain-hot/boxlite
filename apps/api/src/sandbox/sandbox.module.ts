@@ -43,10 +43,8 @@ import { RunnerAdapterFactory } from './runner-adapter/runnerAdapter'
 import { SandboxStartAction } from './managers/sandbox-actions/sandbox-start.action'
 import { SandboxStopAction } from './managers/sandbox-actions/sandbox-stop.action'
 import { SandboxDestroyAction } from './managers/sandbox-actions/sandbox-destroy.action'
-import { SandboxArchiveAction } from './managers/sandbox-actions/sandbox-archive.action'
 import { SshAccess } from './entities/ssh-access.entity'
 import { SandboxRepository } from './repositories/sandbox.repository'
-import { ProxyCacheInvalidationService } from './services/proxy-cache-invalidation.service'
 import { RegionModule } from '../region/region.module'
 import { Region } from '../region/entities/region.entity'
 import { BoxTemplateRegion } from './entities/box-template-region.entity'
@@ -106,7 +104,6 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     RunnerService,
     ToolboxService,
     BoxTemplateService,
-    ProxyCacheInvalidationService,
     SandboxLookupCacheInvalidationService,
     RuntimeArtifactManager,
     RedisLockProvider,
@@ -119,7 +116,6 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     SandboxStartAction,
     SandboxStopAction,
     SandboxDestroyAction,
-    SandboxArchiveAction,
     JobService,
     JobStateHandlerService,
     SandboxActivityService,
