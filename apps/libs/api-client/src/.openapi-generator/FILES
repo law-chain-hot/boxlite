@@ -37,6 +37,7 @@ models/audit-log.ts
 models/box-template-default-resources-dto.ts
 models/box-template-dto.ts
 models/box-template-state.ts
+models/box.ts
 models/boxlite-configuration.ts
 models/build-info.ts
 models/command.ts
@@ -48,6 +49,7 @@ models/computer-use-start-response.ts
 models/computer-use-status-response.ts
 models/computer-use-stop-response.ts
 models/create-api-key.ts
+models/create-box-dto.ts
 models/create-box-template.ts
 models/create-build-info.ts
 models/create-docker-registry.ts
@@ -93,6 +95,7 @@ models/keyboard-hotkey-request.ts
 models/keyboard-press-request.ts
 models/keyboard-type-request.ts
 models/list-branch-response.ts
+models/list-boxes-response.ts
 models/log-entry.ts
 models/lsp-completion-params.ts
 models/lsp-document-request.ts

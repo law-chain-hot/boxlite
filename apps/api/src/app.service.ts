@@ -21,7 +21,7 @@ import { RunnerService } from './sandbox/services/runner.service'
 import { RunnerAdapterFactory } from './sandbox/runner-adapter/runnerAdapter'
 import { RegionType } from './region/enums/region-type.enum'
 import { RunnerState } from './sandbox/enums/runner-state.enum'
-import { SYSTEM_TEMPLATES } from './sandbox/constants/system-templates'
+import { resolveSystemTemplateName, SYSTEM_TEMPLATES } from './sandbox/constants/system-templates'
 
 export const BOXLITE_ADMIN_USER_ID = 'boxlite-admin'
 
@@ -61,6 +61,7 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
     await this.initializeBackupRegistry()
     await this.initializeInternalRegistry()
     await this.initializeBackupRegistry()
+    await this.initializeSystemSourceRegistry()
 
     // Default runner init is not awaited because v2 runners depend on the API to be ready
     this.initializeDefaultRunner()
@@ -169,44 +170,62 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
   }
 
   private async initializeAdminUser(): Promise<void> {
-    if (await this.userService.findOne(BOXLITE_ADMIN_USER_ID)) {
-      return
+    let user = await this.userService.findOne(BOXLITE_ADMIN_USER_ID)
+    if (!user) {
+      user = await this.userService.create({
+        id: BOXLITE_ADMIN_USER_ID,
+        name: 'BoxLite Admin',
+        personalOrganizationQuota: {
+          totalCpuQuota: this.configService.getOrThrow('admin.totalCpuQuota'),
+          totalMemoryQuota: this.configService.getOrThrow('admin.totalMemoryQuota'),
+          totalDiskQuota: this.configService.getOrThrow('admin.totalDiskQuota'),
+          maxCpuPerSandbox: this.configService.getOrThrow('admin.maxCpuPerSandbox'),
+          maxMemoryPerSandbox: this.configService.getOrThrow('admin.maxMemoryPerSandbox'),
+          maxDiskPerSandbox: this.configService.getOrThrow('admin.maxDiskPerSandbox'),
+          templateQuota: this.configService.getOrThrow('admin.templateQuota'),
+          maxTemplateSize: this.configService.getOrThrow('admin.maxTemplateSize'),
+          volumeQuota: this.configService.getOrThrow('admin.volumeQuota'),
+        },
+        personalOrganizationDefaultRegionId: this.configService.getOrThrow('defaultRegion.id'),
+        role: SystemRole.ADMIN,
+      })
     }
 
-    const user = await this.userService.create({
-      id: BOXLITE_ADMIN_USER_ID,
-      name: 'BoxLite Admin',
-      personalOrganizationQuota: {
-        totalCpuQuota: this.configService.getOrThrow('admin.totalCpuQuota'),
-        totalMemoryQuota: this.configService.getOrThrow('admin.totalMemoryQuota'),
-        totalDiskQuota: this.configService.getOrThrow('admin.totalDiskQuota'),
-        maxCpuPerSandbox: this.configService.getOrThrow('admin.maxCpuPerSandbox'),
-        maxMemoryPerSandbox: this.configService.getOrThrow('admin.maxMemoryPerSandbox'),
-        maxDiskPerSandbox: this.configService.getOrThrow('admin.maxDiskPerSandbox'),
-        templateQuota: this.configService.getOrThrow('admin.templateQuota'),
-        maxTemplateSize: this.configService.getOrThrow('admin.maxTemplateSize'),
-        volumeQuota: this.configService.getOrThrow('admin.volumeQuota'),
-      },
-      personalOrganizationDefaultRegionId: this.configService.getOrThrow('defaultRegion.id'),
-      role: SystemRole.ADMIN,
-    })
     const personalOrg = await this.organizationService.findPersonal(user.id)
-    const { value } = await this.apiKeyService.createApiKey(
+    await this.ensureAdminOrganizationQuota(personalOrg.id)
+    const { value } = await this.apiKeyService.ensureApiKeyValue(
       personalOrg.id,
       user.id,
       BOXLITE_ADMIN_USER_ID,
       [],
-      undefined,
       this.configService.getOrThrow('admin.apiKey'),
     )
     this.logger.log(
       `
 =========================================
 =========================================
-Admin user created with API key: ${value}
+Admin API key ensured: ${this.maskApiKeyForLog(value)}
 =========================================
 =========================================`,
     )
+  }
+
+  private async ensureAdminOrganizationQuota(organizationId: string): Promise<void> {
+    await this.organizationService.updateQuota(organizationId, {
+      maxCpuPerSandbox: this.configService.getOrThrow('admin.maxCpuPerSandbox'),
+      maxMemoryPerSandbox: this.configService.getOrThrow('admin.maxMemoryPerSandbox'),
+      maxDiskPerSandbox: this.configService.getOrThrow('admin.maxDiskPerSandbox'),
+      templateQuota: this.configService.getOrThrow('admin.templateQuota'),
+      maxTemplateSize: this.configService.getOrThrow('admin.maxTemplateSize'),
+      volumeQuota: this.configService.getOrThrow('admin.volumeQuota'),
+    })
+  }
+
+  private maskApiKeyForLog(value: string): string {
+    if (value.length <= 8) {
+      return '********'
+    }
+    return `${value.slice(0, 4)}...${value.slice(-4)}`
   }
 
   private async initializeTransientRegistry(): Promise<void> {
@@ -215,10 +234,10 @@ Admin user created with API key: ${value}
     )
     await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Transient Registry',
-      url: this.configService.getOrThrow('transientRegistry.url'),
-      username: this.configService.getOrThrow('transientRegistry.admin'),
-      password: this.configService.getOrThrow('transientRegistry.password'),
-      project: this.configService.getOrThrow('transientRegistry.projectId'),
+      url: this.configService.get('transientRegistry.url') ?? '',
+      username: this.configService.get('transientRegistry.admin') ?? '',
+      password: this.configService.get('transientRegistry.password') ?? '',
+      project: this.configService.get('transientRegistry.projectId') ?? '',
       registryType: RegistryType.TRANSIENT,
     })
   }
@@ -229,10 +248,10 @@ Admin user created with API key: ${value}
     )
     await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Internal Registry',
-      url: this.configService.getOrThrow('internalRegistry.url'),
-      username: this.configService.getOrThrow('internalRegistry.admin'),
-      password: this.configService.getOrThrow('internalRegistry.password'),
-      project: this.configService.getOrThrow('internalRegistry.projectId'),
+      url: this.configService.get('internalRegistry.url') ?? '',
+      username: this.configService.get('internalRegistry.admin') ?? '',
+      password: this.configService.get('internalRegistry.password') ?? '',
+      project: this.configService.get('internalRegistry.projectId') ?? '',
       registryType: RegistryType.INTERNAL,
     })
   }
@@ -243,27 +262,65 @@ Admin user created with API key: ${value}
     )
     await this.ensureConfiguredDefaultRegistry(existingRegistry, {
       name: 'Backup Registry',
-      url: this.configService.getOrThrow('internalRegistry.url'),
-      username: this.configService.getOrThrow('internalRegistry.admin'),
-      password: this.configService.getOrThrow('internalRegistry.password'),
-      project: this.configService.getOrThrow('internalRegistry.projectId'),
+      url: this.configService.get('internalRegistry.url') ?? '',
+      username: this.configService.get('internalRegistry.admin') ?? '',
+      password: this.configService.get('internalRegistry.password') ?? '',
+      project: this.configService.get('internalRegistry.projectId') ?? '',
       registryType: RegistryType.BACKUP,
       isFallback: true,
     })
+  }
+
+  private async initializeSystemSourceRegistry(): Promise<void> {
+    const url = this.configService.get('systemSourceRegistry.url') ?? ''
+    const username = this.configService.get('systemSourceRegistry.username') ?? ''
+    const password = this.configService.get('systemSourceRegistry.password') ?? ''
+    if (!url || !username || !password) {
+      this.logger.warn('System source registry configuration not found, skipping setup')
+      return
+    }
+
+    const defaultRegionId = this.configService.getOrThrow('defaultRegion.id')
+    const existingRegistry = await this.dockerRegistryService.findSourceRegistryByTemplateImageName(
+      url,
+      defaultRegionId,
+      undefined,
+    )
+    const options = {
+      name: this.configService.get('systemSourceRegistry.name') ?? 'BoxLite System Source Registry',
+      url,
+      username,
+      password,
+      project: this.configService.get('systemSourceRegistry.projectId') ?? '',
+    }
+
+    if (existingRegistry) {
+      await this.dockerRegistryService.update(existingRegistry.id, options)
+      this.logger.log(`System source registry updated: ${url}`)
+      return
+    }
+
+    await this.dockerRegistryService.create({
+      ...options,
+      registryType: RegistryType.INTERNAL,
+      isDefault: false,
+    })
+    this.logger.log(`System source registry initialized: ${url}`)
   }
 
   private async initializeSystemTemplates(): Promise<void> {
     const adminPersonalOrg = await this.organizationService.findPersonal(BOXLITE_ADMIN_USER_ID)
 
     const defaultTemplate = this.configService.getOrThrow('defaultTemplate')
-    if (!SYSTEM_TEMPLATES.some((template) => template.name === defaultTemplate)) {
-      this.logger.warn(`Configured default template ${defaultTemplate} is not in the MVP system template list`)
+    if (!resolveSystemTemplateName(defaultTemplate)) {
+      this.logger.warn(`Configured default template ${defaultTemplate} is not in the system template list`)
     }
 
     for (const template of SYSTEM_TEMPLATES) {
       this.logger.log(`Ensuring system template: ${template.name}`)
       await this.boxTemplateService.ensureSystemTemplate(adminPersonalOrg, template)
     }
+    await this.boxTemplateService.hideDeprecatedSystemTemplateAliases()
 
     this.logger.log('System templates initialized successfully')
   }

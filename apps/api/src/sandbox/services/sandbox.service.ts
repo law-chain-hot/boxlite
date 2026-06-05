@@ -19,6 +19,7 @@ import { BadRequestError } from '../../exceptions/bad-request.exception'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { BackupState } from '../enums/backup-state.enum'
 import { BoxTemplate } from '../entities/box-template.entity'
+import { resolveSystemTemplateName } from '../constants/system-templates'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { SANDBOX_WARM_POOL_UNASSIGNED_ORGANIZATION } from '../constants/sandbox.constants'
 import { SandboxWarmPoolService } from './sandbox-warm-pool.service'
@@ -493,7 +494,8 @@ export class SandboxService {
   }
 
   async createFromTemplate(createSandboxDto: CreateSandboxDto, organization: Organization): Promise<SandboxDto> {
-    const templateId = createSandboxDto.templateId?.trim() || this.configService.getOrThrow('defaultTemplate')
+    const requestedTemplate = createSandboxDto.templateId?.trim() || this.configService.getOrThrow('defaultTemplate')
+    const templateId = resolveSystemTemplateName(requestedTemplate) ?? requestedTemplate
     return this.createFromBoxTemplate(createSandboxDto, organization, templateId)
   }
 

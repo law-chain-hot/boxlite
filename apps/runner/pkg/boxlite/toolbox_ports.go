@@ -7,11 +7,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -57,6 +60,55 @@ func (c *Client) ToolboxHostPort(sandboxID string) (int, error) {
 	defer c.toolboxPortMutex.Unlock()
 
 	return c.readToolboxHostPort(sandboxID)
+}
+
+func (c *Client) waitForToolboxReady(ctx context.Context, sandboxID string) error {
+	hostPort, err := c.ToolboxHostPort(sandboxID)
+	if err != nil {
+		return fmt.Errorf("toolbox host port not available for sandbox %s: %w", sandboxID, err)
+	}
+
+	timeout := c.toolboxReadyTimeout
+	if timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+	readyCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/version", hostPort)
+	client := http.Client{Timeout: time.Second}
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer ticker.Stop()
+
+	var lastErr error
+	for {
+		req, reqErr := http.NewRequestWithContext(readyCtx, http.MethodGet, url, nil)
+		if reqErr != nil {
+			return reqErr
+		}
+
+		resp, reqErr := client.Do(req)
+		if reqErr == nil {
+			_, _ = io.Copy(io.Discard, resp.Body)
+			_ = resp.Body.Close()
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				c.logger.InfoContext(ctx, "sandbox toolbox is ready", "sandbox", sandboxID, "hostPort", hostPort)
+				return nil
+			}
+			lastErr = fmt.Errorf("unexpected status %d from %s", resp.StatusCode, url)
+		} else {
+			lastErr = reqErr
+		}
+
+		select {
+		case <-readyCtx.Done():
+			if lastErr != nil {
+				return fmt.Errorf("sandbox toolbox not ready after %s (sandbox=%s hostPort=%d): %w", timeout, sandboxID, hostPort, lastErr)
+			}
+			return fmt.Errorf("sandbox toolbox not ready after %s (sandbox=%s hostPort=%d)", timeout, sandboxID, hostPort)
+		case <-ticker.C:
+		}
+	}
 }
 
 func (c *Client) removeToolboxPortRecord(ctx context.Context, sandboxID string) error {

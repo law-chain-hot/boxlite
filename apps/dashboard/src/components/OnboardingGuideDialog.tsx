@@ -52,6 +52,193 @@ const languageOptions: OnboardingLanguageOption[] = [
   { value: 'rust', label: 'Rust', iconSrc: rustIcon },
 ]
 
+<<<<<<< HEAD
+=======
+const codeExamples: Record<
+  OnboardingLanguage,
+  { install: string; run: string; example: string; codeLanguage: string }
+> = {
+  typescript: {
+    install: 'npm install @boxlite-ai/boxlite tsx',
+    run: 'npx tsx index.mts',
+    codeLanguage: 'typescript',
+    example: `import { createInterface } from 'node:readline/promises'
+import { stdin as input, stdout as output } from 'node:process'
+import { ApiKeyCredential, BoxliteRestOptions, JsBoxlite } from '@boxlite-ai/boxlite'
+
+async function readBoxLiteApiKey() {
+  const readline = createInterface({ input, output })
+  try {
+    return (await readline.question('Paste your BoxLite API key: ')).trim()
+  } finally {
+    readline.close()
+  }
+}
+
+const apiKey = await readBoxLiteApiKey()
+const rt = JsBoxlite.rest(new BoxliteRestOptions({
+  url: 'your-api-url',
+  credential: new ApiKeyCredential(apiKey),
+}))
+
+const box = await rt.create({ image: 'boxlite/base' }, 'sdk-quickstart')
+await box.start()
+
+const exec = await box.exec('echo', ['Hello from BoxLite SDK'])
+const stdout = await exec.stdout()
+let output = ''
+let chunk: string | null
+while ((chunk = await stdout.next()) !== null) {
+  output += chunk
+}
+const result = await exec.wait()
+console.log('Exit code:', result.exitCode)
+console.log(output)
+
+await rt.remove(box.id, true)`,
+  },
+  python: {
+    install: 'pip install boxlite',
+    run: 'python main.py',
+    codeLanguage: 'python',
+    example: `import asyncio
+from getpass import getpass
+from boxlite import ApiKeyCredential, Boxlite, BoxliteRestOptions, BoxOptions
+
+async def main():
+    api_key = getpass("Paste your BoxLite API key: ").strip()
+    rt = Boxlite.rest(BoxliteRestOptions(
+        url="your-api-url",
+        credential=ApiKeyCredential(api_key),
+    ))
+
+    box = await rt.create(BoxOptions(image="boxlite/base"), name="sdk-quickstart")
+    await box.start()
+
+    execution = await box.exec("echo", args=["Hello from BoxLite SDK"])
+    output = ""
+    async for line in execution.stdout():
+        output += line
+    result = await execution.wait()
+    print(f"Exit code: {result.exit_code}")
+    print(output)
+
+    await rt.remove(box.id, force=True)
+
+asyncio.run(main())`,
+  },
+  go: {
+    install: `go get github.com/boxlite-ai/boxlite/sdks/go
+go run github.com/boxlite-ai/boxlite/sdks/go/cmd/setup`,
+    run: 'go run .',
+    codeLanguage: 'go',
+    example: `package main
+
+import (
+    "bufio"
+    "context"
+    "fmt"
+    "log"
+    "os"
+    "strings"
+
+    boxlite "github.com/boxlite-ai/boxlite/sdks/go"
+)
+
+func readBoxLiteAPIKey() (string, error) {
+    fmt.Print("Paste your BoxLite API key: ")
+    value, err := bufio.NewReader(os.Stdin).ReadString('\\n')
+    return strings.TrimSpace(value), err
+}
+
+func main() {
+    ctx := context.Background()
+    apiKey, err := readBoxLiteAPIKey()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    rt, err := boxlite.NewRest(boxlite.BoxliteRestOptions{
+        URL:        "your-api-url",
+        Credential: boxlite.NewApiKeyCredential(apiKey),
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer rt.Close()
+
+    box, err := rt.Create(ctx, "boxlite/base", boxlite.WithName("sdk-quickstart"))
+    if err != nil {
+        log.Fatal(err)
+    }
+    if err := box.Start(ctx); err != nil {
+        log.Fatal(err)
+    }
+
+    result, err := box.Exec(ctx, "echo", "Hello from BoxLite SDK")
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println("Exit code:", result.ExitCode)
+    fmt.Print(result.Stdout)
+
+    if err := rt.ForceRemove(ctx, box.ID()); err != nil {
+        log.Fatal(err)
+    }
+}`,
+  },
+  rust: {
+    install: `cargo add boxlite --features rest
+cargo add tokio --features macros,rt-multi-thread
+cargo add futures`,
+    run: 'cargo run',
+    codeLanguage: 'rust',
+    example: `use boxlite::{BoxCommand, BoxOptions, BoxliteRestOptions, BoxliteRuntime, RootfsSpec};
+use futures::StreamExt;
+use std::io::{self, Write};
+
+fn read_boxlite_api_key() -> io::Result<String> {
+    print!("Paste your BoxLite API key: ");
+    io::stdout().flush()?;
+
+    let mut api_key = String::new();
+    io::stdin().read_line(&mut api_key)?;
+    Ok(api_key.trim().to_owned())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let api_key = read_boxlite_api_key()?;
+    let rt = BoxliteRuntime::rest(
+        BoxliteRestOptions::new("your-api-url").with_api_key(api_key),
+    )?;
+
+    let options = BoxOptions {
+        rootfs: RootfsSpec::Image("boxlite/base".into()),
+        ..Default::default()
+    };
+    let box_handle = rt.create(options, Some("sdk-quickstart".into())).await?;
+    box_handle.start().await?;
+
+    let exec = box_handle
+        .exec(BoxCommand::new("echo").arg("Hello from BoxLite SDK"))
+        .await?;
+    let mut stdout = exec.stdout().expect("stdout stream should be available");
+    let mut output = String::new();
+    while let Some(line) = stdout.next().await {
+        output.push_str(&line);
+    }
+    let result = exec.wait().await?;
+    println!("Exit code: {}", result.exit_code);
+    print!("{output}");
+
+    rt.remove(&box_handle.id().to_string(), true).await?;
+    Ok(())
+}`,
+  },
+}
+
+>>>>>>> fc88aa0 (feat: add agent-ready runtime catalog)
 function LanguageOptionIcon({ option }: { option: OnboardingLanguageOption }) {
   return (
     <span className="flex size-5 shrink-0 items-center justify-center">

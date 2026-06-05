@@ -4,37 +4,64 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { getSystemTemplateDefinition, getSystemTemplateSortIndex, SYSTEM_TEMPLATES } from './system-templates'
+import {
+  getSystemTemplateDefinition,
+  getSystemTemplateSortIndex,
+  resolveSystemTemplateName,
+  SYSTEM_TEMPLATES,
+} from './system-templates'
 
 describe('system-templates', () => {
-  it('exposes only MVP Linux base images in the intended order', () => {
-    expect(SYSTEM_TEMPLATES.map((template) => template.imageName)).toEqual([
-      'ubuntu:24.04',
-      'debian:13-slim',
-      'alpine:3.23',
+  it('exposes only BoxLite agent-ready images in the intended order', () => {
+    expect(SYSTEM_TEMPLATES.map((template) => template.name)).toEqual([
+      'boxlite/base',
+      'boxlite/python',
+      'boxlite/node',
     ])
   })
 
-  it('maps image tags to user-facing labels and descriptions', () => {
-    expect(getSystemTemplateDefinition('ubuntu:24.04')).toMatchObject({
-      displayName: 'Ubuntu 24.04 LTS',
-      description: 'General-purpose Linux image',
+  it('maps image names to user-facing labels, descriptions, and capabilities', () => {
+    expect(getSystemTemplateDefinition('boxlite/base')).toMatchObject({
+      displayName: 'BoxLite Base',
+      description: expect.stringContaining('General agent runtime'),
+      capabilities: expect.arrayContaining(['curl', 'git', 'python', 'apt-noninteractive']),
     })
-    expect(getSystemTemplateDefinition('debian:13-slim')).toMatchObject({
-      displayName: 'Debian 13 slim',
-      description: 'Small Debian-based image',
+    expect(getSystemTemplateDefinition('boxlite/python')).toMatchObject({
+      displayName: 'BoxLite Python',
+      capabilities: expect.arrayContaining(['python', 'pip', 'venv']),
     })
-    expect(getSystemTemplateDefinition('alpine:3.23')).toMatchObject({
-      displayName: 'Alpine 3.23',
-      description: 'Minimal Linux image',
+    expect(getSystemTemplateDefinition('boxlite/node')).toMatchObject({
+      displayName: 'BoxLite Node',
+      capabilities: expect.arrayContaining(['node', 'npm']),
     })
+  })
+
+  it('keeps legacy approved OS tags as hidden compatibility aliases to the base image', () => {
+    expect(getSystemTemplateDefinition('ubuntu:24.04')?.name).toBe('boxlite/base')
+    expect(getSystemTemplateDefinition('debian:13-slim')?.name).toBe('boxlite/base')
+    expect(getSystemTemplateDefinition('alpine:3.23')?.name).toBe('boxlite/base')
+    expect(resolveSystemTemplateName('ubuntu:24.04')).toBe('boxlite/base')
+    expect(resolveSystemTemplateName(undefined)).toBe('boxlite/base')
+  })
+
+  it('does not treat a blank image name as an explicit system template match', () => {
+    expect(getSystemTemplateDefinition('')).toBeUndefined()
   })
 
   it('provides a stable sort order for known images', () => {
     expect(
-      ['alpine:3.23', 'ubuntu:24.04', 'debian:13-slim'].sort(
+      ['boxlite/node', 'boxlite/base', 'boxlite/python'].sort(
         (a, b) => getSystemTemplateSortIndex(a) - getSystemTemplateSortIndex(b),
       ),
-    ).toEqual(['ubuntu:24.04', 'debian:13-slim', 'alpine:3.23'])
+    ).toEqual(['boxlite/base', 'boxlite/python', 'boxlite/node'])
+  })
+
+  it('pins official catalog entries to prebuilt runtime images instead of runner-side buildInfo', () => {
+    for (const template of SYSTEM_TEMPLATES) {
+      expect(template.imageName).toMatch(/:.+|@sha256:[a-f0-9]{64}$/)
+      expect(template.imageName).not.toContain(':latest')
+      expect((template as { buildInfo?: unknown }).buildInfo).toBeUndefined()
+      expect(getSystemTemplateDefinition(template.imageName)?.name).toBe(template.name)
+    }
   })
 })

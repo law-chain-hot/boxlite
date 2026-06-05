@@ -63,7 +63,7 @@ export class SandboxDto {
 
   @ApiPropertyOptional({
     description: 'The template used for the sandbox',
-    example: 'ubuntu:24.04',
+    example: 'boxlite/base',
   })
   template: string
 

@@ -65,6 +65,12 @@ export interface BoxTemplateDto {
    */
   description?: string
   /**
+   * Agent/runtime capabilities included in this official image
+   * @type {Array<string>}
+   * @memberof BoxTemplateDto
+   */
+  capabilities?: Array<string>
+  /**
    *
    * @type {string}
    * @memberof BoxTemplateDto

@@ -17,7 +17,7 @@ describe('sandbox-to-box mapper', () => {
       state: 'started',
       createdAt: '2026-06-04T00:00:00.000Z',
       updatedAt: '2026-06-04T00:00:00.000Z',
-      template: 'ubuntu:24.04',
+      template: 'boxlite/base',
       target: 'us',
       user: 'boxlite',
       env: {},
@@ -35,14 +35,20 @@ describe('sandbox-to-box mapper', () => {
     expect(response.box_id).not.toBe('fd955d93-e74a-48e7-9f2d-fcbe6dd9e920')
   })
 
-  it('maps SDK image tags to approved templates', () => {
-    expect(resolveBoxTemplateId('ubuntu:24.04')).toBe('ubuntu:24.04')
-    expect(resolveBoxTemplateId('debian:13-slim')).toBe('debian:13-slim')
-    expect(resolveBoxTemplateId('alpine:3.23')).toBe('alpine:3.23')
+  it('maps SDK image names to approved agent-ready templates', () => {
+    expect(resolveBoxTemplateId('boxlite/base')).toBe('boxlite/base')
+    expect(resolveBoxTemplateId('boxlite/python')).toBe('boxlite/python')
+    expect(resolveBoxTemplateId('boxlite/node')).toBe('boxlite/node')
   })
 
-  it('uses the default Linux template when the SDK omits image', () => {
-    expect(createBoxToCreateSandbox({ name: 'my-box' }).templateId).toBe('ubuntu:24.04')
+  it('maps legacy approved OS image tags to the base runtime compatibility alias', () => {
+    expect(resolveBoxTemplateId('ubuntu:24.04')).toBe('boxlite/base')
+    expect(resolveBoxTemplateId('debian:13-slim')).toBe('boxlite/base')
+    expect(resolveBoxTemplateId('alpine:3.23')).toBe('boxlite/base')
+  })
+
+  it('uses the default agent-ready image when the SDK omits image', () => {
+    expect(createBoxToCreateSandbox({ name: 'my-box' }).templateId).toBe('boxlite/base')
   })
 
   it('maps SDK resource settings to template create overrides', () => {

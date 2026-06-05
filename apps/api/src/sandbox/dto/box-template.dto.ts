@@ -32,6 +32,7 @@ type BoxTemplatePresentation = Pick<
 > & {
   displayName?: string
   description?: string
+  capabilities?: string[]
 }
 
 export class BoxTemplateDefaultResourcesDto {
@@ -66,6 +67,12 @@ export class BoxTemplateDto {
 
   @ApiPropertyOptional()
   description?: string
+
+  @ApiPropertyOptional({
+    description: 'Agent/runtime capabilities included in this official image',
+    type: [String],
+  })
+  capabilities?: string[]
 
   @ApiPropertyOptional()
   artifactRef?: string
@@ -110,6 +117,8 @@ export class BoxTemplateDto {
   regionIds?: string[]
 
   static fromBoxTemplate(template: BoxTemplatePresentation): BoxTemplateDto {
+    const systemTemplate = getSystemTemplateDefinition(template.name)
+
     return {
       id: template.id,
       organizationId: template.organizationId,
@@ -117,6 +126,7 @@ export class BoxTemplateDto {
       name: template.name,
       displayName: template.displayName ?? template.name,
       description: template.description,
+      capabilities: template.capabilities ?? systemTemplate?.capabilities,
       artifactRef: template.artifactRef,
       state: template.state,
       errorReason: template.errorReason,
@@ -154,6 +164,7 @@ export class BoxTemplateDto {
       name: template.name,
       displayName: systemTemplate?.displayName ?? displaySource,
       description: systemTemplate?.description,
+      capabilities: systemTemplate?.capabilities,
       artifactRef: template.artifactRef,
       state: template.state,
       cpu: template.cpu,
