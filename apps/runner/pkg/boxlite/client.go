@@ -154,6 +154,11 @@ func (c *Client) Close() error {
 // Create creates a new sandbox (VM) from the given image and configuration.
 // Returns the box ID and daemon version.
 func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (string, string, error) {
+	publicBoxId := sandboxDto.BoxId
+	if publicBoxId == "" {
+		publicBoxId = sandboxDto.Id
+	}
+
 	// API sends cores / GB / GB as small integers (see apps/api Sandbox entity).
 	cpus := int(sandboxDto.CpuQuota)
 	if cpus < 1 {
@@ -221,7 +226,19 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 	c.boxes[sandboxDto.Id] = bx
 	c.mu.Unlock()
 
-	c.logger.Info("created box", "id", bx.ID(), "name", bx.Name(), "artifactRef", sandboxDto.ArtifactRef)
+	c.logger.Info(
+		"created box",
+		"id",
+		bx.ID(),
+		"sandboxId",
+		sandboxDto.Id,
+		"boxId",
+		publicBoxId,
+		"name",
+		bx.Name(),
+		"artifactRef",
+		sandboxDto.ArtifactRef,
+	)
 
 	skipStart := sandboxDto.SkipStart != nil && *sandboxDto.SkipStart
 	if !skipStart {

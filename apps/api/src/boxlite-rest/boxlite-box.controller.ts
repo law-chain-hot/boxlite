@@ -19,7 +19,7 @@ import {
   NotFoundException,
   Res,
 } from '@nestjs/common'
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
 import { Response } from 'express'
 import { CombinedAuthGuard } from '../auth/combined-auth.guard'
 import { OrganizationResourceActionGuard } from '../organization/guards/organization-resource-action.guard'
@@ -52,6 +52,11 @@ export class BoxliteBoxController {
 
   @Post()
   @HttpCode(201)
+  @ApiResponse({
+    status: 201,
+    description: 'Box created',
+    type: BoxResponseDto,
+  })
   @Audit({
     action: AuditAction.CREATE,
     targetType: AuditTarget.SANDBOX,
@@ -93,6 +98,11 @@ export class BoxliteBoxController {
   }
 
   @Get()
+  @ApiResponse({
+    status: 200,
+    description: 'List boxes',
+    type: ListBoxesResponseDto,
+  })
   async listBoxes(
     @AuthContext() authContext: OrganizationAuthContext,
     @Query('pageSize') pageSize?: string,
@@ -105,6 +115,11 @@ export class BoxliteBoxController {
   }
 
   @Get(':boxId')
+  @ApiResponse({
+    status: 200,
+    description: 'Box details',
+    type: BoxResponseDto,
+  })
   async getBox(
     @AuthContext() authContext: OrganizationAuthContext,
     @Param('boxId') boxId: string,
@@ -140,6 +155,11 @@ export class BoxliteBoxController {
   }
 
   @Post(':boxId/start')
+  @ApiResponse({
+    status: 201,
+    description: 'Box start requested',
+    type: BoxResponseDto,
+  })
   @Audit({
     action: AuditAction.START,
     targetType: AuditTarget.SANDBOX,
@@ -166,6 +186,11 @@ export class BoxliteBoxController {
   }
 
   @Post(':boxId/stop')
+  @ApiResponse({
+    status: 201,
+    description: 'Box stop requested',
+    type: BoxResponseDto,
+  })
   @Audit({
     action: AuditAction.STOP,
     targetType: AuditTarget.SANDBOX,

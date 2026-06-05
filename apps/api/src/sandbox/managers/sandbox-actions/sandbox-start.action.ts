@@ -53,7 +53,7 @@ export class SandboxStartAction extends SandboxAction {
   @WithSpan()
   async run(sandbox: Sandbox, lockCode: LockCode): Promise<SyncState> {
     // Load buildInfo only for states that need it — avoids a JOIN+DISTINCT in the
-    // shared syncInstanceState query that stop/destroy/archive paths never use.
+    // shared syncInstanceState query that stop/destroy paths never use.
     if (
       sandbox.template === null &&
       [SandboxState.PENDING_BUILD, SandboxState.BUILDING_ARTIFACT, SandboxState.UNKNOWN].includes(sandbox.state)
@@ -79,10 +79,8 @@ export class SandboxStartAction extends SandboxAction {
       case SandboxState.UNKNOWN: {
         return this.handleRunnerSandboxUnknownStateOnDesiredStateStart(sandbox, lockCode)
       }
-      case SandboxState.ARCHIVED:
-      case SandboxState.ARCHIVING:
       case SandboxState.STOPPED: {
-        return this.handleRunnerSandboxStoppedOrArchivedStateOnDesiredStateStart(sandbox, lockCode)
+        return this.handleRunnerSandboxStoppedStateOnDesiredStateStart(sandbox, lockCode)
       }
       case SandboxState.RESTORING:
       case SandboxState.CREATING:
@@ -408,7 +406,7 @@ export class SandboxStartAction extends SandboxAction {
     return SYNC_AGAIN
   }
 
-  private async handleRunnerSandboxStoppedOrArchivedStateOnDesiredStateStart(
+  private async handleRunnerSandboxStoppedStateOnDesiredStateStart(
     sandbox: Sandbox,
     lockCode: LockCode,
   ): Promise<SyncState> {

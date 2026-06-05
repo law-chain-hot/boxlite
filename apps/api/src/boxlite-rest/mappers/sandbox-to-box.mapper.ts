@@ -13,7 +13,7 @@ import { SYSTEM_TEMPLATES, getSystemTemplateDefinition } from '../../sandbox/con
 
 export function sandboxToBoxResponse(sandbox: SandboxDto): BoxResponseDto {
   return {
-    box_id: sandbox.id,
+    box_id: sandbox.boxId,
     name: sandbox.name,
     status: mapState(sandbox.state),
     created_at: sandbox.createdAt || new Date().toISOString(),

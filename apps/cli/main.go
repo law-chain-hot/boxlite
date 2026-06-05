@@ -56,7 +56,6 @@ func init() {
 	rootCmd.AddCommand(createSandboxShortcut(sandbox.ListCmd))
 	rootCmd.AddCommand(createSandboxShortcut(sandbox.StartCmd))
 	rootCmd.AddCommand(createSandboxShortcut(sandbox.StopCmd))
-	rootCmd.AddCommand(createSandboxShortcut(sandbox.ArchiveCmd))
 	rootCmd.AddCommand(createSandboxShortcut(sandbox.SSHCmd))
 	rootCmd.AddCommand(createSandboxShortcut(sandbox.ExecCmd))
 	rootCmd.AddCommand(createSandboxShortcut(sandbox.PreviewUrlCmd))

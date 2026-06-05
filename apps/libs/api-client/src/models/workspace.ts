@@ -35,11 +35,17 @@ import type { SandboxVolume } from './sandbox-volume'
  */
 export interface Workspace {
   /**
-   * The ID of the sandbox
+   * The internal UUID of the sandbox
    * @type {string}
    * @memberof Workspace
    */
   id: string
+  /**
+   * The public Box ID shown to users and SDK clients
+   * @type {string}
+   * @memberof Workspace
+   */
+  boxId: string
   /**
    * The organization ID of the sandbox
    * @type {string}
@@ -166,12 +172,6 @@ export interface Workspace {
    * @memberof Workspace
    */
   autoStopInterval?: number
-  /**
-   * Auto-archive interval in minutes
-   * @type {number}
-   * @memberof Workspace
-   */
-  autoArchiveInterval?: number
   /**
    * Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)
    * @type {number}

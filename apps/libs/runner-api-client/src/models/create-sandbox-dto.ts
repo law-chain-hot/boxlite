@@ -75,6 +75,12 @@ export interface CreateSandboxDTO {
   id: string
   /**
    *
+   * @type {string}
+   * @memberof CreateSandboxDTO
+   */
+  boxId?: string
+  /**
+   *
    * @type {number}
    * @memberof CreateSandboxDTO
    */

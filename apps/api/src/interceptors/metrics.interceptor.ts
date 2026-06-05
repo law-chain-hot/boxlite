@@ -175,10 +175,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
           case '/api/sandbox/:sandboxIdOrName/resize':
             this.captureResizeSandbox(props, request.params.sandboxIdOrName, request.body)
             break
-          case '/api/sandbox/:sandboxIdOrName/archive':
-          case '/api/workspace/:workspaceId/archive':
-            this.captureArchiveSandbox(props, request.params.sandboxIdOrName || request.params.workspaceId)
-            break
           case '/api/sandbox/:sandboxIdOrName/backup':
             this.captureCreateBackup(props, request.params.sandboxIdOrName)
             break
@@ -193,14 +189,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
           case '/api/sandbox/:sandboxIdOrName/autostop/:interval':
           case '/api/workspace/:workspaceId/autostop/:interval':
             this.captureSetAutostopInterval(
-              props,
-              request.params.sandboxIdOrName || request.params.workspaceId,
-              parseInt(request.params.interval),
-            )
-            break
-          case '/api/sandbox/:sandboxIdOrName/autoarchive/:interval':
-          case '/api/workspace/:workspaceId/autoarchive/:interval':
-            this.captureSetAutoArchiveInterval(
               props,
               request.params.sandboxIdOrName || request.params.workspaceId,
               parseInt(request.params.interval),
@@ -547,8 +535,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
       sandbox_target: response.target,
       sandbox_auto_stop_interval_min_request: request.autoStopInterval,
       sandbox_auto_stop_interval_min: response.autoStopInterval,
-      sandbox_auto_archive_interval_min_request: request.autoArchiveInterval,
-      sandbox_auto_archive_interval_min: response.autoArchiveInterval,
       sandbox_auto_delete_interval_min_request: request.autoDeleteInterval,
       sandbox_auto_delete_interval_min: response.autoDeleteInterval,
       sandbox_public_request: request.public,
@@ -597,8 +583,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
       sandbox_target: response.target,
       sandbox_auto_stop_interval_min_request: request.autoStopInterval,
       sandbox_auto_stop_interval_min: response.autoStopInterval,
-      sandbox_auto_archive_interval_min_request: request.autoArchiveInterval,
-      sandbox_auto_archive_interval_min: response.autoArchiveInterval,
       sandbox_public_request: request.public,
       sandbox_public: response.public,
       sandbox_labels_request: request.labels,
@@ -648,12 +632,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
     })
   }
 
-  private captureArchiveSandbox(props: CommonCaptureProps, sandboxId: string) {
-    this.capture('api_sandbox_archived', props, 'api_sandbox_archive_failed', {
-      sandbox_id: sandboxId,
-    })
-  }
-
   private captureCreateBackup(props: CommonCaptureProps, sandboxId: string) {
     this.capture('api_sandbox_backup_created', props, 'api_sandbox_backup_creation_failed', {
       sandbox_id: sandboxId,
@@ -671,13 +649,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
     this.capture('api_sandbox_autostop_interval_updated', props, 'api_sandbox_autostop_interval_update_failed', {
       sandbox_id: sandboxId,
       sandbox_autostop_interval: interval,
-    })
-  }
-
-  private captureSetAutoArchiveInterval(props: CommonCaptureProps, sandboxId: string, interval: number) {
-    this.capture('api_sandbox_autoarchive_interval_updated', props, 'api_sandbox_autoarchive_interval_update_failed', {
-      sandbox_id: sandboxId,
-      sandbox_autoarchive_interval: interval,
     })
   }
 

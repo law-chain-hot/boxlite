@@ -6,6 +6,7 @@ package dto
 
 type CreateSandboxDTO struct {
 	Id               string            `json:"id" validate:"required"`
+	BoxId            string            `json:"boxId,omitempty"`
 	FromVolumeId     string            `json:"fromVolumeId,omitempty"`
 	UserId           string            `json:"userId" validate:"required"`
 	ArtifactRef      string            `json:"artifactRef" validate:"required"`

@@ -41,8 +41,6 @@ type BoxliteConfiguration struct {
 	DefaultTemplate string `json:"defaultTemplate"`
 	// Dashboard URL
 	DashboardUrl string `json:"dashboardUrl"`
-	// Maximum auto-archive interval in minutes
-	MaxAutoArchiveInterval float32 `json:"maxAutoArchiveInterval"`
 	// Whether maintenance mode is enabled
 	MaintananceMode bool `json:"maintananceMode"`
 	// Current environment
@@ -66,7 +64,7 @@ type _BoxliteConfiguration BoxliteConfiguration
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewBoxliteConfiguration(version string, oidc OidcConfig, linkedAccountsEnabled bool, announcements map[string]Announcement, proxyTemplateUrl string, proxyToolboxUrl string, defaultTemplate string, dashboardUrl string, maxAutoArchiveInterval float32, maintananceMode bool, environment string) *BoxliteConfiguration {
+func NewBoxliteConfiguration(version string, oidc OidcConfig, linkedAccountsEnabled bool, announcements map[string]Announcement, proxyTemplateUrl string, proxyToolboxUrl string, defaultTemplate string, dashboardUrl string, maintananceMode bool, environment string) *BoxliteConfiguration {
 	this := BoxliteConfiguration{}
 	this.Version = version
 	this.Oidc = oidc
@@ -76,7 +74,6 @@ func NewBoxliteConfiguration(version string, oidc OidcConfig, linkedAccountsEnab
 	this.ProxyToolboxUrl = proxyToolboxUrl
 	this.DefaultTemplate = defaultTemplate
 	this.DashboardUrl = dashboardUrl
-	this.MaxAutoArchiveInterval = maxAutoArchiveInterval
 	this.MaintananceMode = maintananceMode
 	this.Environment = environment
 	return &this
@@ -346,30 +343,6 @@ func (o *BoxliteConfiguration) SetDashboardUrl(v string) {
 	o.DashboardUrl = v
 }
 
-// GetMaxAutoArchiveInterval returns the MaxAutoArchiveInterval field value
-func (o *BoxliteConfiguration) GetMaxAutoArchiveInterval() float32 {
-	if o == nil {
-		var ret float32
-		return ret
-	}
-
-	return o.MaxAutoArchiveInterval
-}
-
-// GetMaxAutoArchiveIntervalOk returns a tuple with the MaxAutoArchiveInterval field value
-// and a boolean to check if the value has been set.
-func (o *BoxliteConfiguration) GetMaxAutoArchiveIntervalOk() (*float32, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.MaxAutoArchiveInterval, true
-}
-
-// SetMaxAutoArchiveInterval sets field value
-func (o *BoxliteConfiguration) SetMaxAutoArchiveInterval(v float32) {
-	o.MaxAutoArchiveInterval = v
-}
-
 // GetMaintananceMode returns the MaintananceMode field value
 func (o *BoxliteConfiguration) GetMaintananceMode() bool {
 	if o == nil {
@@ -602,7 +575,6 @@ func (o BoxliteConfiguration) ToMap() (map[string]interface{}, error) {
 	toSerialize["proxyToolboxUrl"] = o.ProxyToolboxUrl
 	toSerialize["defaultTemplate"] = o.DefaultTemplate
 	toSerialize["dashboardUrl"] = o.DashboardUrl
-	toSerialize["maxAutoArchiveInterval"] = o.MaxAutoArchiveInterval
 	toSerialize["maintananceMode"] = o.MaintananceMode
 	toSerialize["environment"] = o.Environment
 	if !IsNil(o.BillingApiUrl) {
@@ -641,7 +613,6 @@ func (o *BoxliteConfiguration) UnmarshalJSON(data []byte) (err error) {
 		"proxyToolboxUrl",
 		"defaultTemplate",
 		"dashboardUrl",
-		"maxAutoArchiveInterval",
 		"maintananceMode",
 		"environment",
 	}
@@ -683,7 +654,6 @@ func (o *BoxliteConfiguration) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "proxyToolboxUrl")
 		delete(additionalProperties, "defaultTemplate")
 		delete(additionalProperties, "dashboardUrl")
-		delete(additionalProperties, "maxAutoArchiveInterval")
 		delete(additionalProperties, "maintananceMode")
 		delete(additionalProperties, "environment")
 		delete(additionalProperties, "billingApiUrl")

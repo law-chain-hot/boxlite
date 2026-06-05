@@ -1835,7 +1835,7 @@ paths:
           minimum: 1
           type: number
         style: form
-      - description: Filter by partial ID match
+      - description: "Filter by partial Box ID, internal UUID, or name match"
         explode: true
         in: query
         name: id
@@ -2001,6 +2001,7 @@ paths:
           default: createdAt
           enum:
           - id
+          - boxId
           - name
           - state
           - template
@@ -2224,8 +2225,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Sandbox'
-          description: Sandbox has been started or is being restored from archived
-            state
+          description: Sandbox has been started
       security:
       - bearer: []
       - oauth2:
@@ -2557,51 +2557,6 @@ paths:
       summary: Set sandbox auto-stop interval
       tags:
       - sandbox
-  /sandbox/{sandboxIdOrName}/autoarchive/{interval}:
-    post:
-      operationId: setAutoArchiveInterval
-      parameters:
-      - description: Use with JWT to specify the organization ID
-        explode: false
-        in: header
-        name: X-BoxLite-Organization-ID
-        required: false
-        schema:
-          type: string
-        style: simple
-      - description: ID or name of the sandbox
-        explode: false
-        in: path
-        name: sandboxIdOrName
-        required: true
-        schema:
-          type: string
-        style: simple
-      - description: Auto-archive interval in minutes (0 means the maximum interval
-          will be used)
-        explode: false
-        in: path
-        name: interval
-        required: true
-        schema:
-          type: number
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Sandbox'
-          description: Auto-archive interval has been set
-      security:
-      - bearer: []
-      - oauth2:
-        - openid
-        - profile
-        - email
-      summary: Set sandbox auto-archive interval
-      tags:
-      - sandbox
   /sandbox/{sandboxIdOrName}/autodelete/{interval}:
     post:
       operationId: setAutoDeleteInterval
@@ -2645,41 +2600,6 @@ paths:
         - profile
         - email
       summary: Set sandbox auto-delete interval
-      tags:
-      - sandbox
-  /sandbox/{sandboxIdOrName}/archive:
-    post:
-      operationId: archiveSandbox
-      parameters:
-      - description: Use with JWT to specify the organization ID
-        explode: false
-        in: header
-        name: X-BoxLite-Organization-ID
-        required: false
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: sandboxIdOrName
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Sandbox'
-          description: Sandbox has been archived
-      security:
-      - bearer: []
-      - oauth2:
-        - openid
-        - profile
-        - email
-      summary: Archive sandbox
       tags:
       - sandbox
   /sandbox/{sandboxIdOrName}/ports/{port}/preview-url:
@@ -7201,80 +7121,6 @@ paths:
       summary: "[DEPRECATED] Set workspace auto-stop interval"
       tags:
       - workspace
-  /workspace/{workspaceId}/autoarchive/{interval}:
-    post:
-      deprecated: true
-      operationId: setAutoArchiveIntervalWorkspace_deprecated
-      parameters:
-      - description: Use with JWT to specify the organization ID
-        explode: false
-        in: header
-        name: X-BoxLite-Organization-ID
-        required: false
-        schema:
-          type: string
-        style: simple
-      - description: ID of the workspace
-        explode: false
-        in: path
-        name: workspaceId
-        required: true
-        schema:
-          type: string
-        style: simple
-      - description: Auto-archive interval in minutes (0 means the maximum interval
-          will be used)
-        explode: false
-        in: path
-        name: interval
-        required: true
-        schema:
-          type: number
-        style: simple
-      responses:
-        "200":
-          description: Auto-archive interval has been set
-      security:
-      - bearer: []
-      - oauth2:
-        - openid
-        - profile
-        - email
-      summary: "[DEPRECATED] Set workspace auto-archive interval"
-      tags:
-      - workspace
-  /workspace/{workspaceId}/archive:
-    post:
-      deprecated: true
-      operationId: archiveWorkspace_deprecated
-      parameters:
-      - description: Use with JWT to specify the organization ID
-        explode: false
-        in: header
-        name: X-BoxLite-Organization-ID
-        required: false
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: path
-        name: workspaceId
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          description: Workspace has been archived
-      security:
-      - bearer: []
-      - oauth2:
-        - openid
-        - profile
-        - email
-      summary: "[DEPRECATED] Archive workspace"
-      tags:
-      - workspace
   /workspace/{workspaceId}/ports/{port}/preview-url:
     get:
       deprecated: true
@@ -8894,9 +8740,9 @@ paths:
           description: ""
       tags:
       - BoxLite REST
-  /v1/{prefix}/boxes:
+  /v1/boxes:
     get:
-      operationId: BoxliteBoxController_listBoxes
+      operationId: "BoxliteBoxController_listBoxes[0]"
       parameters:
       - explode: true
         in: query
@@ -8913,7 +8759,7 @@ paths:
       tags:
       - BoxLite REST
     post:
-      operationId: BoxliteBoxController_createBox
+      operationId: "BoxliteBoxController_createBox[0]"
       parameters: []
       requestBody:
         content:
@@ -8928,9 +8774,43 @@ paths:
       - bearer: []
       tags:
       - BoxLite REST
-  /v1/{prefix}/boxes/{boxId}:
+  /v1/{prefix}/boxes:
+    get:
+      operationId: "BoxliteBoxController_listBoxes[1]"
+      parameters:
+      - explode: true
+        in: query
+        name: pageSize
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    post:
+      operationId: "BoxliteBoxController_createBox[1]"
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBoxDto'
+        required: true
+      responses:
+        "201":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}:
     delete:
-      operationId: BoxliteBoxController_removeBox
+      operationId: "BoxliteBoxController_removeBox[0]"
       parameters:
       - explode: false
         in: path
@@ -8947,7 +8827,7 @@ paths:
       tags:
       - BoxLite REST
     get:
-      operationId: BoxliteBoxController_getBox
+      operationId: "BoxliteBoxController_getBox[0]"
       parameters:
       - explode: false
         in: path
@@ -8964,7 +8844,7 @@ paths:
       tags:
       - BoxLite REST
     head:
-      operationId: BoxliteBoxController_headBox
+      operationId: "BoxliteBoxController_headBox[0]"
       parameters:
       - explode: false
         in: path
@@ -8980,9 +8860,97 @@ paths:
       - bearer: []
       tags:
       - BoxLite REST
+  /v1/{prefix}/boxes/{boxId}:
+    delete:
+      operationId: "BoxliteBoxController_removeBox[1]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: "BoxliteBoxController_getBox[1]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    head:
+      operationId: "BoxliteBoxController_headBox[1]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/start:
+    post:
+      operationId: "BoxliteBoxController_startBox[0]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "201":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
   /v1/{prefix}/boxes/{boxId}/start:
     post:
-      operationId: BoxliteBoxController_startBox
+      operationId: "BoxliteBoxController_startBox[1]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "201":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/stop:
+    post:
+      operationId: "BoxliteBoxController_stopBox[0]"
       parameters:
       - explode: false
         in: path
@@ -9000,7 +8968,7 @@ paths:
       - BoxLite REST
   /v1/{prefix}/boxes/{boxId}/stop:
     post:
-      operationId: BoxliteBoxController_stopBox
+      operationId: "BoxliteBoxController_stopBox[1]"
       parameters:
       - explode: false
         in: path
@@ -9011,6 +8979,126 @@ paths:
         style: simple
       responses:
         "201":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/exec:
+    delete:
+      operationId: BoxliteProxyController_proxyExec_delete
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: BoxliteProxyController_proxyExec_get
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    head:
+      operationId: BoxliteProxyController_proxyExec_head
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    options:
+      operationId: BoxliteProxyController_proxyExec_options
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    patch:
+      operationId: BoxliteProxyController_proxyExec_patch
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    post:
+      operationId: BoxliteProxyController_proxyExec_post
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    put:
+      operationId: BoxliteProxyController_proxyExec_put
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
           description: ""
       security:
       - bearer: []
@@ -9125,6 +9213,175 @@ paths:
       - explode: false
         in: path
         name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/executions/{execId}/signal:
+    delete:
+      operationId: BoxliteProxyController_proxyExecSignal_delete
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: BoxliteProxyController_proxyExecSignal_get
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    head:
+      operationId: BoxliteProxyController_proxyExecSignal_head
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    options:
+      operationId: BoxliteProxyController_proxyExecSignal_options
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    patch:
+      operationId: BoxliteProxyController_proxyExecSignal_patch
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    post:
+      operationId: BoxliteProxyController_proxyExecSignal_post
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    put:
+      operationId: BoxliteProxyController_proxyExecSignal_put
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
         required: true
         schema:
           type: string
@@ -9283,6 +9540,175 @@ paths:
       - BoxLite REST
     put:
       operationId: BoxliteProxyController_proxyExecSignal_put
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/executions/{execId}/resize:
+    delete:
+      operationId: BoxliteProxyController_proxyExecResize_delete
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: BoxliteProxyController_proxyExecResize_get
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    head:
+      operationId: BoxliteProxyController_proxyExecResize_head
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    options:
+      operationId: BoxliteProxyController_proxyExecResize_options
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    patch:
+      operationId: BoxliteProxyController_proxyExecResize_patch
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    post:
+      operationId: BoxliteProxyController_proxyExecResize_post
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    put:
+      operationId: BoxliteProxyController_proxyExecResize_put
       parameters:
       - explode: false
         in: path
@@ -9474,9 +9900,9 @@ paths:
       - bearer: []
       tags:
       - BoxLite REST
-  /v1/{prefix}/boxes/{boxId}/executions/{execId}:
+  /v1/boxes/{boxId}/executions/{execId}:
     delete:
-      operationId: BoxliteProxyController_proxyExecKill
+      operationId: "BoxliteProxyController_proxyExecKill[0]"
       parameters:
       - explode: false
         in: path
@@ -9500,7 +9926,7 @@ paths:
       tags:
       - BoxLite REST
     get:
-      operationId: BoxliteProxyController_proxyExecStatus
+      operationId: "BoxliteProxyController_proxyExecStatus[0]"
       parameters:
       - explode: false
         in: path
@@ -9512,6 +9938,175 @@ paths:
       - explode: false
         in: path
         name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/{prefix}/boxes/{boxId}/executions/{execId}:
+    delete:
+      operationId: "BoxliteProxyController_proxyExecKill[1]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: "BoxliteProxyController_proxyExecStatus[1]"
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: execId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/files:
+    delete:
+      operationId: BoxliteProxyController_proxyFiles_delete
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: BoxliteProxyController_proxyFiles_get
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    head:
+      operationId: BoxliteProxyController_proxyFiles_head
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    options:
+      operationId: BoxliteProxyController_proxyFiles_options
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    patch:
+      operationId: BoxliteProxyController_proxyFiles_patch
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    post:
+      operationId: BoxliteProxyController_proxyFiles_post
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    put:
+      operationId: BoxliteProxyController_proxyFiles_put
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
         required: true
         schema:
           type: string
@@ -9628,6 +10223,126 @@ paths:
       - BoxLite REST
     put:
       operationId: BoxliteProxyController_proxyFiles_put
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+  /v1/boxes/{boxId}/metrics:
+    delete:
+      operationId: BoxliteProxyController_proxyMetrics_delete
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    get:
+      operationId: BoxliteProxyController_proxyMetrics_get
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    head:
+      operationId: BoxliteProxyController_proxyMetrics_head
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    options:
+      operationId: BoxliteProxyController_proxyMetrics_options
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    patch:
+      operationId: BoxliteProxyController_proxyMetrics_patch
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    post:
+      operationId: BoxliteProxyController_proxyMetrics_post
+      parameters:
+      - explode: false
+        in: path
+        name: boxId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: ""
+      security:
+      - bearer: []
+      tags:
+      - BoxLite REST
+    put:
+      operationId: BoxliteProxyController_proxyMetrics_put
       parameters:
       - explode: false
         in: path
@@ -9859,7 +10574,6 @@ components:
         oidc: ""
         proxyToolboxUrl: https://proxy.example.com/toolbox
         posthog: ""
-        maxAutoArchiveInterval: 43200
         pylonAppId: pylon-app-123
         proxyTemplateUrl: "https://{{PORT}}-{{sandboxId}}.proxy.example.com"
         maintananceMode: false
@@ -9915,10 +10629,6 @@ components:
           description: Dashboard URL
           example: https://dashboard.example.com
           type: string
-        maxAutoArchiveInterval:
-          description: Maximum auto-archive interval in minutes
-          example: 43200
-          type: number
         maintananceMode:
           description: Whether maintenance mode is enabled
           example: false
@@ -9954,7 +10664,6 @@ components:
       - environment
       - linkedAccountsEnabled
       - maintananceMode
-      - maxAutoArchiveInterval
       - oidc
       - proxyTemplateUrl
       - proxyToolboxUrl
@@ -11304,7 +12013,6 @@ components:
       - started
       - stopped
       - resized
-      - archived
       type: string
     SandboxVolume:
       example:
@@ -11380,9 +12088,10 @@ components:
         public: false
         errorReason: The sandbox is not running
         runnerId: runner123
-        id: sandbox123
+        id: fd955d93-e74a-48e7-9f2d-fcbe6dd9e920
         state: creating
         class: small
+        boxId: aB3cD4eF5gH6
         updatedAt: 2024-10-01T12:00:00Z
         desiredState: destroyed
         networkAllowList: "192.168.1.0/16,10.0.0.0/24"
@@ -11407,11 +12116,14 @@ components:
         name: MySandbox
         backupState: None
         user: boxlite
-        autoArchiveInterval: 10080
       properties:
         id:
-          description: The ID of the sandbox
-          example: sandbox123
+          description: The internal UUID of the sandbox
+          example: fd955d93-e74a-48e7-9f2d-fcbe6dd9e920
+          type: string
+        boxId:
+          description: The public Box ID shown to users and SDK clients
+          example: aB3cD4eF5gH6
           type: string
         organizationId:
           description: The organization ID of the sandbox
@@ -11512,10 +12224,6 @@ components:
           description: Auto-stop interval in minutes (0 means disabled)
           example: 30
           type: number
-        autoArchiveInterval:
-          description: Auto-archive interval in minutes
-          example: 10080
-          type: number
         autoDeleteInterval:
           description: "Auto-delete interval in minutes (negative value means disabled,\
             \ 0 means delete immediately upon stopping)"
@@ -11560,6 +12268,7 @@ components:
           example: https://proxy.app.boxlite.io/toolbox
           type: string
       required:
+      - boxId
       - cpu
       - disk
       - env
@@ -11593,9 +12302,10 @@ components:
           public: false
           errorReason: The sandbox is not running
           runnerId: runner123
-          id: sandbox123
+          id: fd955d93-e74a-48e7-9f2d-fcbe6dd9e920
           state: creating
           class: small
+          boxId: aB3cD4eF5gH6
           updatedAt: 2024-10-01T12:00:00Z
           desiredState: destroyed
           networkAllowList: "192.168.1.0/16,10.0.0.0/24"
@@ -11620,7 +12330,6 @@ components:
           name: MySandbox
           backupState: None
           user: boxlite
-          autoArchiveInterval: 10080
         - template: ubuntu:24.04
           memory: 4
           buildInfo: ""
@@ -11633,9 +12342,10 @@ components:
           public: false
           errorReason: The sandbox is not running
           runnerId: runner123
-          id: sandbox123
+          id: fd955d93-e74a-48e7-9f2d-fcbe6dd9e920
           state: creating
           class: small
+          boxId: aB3cD4eF5gH6
           updatedAt: 2024-10-01T12:00:00Z
           desiredState: destroyed
           networkAllowList: "192.168.1.0/16,10.0.0.0/24"
@@ -11660,7 +12370,6 @@ components:
           name: MySandbox
           backupState: None
           user: boxlite
-          autoArchiveInterval: 10080
       properties:
         items:
           items:
@@ -11728,7 +12437,6 @@ components:
         name: MySandbox
         user: boxlite
         class: small
-        autoArchiveInterval: 10080
       properties:
         name:
           description: "The name of the sandbox. If not provided, the sandbox ID will\
@@ -11801,11 +12509,6 @@ components:
         autoStopInterval:
           description: Auto-stop interval in minutes (0 means disabled)
           example: 30
-          type: integer
-        autoArchiveInterval:
-          description: Auto-archive interval in minutes (0 means the maximum interval
-            will be used)
-          example: 10080
           type: integer
         autoDeleteInterval:
           description: "Auto-delete interval in minutes (negative value means disabled,\
@@ -14237,9 +14940,10 @@ components:
         public: false
         errorReason: The sandbox is not running
         runnerId: runner123
-        id: sandbox123
+        id: fd955d93-e74a-48e7-9f2d-fcbe6dd9e920
         state: creating
         class: small
+        boxId: aB3cD4eF5gH6
         updatedAt: 2024-10-01T12:00:00Z
         info: ""
         desiredState: destroyed
@@ -14267,11 +14971,14 @@ components:
         name: MySandbox
         backupState: None
         user: boxlite
-        autoArchiveInterval: 10080
       properties:
         id:
-          description: The ID of the sandbox
-          example: sandbox123
+          description: The internal UUID of the sandbox
+          example: fd955d93-e74a-48e7-9f2d-fcbe6dd9e920
+          type: string
+        boxId:
+          description: The public Box ID shown to users and SDK clients
+          example: aB3cD4eF5gH6
           type: string
         organizationId:
           description: The organization ID of the sandbox
@@ -14372,10 +15079,6 @@ components:
           description: Auto-stop interval in minutes (0 means disabled)
           example: 30
           type: number
-        autoArchiveInterval:
-          description: Auto-archive interval in minutes
-          example: 10080
-          type: number
         autoDeleteInterval:
           description: "Auto-delete interval in minutes (negative value means disabled,\
             \ 0 means delete immediately upon stopping)"
@@ -14442,6 +15145,7 @@ components:
           - $ref: '#/components/schemas/SandboxInfo'
           description: Additional information about the sandbox
       required:
+      - boxId
       - cpu
       - disk
       - env
@@ -14481,7 +15185,6 @@ components:
         public: false
         user: boxlite
         class: small
-        autoArchiveInterval: 10080
       properties:
         image:
           description: The image used for the workspace
@@ -14544,11 +15247,6 @@ components:
         autoStopInterval:
           description: Auto-stop interval in minutes (0 means disabled)
           example: 30
-          type: integer
-        autoArchiveInterval:
-          description: Auto-archive interval in minutes (0 means the maximum interval
-            will be used)
-          example: 10080
           type: integer
         volumes:
           description: Array of volumes to attach to the workspace

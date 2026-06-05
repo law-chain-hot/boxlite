@@ -25,7 +25,6 @@ const (
 	SANDBOXDESIREDSTATE_STARTED   SandboxDesiredState = "started"
 	SANDBOXDESIREDSTATE_STOPPED   SandboxDesiredState = "stopped"
 	SANDBOXDESIREDSTATE_RESIZED   SandboxDesiredState = "resized"
-	SANDBOXDESIREDSTATE_ARCHIVED  SandboxDesiredState = "archived"
 )
 
 // All allowed values of SandboxDesiredState enum
@@ -34,7 +33,6 @@ var AllowedSandboxDesiredStateEnumValues = []SandboxDesiredState{
 	"started",
 	"stopped",
 	"resized",
-	"archived",
 }
 
 func (v *SandboxDesiredState) UnmarshalJSON(src []byte) error {

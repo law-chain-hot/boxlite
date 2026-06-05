@@ -97,7 +97,6 @@ export class WorkspaceDto extends SandboxDto {
           memory: sandboxDto.memory,
           disk: sandboxDto.disk,
           autoStopInterval: sandboxDto.autoStopInterval,
-          autoArchiveInterval: sandboxDto.autoArchiveInterval,
           daemonVersion: sandboxDto.daemonVersion,
         }),
       },

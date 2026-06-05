@@ -98,9 +98,6 @@ var CreateCmd = &cobra.Command{
 		if autoStopFlag >= 0 {
 			createSandbox.SetAutoStopInterval(autoStopFlag)
 		}
-		if autoArchiveFlag >= 0 {
-			createSandbox.SetAutoArchiveInterval(autoArchiveFlag)
-		}
 		createSandbox.SetAutoDeleteInterval(autoDeleteFlag)
 
 		createSandbox.SetNetworkBlockAll(networkBlockAllFlag)
@@ -209,7 +206,6 @@ var (
 	memoryFlag           int32
 	diskFlag             int32
 	autoStopFlag         int32
-	autoArchiveFlag      int32
 	autoDeleteFlag       int32
 	volumesFlag          []string
 	dockerfileFlag       string
@@ -233,7 +229,6 @@ func init() {
 	CreateCmd.Flags().Int32Var(&memoryFlag, "memory", 0, "Memory allocated to the sandbox in MB")
 	CreateCmd.Flags().Int32Var(&diskFlag, "disk", 0, "Disk space allocated to the sandbox in GB")
 	CreateCmd.Flags().Int32Var(&autoStopFlag, "auto-stop", 15, "Auto-stop interval in minutes (0 means disabled)")
-	CreateCmd.Flags().Int32Var(&autoArchiveFlag, "auto-archive", 10080, "Auto-archive interval in minutes (0 means the maximum interval will be used)")
 	CreateCmd.Flags().Int32Var(&autoDeleteFlag, "auto-delete", -1, "Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)")
 	CreateCmd.Flags().StringArrayVarP(&volumesFlag, "volume", "v", []string{}, "Volumes to mount (format: VOLUME_NAME:MOUNT_PATH)")
 	CreateCmd.Flags().StringVarP(&dockerfileFlag, "dockerfile", "f", "", "Path to Dockerfile for sandbox build")

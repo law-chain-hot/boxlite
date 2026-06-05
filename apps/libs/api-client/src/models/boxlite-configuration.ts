@@ -92,12 +92,6 @@ export interface BoxliteConfiguration {
    */
   dashboardUrl: string
   /**
-   * Maximum auto-archive interval in minutes
-   * @type {number}
-   * @memberof BoxliteConfiguration
-   */
-  maxAutoArchiveInterval: number
-  /**
    * Whether maintenance mode is enabled
    * @type {boolean}
    * @memberof BoxliteConfiguration

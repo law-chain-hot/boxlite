@@ -91,7 +91,6 @@ const configuration = {
   },
   notificationGatewayDisabled: process.env.NOTIFICATION_GATEWAY_DISABLED === 'true',
   skipConnections: process.env.SKIP_CONNECTIONS === 'true',
-  maxAutoArchiveInterval: parseInt(process.env.MAX_AUTO_ARCHIVE_INTERVAL || '43200', 10),
   maintananceMode: process.env.MAINTENANCE_MODE === 'true',
   disableCronJobs: process.env.DISABLE_CRON_JOBS === 'true',
   appRole: process.env.APP_ROLE || 'all',

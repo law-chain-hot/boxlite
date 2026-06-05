@@ -23,7 +23,6 @@ export const SandboxDesiredState = {
   STARTED: 'started',
   STOPPED: 'stopped',
   RESIZED: 'resized',
-  ARCHIVED: 'archived',
 } as const
 
 export type SandboxDesiredState = (typeof SandboxDesiredState)[keyof typeof SandboxDesiredState]

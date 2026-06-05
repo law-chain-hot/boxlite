@@ -201,13 +201,6 @@ export class ConfigurationDto {
   dashboardUrl: string
 
   @ApiProperty({
-    description: 'Maximum auto-archive interval in minutes',
-    example: 43200,
-  })
-  @IsNumber()
-  maxAutoArchiveInterval: number
-
-  @ApiProperty({
     description: 'Whether maintenance mode is enabled',
     example: false,
   })
@@ -283,7 +276,6 @@ export class ConfigurationDto {
     this.proxyToolboxUrl = configService.getOrThrow('proxy.toolboxUrl')
     this.defaultTemplate = configService.getOrThrow('defaultTemplate')
     this.dashboardUrl = configService.getOrThrow('dashboardUrl')
-    this.maxAutoArchiveInterval = configService.getOrThrow('maxAutoArchiveInterval')
     this.maintananceMode = configService.getOrThrow('maintananceMode')
     this.environment = configService.getOrThrow('environment')
 
