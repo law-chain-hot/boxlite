@@ -5,6 +5,7 @@
  */
 
 import { RoutePath } from '@/enums/RoutePath'
+import { getSandboxRouteId } from '@/lib/sandbox-identity'
 import { SandboxState } from '@boxlite-ai/api-client'
 import { Terminal, MoreVertical, Play, Square, Loader2, Wrench } from 'lucide-react'
 import { generatePath, useNavigate } from 'react-router-dom'
@@ -29,7 +30,6 @@ export function SandboxTableActions({
   onStart,
   onStop,
   onDelete,
-  onArchive,
   onVnc,
   onOpenWebTerminal,
   onCreateSshAccess,
@@ -78,7 +78,7 @@ export function SandboxTableActions({
     items.push({
       key: 'open',
       label: 'View Details',
-      onClick: () => navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })),
+      onClick: () => navigate(generatePath(RoutePath.BOX_DETAILS, { sandboxId: getSandboxRouteId(sandbox) })),
       disabled: isLoading,
     })
 
@@ -93,7 +93,7 @@ export function SandboxTableActions({
         items.push({
           key: 'vnc',
           label: 'VNC',
-          onClick: () => onVnc(sandbox.id),
+          onClick: () => onVnc(getSandboxRouteId(sandbox)),
           disabled: isLoading,
         })
         items.push({
@@ -108,7 +108,7 @@ export function SandboxTableActions({
           onClick: () => onStop(sandbox.id),
           disabled: isLoading,
         })
-      } else if (sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED) {
+      } else if (sandbox.state === SandboxState.STOPPED) {
         items.push({
           key: 'start',
           label: 'Start',
@@ -120,15 +120,6 @@ export function SandboxTableActions({
           key: 'recover',
           label: 'Recover',
           onClick: () => onRecover(sandbox.id),
-          disabled: isLoading,
-        })
-      }
-
-      if (sandbox.state === SandboxState.STOPPED) {
-        items.push({
-          key: 'archive',
-          label: 'Archive',
-          onClick: () => onArchive(sandbox.id),
           disabled: isLoading,
         })
       }
@@ -168,12 +159,12 @@ export function SandboxTableActions({
     deletePermitted,
     sandbox.state,
     sandbox.id,
+    sandbox.boxId,
     isLoading,
     sandbox.recoverable,
     onStart,
     onStop,
     onDelete,
-    onArchive,
     onVnc,
     onOpenWebTerminal,
     onCreateSshAccess,

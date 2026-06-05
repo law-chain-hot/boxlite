@@ -33,7 +33,6 @@ interface UseSandboxTableProps {
   handleStart: (id: string) => void
   handleStop: (id: string) => void
   handleDelete: (id: string) => void
-  handleArchive: (id: string) => void
   handleVnc: (id: string) => void
   getWebTerminalUrl: (id: string) => Promise<string | null>
   handleCreateSshAccess: (id: string) => void
@@ -61,7 +60,6 @@ export function useSandboxTable({
   handleStart,
   handleStop,
   handleDelete,
-  handleArchive,
   handleVnc,
   getWebTerminalUrl,
   handleCreateSshAccess,
@@ -82,12 +80,12 @@ export function useSandboxTable({
     const saved = getLocalStorageItem(LocalStorageKey.SandboxTableColumnVisibility)
     if (saved) {
       try {
-        return { ...JSON.parse(saved), id: false, region: true, labels: false }
+        return { ...JSON.parse(saved), boxId: true, id: false, region: true, labels: false }
       } catch {
-        return { id: false, region: true, labels: false }
+        return { boxId: true, id: false, region: true, labels: false }
       }
     }
-    return { id: false, region: true, labels: false }
+    return { boxId: true, id: false, region: true, labels: false }
   })
 
   useEffect(() => {
@@ -104,7 +102,6 @@ export function useSandboxTable({
         handleStart,
         handleStop,
         handleDelete,
-        handleArchive,
         handleVnc,
         getWebTerminalUrl,
         sandboxIsLoading,
@@ -120,7 +117,6 @@ export function useSandboxTable({
       handleStart,
       handleStop,
       handleDelete,
-      handleArchive,
       handleVnc,
       getWebTerminalUrl,
       sandboxIsLoading,

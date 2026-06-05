@@ -34,14 +34,14 @@ import Keys from './pages/Keys'
 import LandingPage from './pages/LandingPage'
 import Logout from './pages/Logout'
 import NotFound from './pages/NotFound'
-import Pricing from './pages/Pricing'
+import Billing from './pages/Billing'
 import Sandboxes from './pages/Sandboxes'
 import { SandboxDetails, SandboxTerminalFullscreen, SandboxVncFullscreen } from './components/sandboxes'
 import { ApiProvider } from './providers/ApiProvider'
 import { RegionsProvider } from './providers/RegionsProvider'
 import { SandboxSessionProvider } from './providers/SandboxSessionProvider'
 
-const MVP_HIDDEN_DASHBOARD_ROUTES = [
+const HIDDEN_DASHBOARD_ROUTES = [
   RoutePath.IMAGES,
   RoutePath.REGISTRIES,
   RoutePath.VOLUMES,
@@ -194,7 +194,8 @@ function App() {
         <Route index element={<Navigate to={boxesRedirect} replace />} />
         <Route path={getRouteSubPath(RoutePath.KEYS)} element={<Keys />} />
         <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Sandboxes />} />
-        <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Pricing />} />
+        <Route path={getRouteSubPath(RoutePath.BILLING)} element={<Billing />} />
+        <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Navigate to={RoutePath.BILLING} replace />} />
         <Route path={getRouteSubPath(RoutePath.LEGACY_SANDBOXES)} element={<Navigate to={boxesRedirect} replace />} />
         <Route
           path={getRouteSubPath(RoutePath.LEGACY_TEMPLATES)}
@@ -228,7 +229,7 @@ function App() {
             element={<LegacySandboxRedirect route={RoutePath.BOX_DETAILS} />}
           />
         </Route>
-        {MVP_HIDDEN_DASHBOARD_ROUTES.map((path) => (
+        {HIDDEN_DASHBOARD_ROUTES.map((path) => (
           <Route key={path} path={getRouteSubPath(path)} element={<Navigate to={boxesRedirect} replace />} />
         ))}
         <Route path={getRouteSubPath(RoutePath.EMAIL_VERIFY)} element={<EmailVerify />} />

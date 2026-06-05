@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ResourceChip } from '@/components/ResourceChip'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -28,10 +27,11 @@ import { useConfig } from '@/hooks/useConfig'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { getTemplateDisplayMetadata, getTemplateDisplaySortIndex } from '@/lib/template-display'
 import { handleApiError } from '@/lib/error-handling'
+import { getSandboxRouteId } from '@/lib/sandbox-identity'
 import { cn } from '@/lib/utils'
 import type { Sandbox } from '@boxlite-ai/api-client'
 import { useForm } from '@tanstack/react-form'
-import { CheckCircle2, Cpu, HardDrive, Layers, MemoryStick, Plus, type LucideIcon } from 'lucide-react'
+import { Cpu, HardDrive, MemoryStick, Plus, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NumericFormat } from 'react-number-format'
 import { createSearchParams, generatePath, useNavigate } from 'react-router-dom'
@@ -102,17 +102,6 @@ const getTemplateLabel = (template: BoxTemplate) => {
   const templateName = getTemplateName(template)
   return template.displayName || getTemplateDisplayMetadata(templateName)?.displayName || templateName
 }
-
-const getTemplateDescription = (template: BoxTemplate) => {
-  const templateName = getTemplateName(template)
-  return getTemplateDisplayMetadata(templateName)?.description || template.description
-}
-
-const getTemplateResourceSummary = (template: BoxTemplate) => ({
-  cpu: template.defaultResources?.cpu ?? 1,
-  memory: template.defaultResources?.memory ?? 1,
-  disk: template.defaultResources?.disk ?? 3,
-})
 
 type ResourceFieldName = 'cpu' | 'memory' | 'disk'
 
@@ -208,7 +197,7 @@ export const CreateSandboxSheet = ({
           memory: parseOptionalInteger(value.memory),
           disk: parseOptionalInteger(value.disk),
         })
-        sandboxId = sandbox.id
+        sandboxId = getSandboxRouteId(sandbox)
         onCreated?.(sandbox)
 
         toast.success('Box created')
@@ -258,7 +247,7 @@ export const CreateSandboxSheet = ({
       </SheetTrigger>
       <SheetContent className={`w-dvw sm:w-[600px] p-0 flex flex-col gap-0 ${className ?? ''}`}>
         <SheetHeader className="border-b border-border p-5 px-6 items-center flex text-left flex-row">
-          <SheetTitle className="text-2xl leading-tight">Create Box</SheetTitle>
+          <SheetTitle className="text-lg font-semibold leading-tight">Create Box</SheetTitle>
           <SheetDescription className="sr-only">Create a new box in your organization.</SheetDescription>
         </SheetHeader>
         <ScrollArea fade="mask" className="flex-1 min-h-0">
@@ -306,84 +295,31 @@ export const CreateSandboxSheet = ({
                       Image
                     </FieldLabel>
                     <FieldDescription>Choose the base image for this box.</FieldDescription>
-                    <div
-                      id={field.name}
-                      role="radiogroup"
-                      aria-invalid={isInvalid}
-                      aria-label="Image"
-                      className="grid gap-3"
-                    >
-                      {templatesLoading && (
-                        <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
-                          Loading images...
-                        </div>
-                      )}
-                      {!templatesLoading && templates.length === 0 && (
-                        <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
-                          No images are available for this organization.
-                        </div>
-                      )}
-                      {templates.map((template, index) => {
-                        const templateName = getTemplateName(template)
-                        const description = getTemplateDescription(template) ?? 'Prepared Linux image'
-                        const resources = getTemplateResourceSummary(template)
-                        const selected = field.state.value === template.id
-                        const isDefault = template.name === defaultTemplate || template.id === defaultTemplate
+                    <Select value={field.state.value} onValueChange={field.handleChange} disabled={templatesLoading}>
+                      <SelectTrigger id={field.name} aria-invalid={isInvalid} loading={templatesLoading}>
+                        <SelectValue placeholder={templatesLoading ? 'Loading images...' : 'Select an image'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map((template) => {
+                          const templateName = getTemplateName(template)
+                          const templateLabel = getTemplateLabel(template)
+                          const isDefault = template.name === defaultTemplate || template.id === defaultTemplate
 
-                        return (
-                          <button
-                            key={template.id}
-                            type="button"
-                            role="radio"
-                            aria-checked={selected}
-                            title={templateName}
-                            disabled={templatesLoading}
-                            onClick={() => field.handleChange(template.id)}
-                            className={cn(
-                              'group grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-md border bg-background p-4 text-left transition-all',
-                              'hover:border-foreground/40 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20',
-                              selected &&
-                                'border-foreground bg-accent shadow-sm hover:border-foreground hover:bg-accent',
-                            )}
-                          >
-                            <span className="min-w-0 space-y-2.5">
-                              <span className="flex min-w-0 items-center gap-2">
-                                <span className="truncate text-base font-semibold">{getTemplateLabel(template)}</span>
-                                {isDefault && (
-                                  <Badge variant="secondary" className="shrink-0">
-                                    Default
-                                  </Badge>
-                                )}
-                              </span>
-
-                              <span className="block text-sm text-foreground/70">{description}</span>
-
-                              <span className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-[minmax(0,1fr)_auto]">
-                                <span className="flex min-w-0 items-center gap-2">
-                                  <Layers className="size-4 shrink-0" />
-                                  <span className="truncate">Image {index + 1}</span>
-                                </span>
-                                <span className="flex flex-wrap items-center gap-1">
-                                  <ResourceChip resource="cpu" value={resources.cpu} />
-                                  <ResourceChip resource="memory" value={resources.memory} />
-                                  <ResourceChip resource="disk" value={resources.disk} />
-                                </span>
-                              </span>
-                            </span>
-
-                            <span
-                              className={cn(
-                                'mt-0.5 flex size-5 items-center justify-center rounded-full border text-transparent transition-colors',
-                                selected && 'border-foreground bg-foreground text-background',
-                              )}
-                              aria-hidden="true"
-                            >
-                              <CheckCircle2 className="size-3.5" />
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
+                          return (
+                            <SelectItem key={template.id} value={template.id}>
+                              {templateLabel}
+                              {isDefault ? ' (Default)' : ''}
+                              {templateName !== templateLabel ? ` - ${templateName}` : ''}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {!templatesLoading && templates.length === 0 && (
+                      <div className="rounded-md border bg-muted/35 p-4 text-sm text-muted-foreground">
+                        No images are available for this organization.
+                      </div>
+                    )}
                     {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
                       <FieldError errors={field.state.meta.errors} />
                     )}
@@ -404,193 +340,161 @@ export const CreateSandboxSheet = ({
                   Advanced options
                 </AccordionTrigger>
                 <AccordionContent className="pb-0 pt-4">
-                  <form.Subscribe
-                    selector={(state) => state.values.template}
-                    children={(selectedTemplateId) => {
-                      const selectedTemplate = templates.find((template) => template.id === selectedTemplateId)
-                      const defaultResources = selectedTemplate
-                        ? getTemplateResourceSummary(selectedTemplate)
-                        : undefined
+                  <div className="space-y-5">
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-semibold">Resources</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Leave fields blank to use the platform defaults.
+                        </p>
+                      </div>
+                      <div className="grid gap-3">
+                        {RESOURCE_FIELDS.map(({ name, label, unit, Icon }) => (
+                          <form.Field key={name} name={name}>
+                            {(field) => {
+                              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                              return (
+                                <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
+                                  <div className="min-w-0">
+                                    <Label
+                                      htmlFor={field.name}
+                                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
+                                    >
+                                      <Icon className="size-3.5" />
+                                      {label}
+                                    </Label>
+                                    <p className="mt-0.5 text-xs text-muted-foreground">Optional override.</p>
+                                  </div>
+                                  <div className="relative min-w-0">
+                                    <NumericFormat
+                                      customInput={Input}
+                                      aria-invalid={isInvalid}
+                                      id={field.name}
+                                      className="h-8 w-full pr-11 text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
+                                      placeholder={focusedAdvancedField === field.name ? '' : 'Default'}
+                                      decimalScale={0}
+                                      allowNegative={false}
+                                      isAllowed={(values) => values.floatValue === undefined || values.floatValue >= 1}
+                                      value={field.state.value ?? ''}
+                                      onFocus={() => setFocusedAdvancedField(field.name)}
+                                      onBlur={() => {
+                                        field.handleBlur()
+                                        setFocusedAdvancedField((currentField) =>
+                                          currentField === field.name ? null : currentField,
+                                        )
+                                      }}
+                                      onValueChange={(values) => field.handleChange(values.value)}
+                                    />
+                                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">
+                                      {unit}
+                                    </span>
+                                    {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
+                                      <FieldError errors={field.state.meta.errors} />
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            }}
+                          </form.Field>
+                        ))}
+                      </div>
+                    </div>
 
-                      return (
-                        <div className="space-y-5">
-                          <div className="space-y-3">
-                            <div>
-                              <Label className="text-sm font-semibold">Resources</Label>
-                              <p className="text-xs text-muted-foreground">
-                                Leave fields blank to use the selected image defaults.
-                              </p>
-                            </div>
-                            <div className="grid gap-3">
-                              {RESOURCE_FIELDS.map(({ name, label, unit, Icon }) => {
-                                const defaultValue = defaultResources?.[name]
-
-                                return (
-                                  <form.Field key={name} name={name}>
-                                    {(field) => {
-                                      const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                                      return (
-                                        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
-                                          <div className="min-w-0">
-                                            <Label
-                                              htmlFor={field.name}
-                                              className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
-                                            >
-                                              <Icon className="size-3.5" />
-                                              {label}
-                                            </Label>
-                                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                              {defaultValue === undefined
-                                                ? 'Select an image to view the default.'
-                                                : `Default: ${defaultValue} ${unit}`}
-                                            </p>
-                                          </div>
-                                          <div className="relative min-w-0">
-                                            <NumericFormat
-                                              customInput={Input}
-                                              aria-invalid={isInvalid}
-                                              id={field.name}
-                                              className="h-8 w-full pr-11 text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
-                                              placeholder={
-                                                focusedAdvancedField === field.name || defaultValue === undefined
-                                                  ? ''
-                                                  : String(defaultValue)
-                                              }
-                                              decimalScale={0}
-                                              allowNegative={false}
-                                              isAllowed={(values) =>
-                                                values.floatValue === undefined || values.floatValue >= 1
-                                              }
-                                              value={field.state.value ?? ''}
-                                              onFocus={() => setFocusedAdvancedField(field.name)}
-                                              onBlur={() => {
-                                                field.handleBlur()
-                                                setFocusedAdvancedField((currentField) =>
-                                                  currentField === field.name ? null : currentField,
-                                                )
-                                              }}
-                                              onValueChange={(values) => field.handleChange(values.value)}
-                                            />
-                                            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">
-                                              {unit}
-                                            </span>
-                                            {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
-                                              <FieldError errors={field.state.meta.errors} />
-                                            )}
-                                          </div>
-                                        </div>
+                    <div className="space-y-3 border-t pt-4">
+                      <div>
+                        <Label className="text-sm font-semibold">Lifecycle</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Leave fields blank to use the platform defaults.
+                        </p>
+                      </div>
+                      <div className="grid gap-3">
+                        <form.Field name="autoStopInterval">
+                          {(field) => {
+                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                            return (
+                              <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
+                                <div className="min-w-0">
+                                  <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
+                                    Auto-stop
+                                  </Label>
+                                  <p className="mt-0.5 text-xs text-muted-foreground">Default: 15 min</p>
+                                </div>
+                                <div className="relative min-w-0">
+                                  <NumericFormat
+                                    customInput={Input}
+                                    aria-invalid={isInvalid}
+                                    id={field.name}
+                                    className="h-8 w-full pr-10 text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
+                                    placeholder={focusedAdvancedField === field.name ? '' : '15'}
+                                    decimalScale={0}
+                                    allowNegative={false}
+                                    value={field.state.value ?? ''}
+                                    onFocus={() => setFocusedAdvancedField(field.name)}
+                                    onBlur={() => {
+                                      field.handleBlur()
+                                      setFocusedAdvancedField((currentField) =>
+                                        currentField === field.name ? null : currentField,
                                       )
                                     }}
-                                  </form.Field>
-                                )
-                              })}
-                            </div>
-                          </div>
+                                    onValueChange={(values) => field.handleChange(values.value)}
+                                  />
+                                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">
+                                    min
+                                  </span>
+                                  {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
+                                    <FieldError errors={field.state.meta.errors} />
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }}
+                        </form.Field>
 
-                          <div className="space-y-3 border-t pt-4">
-                            <div>
-                              <Label className="text-sm font-semibold">Lifecycle</Label>
-                              <p className="text-xs text-muted-foreground">
-                                Leave fields blank to use the platform defaults.
-                              </p>
-                            </div>
-                            <div className="grid gap-3">
-                              <form.Field name="autoStopInterval">
-                                {(field) => {
-                                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                                  return (
-                                    <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
-                                      <div className="min-w-0">
-                                        <Label
-                                          htmlFor={field.name}
-                                          className="text-xs font-medium text-muted-foreground"
-                                        >
-                                          Auto-stop
-                                        </Label>
-                                        <p className="mt-0.5 text-xs text-muted-foreground">Default: 15 min</p>
-                                      </div>
-                                      <div className="relative min-w-0">
-                                        <NumericFormat
-                                          customInput={Input}
-                                          aria-invalid={isInvalid}
-                                          id={field.name}
-                                          className="h-8 w-full pr-10 text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
-                                          placeholder={focusedAdvancedField === field.name ? '' : '15'}
-                                          decimalScale={0}
-                                          allowNegative={false}
-                                          value={field.state.value ?? ''}
-                                          onFocus={() => setFocusedAdvancedField(field.name)}
-                                          onBlur={() => {
-                                            field.handleBlur()
-                                            setFocusedAdvancedField((currentField) =>
-                                              currentField === field.name ? null : currentField,
-                                            )
-                                          }}
-                                          onValueChange={(values) => field.handleChange(values.value)}
-                                        />
-                                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">
-                                          min
-                                        </span>
-                                        {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
-                                          <FieldError errors={field.state.meta.errors} />
-                                        )}
-                                      </div>
-                                    </div>
-                                  )
-                                }}
-                              </form.Field>
-
-                              <form.Field name="autoDeleteInterval">
-                                {(field) => {
-                                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                                  return (
-                                    <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
-                                      <div className="min-w-0">
-                                        <Label
-                                          htmlFor={field.name}
-                                          className="text-xs font-medium text-muted-foreground"
-                                        >
-                                          Auto-delete
-                                        </Label>
-                                        <p className="mt-0.5 text-xs text-muted-foreground">Default: Disabled</p>
-                                      </div>
-                                      <div className="min-w-0">
-                                        <NumericFormat
-                                          customInput={Input}
-                                          aria-invalid={isInvalid}
-                                          id={field.name}
-                                          className="h-8 w-full text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
-                                          placeholder={focusedAdvancedField === field.name ? '' : 'Disabled'}
-                                          decimalScale={0}
-                                          allowNegative
-                                          isAllowed={(values) => {
-                                            if (values.floatValue === undefined) return true
-                                            return values.floatValue === -1 || values.floatValue >= 0
-                                          }}
-                                          value={field.state.value ?? ''}
-                                          onFocus={() => setFocusedAdvancedField(field.name)}
-                                          onBlur={() => {
-                                            field.handleBlur()
-                                            setFocusedAdvancedField((currentField) =>
-                                              currentField === field.name ? null : currentField,
-                                            )
-                                          }}
-                                          onValueChange={(values) => field.handleChange(values.value)}
-                                        />
-                                        {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
-                                          <FieldError errors={field.state.meta.errors} />
-                                        )}
-                                      </div>
-                                    </div>
-                                  )
-                                }}
-                              </form.Field>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }}
-                  />
+                        <form.Field name="autoDeleteInterval">
+                          {(field) => {
+                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                            return (
+                              <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_11rem] sm:items-center">
+                                <div className="min-w-0">
+                                  <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
+                                    Auto-delete
+                                  </Label>
+                                  <p className="mt-0.5 text-xs text-muted-foreground">Default: Disabled</p>
+                                </div>
+                                <div className="min-w-0">
+                                  <NumericFormat
+                                    customInput={Input}
+                                    aria-invalid={isInvalid}
+                                    id={field.name}
+                                    className="h-8 w-full text-right font-medium tabular-nums placeholder:font-normal placeholder:text-muted-foreground/45"
+                                    placeholder={focusedAdvancedField === field.name ? '' : 'Disabled'}
+                                    decimalScale={0}
+                                    allowNegative
+                                    isAllowed={(values) => {
+                                      if (values.floatValue === undefined) return true
+                                      return values.floatValue === -1 || values.floatValue >= 0
+                                    }}
+                                    value={field.state.value ?? ''}
+                                    onFocus={() => setFocusedAdvancedField(field.name)}
+                                    onBlur={() => {
+                                      field.handleBlur()
+                                      setFocusedAdvancedField((currentField) =>
+                                        currentField === field.name ? null : currentField,
+                                      )
+                                    }}
+                                    onValueChange={(values) => field.handleChange(values.value)}
+                                  />
+                                  {field.state.meta.errors.length > 0 && field.state.meta.isTouched && (
+                                    <FieldError errors={field.state.meta.errors} />
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }}
+                        </form.Field>
+                      </div>
+                    </div>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

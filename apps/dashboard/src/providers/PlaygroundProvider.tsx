@@ -83,7 +83,6 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     },
     createSandboxBaseParams: {
       autoStopInterval: 5,
-      autoArchiveInterval: 5,
       autoDeleteInterval: 0,
     },
     listFilesParams: {
@@ -310,8 +309,6 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const createSandboxParamsExist = objectHasAnyValue(sandboxParametersState['createSandboxBaseParams'])
     const useAutoStopInterval =
       createSandboxParamsExist && sandboxParametersState['createSandboxBaseParams']['autoStopInterval'] !== undefined
-    const useAutoArchiveInterval =
-      createSandboxParamsExist && sandboxParametersState['createSandboxBaseParams']['autoArchiveInterval'] !== undefined
     const useAutoDeleteInterval =
       createSandboxParamsExist && sandboxParametersState['createSandboxBaseParams']['autoDeleteInterval'] !== undefined
 
@@ -354,8 +351,6 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (useLanguageParam) createSandboxParams.language = sandboxParametersState['language']
     if (useAutoStopInterval)
       createSandboxParams.autoStopInterval = sandboxParametersState['createSandboxBaseParams']['autoStopInterval']
-    if (useAutoArchiveInterval)
-      createSandboxParams.autoArchiveInterval = sandboxParametersState['createSandboxBaseParams']['autoArchiveInterval']
     if (useAutoDeleteInterval)
       createSandboxParams.autoDeleteInterval = sandboxParametersState['createSandboxBaseParams']['autoDeleteInterval']
     createSandboxParams.labels = { 'boxlite-playground': 'true' }
@@ -369,7 +364,6 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       useResourcesDisk,
       createSandboxParamsExist,
       useAutoStopInterval,
-      useAutoArchiveInterval,
       useAutoDeleteInterval,
       useSandboxCreateParams,
       useCustomSandboxTemplateName,

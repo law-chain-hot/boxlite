@@ -13,6 +13,7 @@ import { useSandboxQuery } from '@/hooks/queries/useSandboxQuery'
 import { useTerminalSessionQuery } from '@/hooks/queries/useTerminalSessionQuery'
 import { useSandboxSessionContext } from '@/hooks/useSandboxSessionContext'
 import { useSandboxWsSync } from '@/hooks/useSandboxWsSync'
+import { getSandboxDisplayName, getSandboxPublicId } from '@/lib/sandbox-identity'
 import { isStoppable } from '@/lib/utils/sandbox'
 import { Container, Play, RefreshCw, TerminalSquare } from 'lucide-react'
 import { SandboxFullscreenShell } from './SandboxFullscreenShell'
@@ -126,14 +127,11 @@ export default function SandboxTerminalFullscreen() {
     body = <SandboxTerminalFrame sessionUrl={session.url} className="flex-1" />
   }
 
-  const label = sandbox?.name || sandbox?.id || sandboxId
+  const label = sandbox ? getSandboxDisplayName(sandbox) : sandboxId
+  const publicBoxId = sandbox ? getSandboxPublicId(sandbox) : ''
 
   return (
-    <SandboxFullscreenShell
-      sandboxId={sandboxId}
-      title={label}
-      copyValue={sandbox ? sandbox.name || sandbox.id : undefined}
-    >
+    <SandboxFullscreenShell sandboxId={sandboxId} title={label} copyValue={publicBoxId || undefined}>
       {body}
     </SandboxFullscreenShell>
   )

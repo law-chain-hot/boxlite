@@ -64,12 +64,12 @@ export function mergeOnboardingProgress(userId: string | undefined, update: Onbo
   return nextProgress
 }
 
-export function getOnboardingCoreProgress(progress: OnboardingProgress, hasBoxes = false) {
-  const completed = Number(Boolean(progress.boxCreated || hasBoxes)) + Number(Boolean(progress.commandRan))
+export function getOnboardingCoreProgress(progress: OnboardingProgress) {
+  const completed = Number(Boolean(progress.sdkConnected))
 
   return {
     completed,
-    total: 2,
-    isComplete: completed === 2,
+    total: 1,
+    isComplete: completed === 1,
   }
 }

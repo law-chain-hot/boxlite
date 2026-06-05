@@ -22,7 +22,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { RoutePath } from '@/enums/RoutePath'
-import { useArchiveSandboxMutation } from '@/hooks/mutations/useArchiveSandboxMutation'
 import { useDeleteSandboxMutation } from '@/hooks/mutations/useDeleteSandboxMutation'
 import { useRecoverSandboxMutation } from '@/hooks/mutations/useRecoverSandboxMutation'
 import { useStartSandboxMutation } from '@/hooks/mutations/useStartSandboxMutation'
@@ -48,7 +47,7 @@ import {
 import { isStoppable, isTransitioning } from '@/lib/utils/sandbox'
 import { OrganizationRolePermissionsEnum, OrganizationUserRoleEnum } from '@boxlite-ai/api-client'
 import { isAxiosError } from 'axios'
-import { CheckCircle2, Container, GripVertical, ListChecks, RefreshCw, Terminal } from 'lucide-react'
+import { Code2, Container, GripVertical, ListChecks, RefreshCw } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { useFeatureFlagEnabled } from 'posthog-js/react'
 import { useCallback, useEffect, useState } from 'react'
@@ -147,21 +146,6 @@ export default function SandboxDetails() {
     }, 220)
   }, [clearOnboardingUrlParam, userId])
 
-  const createBoxFromOnboardingDialog = useCallback(() => {
-    setShowOnboardingDialog(false)
-    clearOnboardingUrlParam()
-    navigate(RoutePath.BOXES, {
-      state: { openCreateBox: true, resumeOnboardingAfterCreate: true },
-    })
-  }, [clearOnboardingUrlParam, navigate])
-
-  const openTerminalFromOnboardingDialog = useCallback(() => {
-    updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
-    setShowOnboardingDialog(false)
-    clearOnboardingUrlParam()
-    setTab('terminal')
-  }, [clearOnboardingUrlParam, setTab, updateOnboardingProgress])
-
   // On desktop (lg+), the overview tab is hidden in the sidebar, so switch to a content tab
   useEffect(() => {
     if (isDesktop && tab === 'overview') {
@@ -178,7 +162,7 @@ export default function SandboxDetails() {
 
   const { data: sandbox, isLoading, isError, error, refetch, isFetching } = useSandboxQuery(sandboxId ?? '')
   const isNotFound = isError && isAxiosError(error.cause) && error.cause?.status === 404
-  const onboardingCoreProgress = getOnboardingCoreProgress(onboardingProgress, Boolean(sandbox))
+  const onboardingCoreProgress = getOnboardingCoreProgress(onboardingProgress)
   const showOnboardingNudge = Boolean(sandbox && !onboardingCoreProgress.isComplete)
 
   useSandboxWsSync({ sandboxId })
@@ -195,18 +179,8 @@ export default function SandboxDetails() {
     }
   }, [onboardingProgress.terminalOpened, sandbox, tab, updateOnboardingProgress])
 
-  const openTerminalFromNudge = () => {
-    updateOnboardingProgress({ boxCreated: true, terminalOpened: true })
-    setTab('terminal')
-  }
-
-  const markOnboardingCommandRan = () => {
-    updateOnboardingProgress({ boxCreated: true, terminalOpened: true, commandRan: true })
-  }
-
   const startMutation = useStartSandboxMutation()
   const stopMutation = useStopSandboxMutation()
-  const archiveMutation = useArchiveSandboxMutation()
   const recoverMutation = useRecoverSandboxMutation()
   const deleteMutation = useDeleteSandboxMutation()
 
@@ -216,7 +190,6 @@ export default function SandboxDetails() {
   const anyMutating =
     startMutation.isPending ||
     stopMutation.isPending ||
-    archiveMutation.isPending ||
     recoverMutation.isPending ||
     deleteMutation.isPending
   const actionsDisabled = anyMutating || transitioning
@@ -224,7 +197,7 @@ export default function SandboxDetails() {
   const handleStart = async () => {
     if (!sandbox) return
     try {
-      await startMutation.mutateAsync({ sandboxId: sandbox.id })
+      await startMutation.mutateAsync({ sandboxId: sandbox.id, detailRef: sandboxId })
       toast.success('Box started')
     } catch (error) {
       handleApiError(error, 'Failed to start box', {
@@ -243,27 +216,17 @@ export default function SandboxDetails() {
   const handleStop = async () => {
     if (!sandbox) return
     try {
-      await stopMutation.mutateAsync({ sandboxId: sandbox.id })
+      await stopMutation.mutateAsync({ sandboxId: sandbox.id, detailRef: sandboxId })
       toast.success('Box stopped')
     } catch (error) {
       handleApiError(error, 'Failed to stop box')
     }
   }
 
-  const handleArchive = async () => {
-    if (!sandbox) return
-    try {
-      await archiveMutation.mutateAsync({ sandboxId: sandbox.id })
-      toast.success('Box archived')
-    } catch (error) {
-      handleApiError(error, 'Failed to archive box')
-    }
-  }
-
   const handleRecover = async () => {
     if (!sandbox) return
     try {
-      await recoverMutation.mutateAsync({ sandboxId: sandbox.id })
+      await recoverMutation.mutateAsync({ sandboxId: sandbox.id, detailRef: sandboxId })
       toast.success('Box recovery started')
     } catch (error) {
       handleApiError(error, 'Failed to recover box')
@@ -273,7 +236,7 @@ export default function SandboxDetails() {
   const handleDelete = async () => {
     if (!sandbox) return
     try {
-      await deleteMutation.mutateAsync({ sandboxId: sandbox.id })
+      await deleteMutation.mutateAsync({ sandboxId: sandbox.id, detailRef: sandboxId })
       toast.success('Box deleted')
       setDeleteDialogOpen(false)
       navigate(RoutePath.BOXES)
@@ -307,11 +270,8 @@ export default function SandboxDetails() {
             setShowOnboardingDialog(true)
           }
         }}
-        onCreateBox={createBoxFromOnboardingDialog}
-        onOpenTerminal={openTerminalFromOnboardingDialog}
         onProgressChange={updateOnboardingProgress}
         progress={onboardingProgress}
-        hasBoxes={Boolean(sandbox) || Boolean(onboardingProgress.boxCreated)}
       />
       <SandboxHeader
         sandbox={sandbox}
@@ -322,7 +282,6 @@ export default function SandboxDetails() {
         isFetching={isFetching}
         onStart={handleStart}
         onStop={handleStop}
-        onArchive={handleArchive}
         onRecover={handleRecover}
         onDelete={() => setDeleteDialogOpen(true)}
         onRefresh={() => refetch()}
@@ -333,7 +292,6 @@ export default function SandboxDetails() {
         mutations={{
           start: startMutation.isPending,
           stop: stopMutation.isPending,
-          archive: archiveMutation.isPending,
           recover: recoverMutation.isPending,
         }}
       />
@@ -346,36 +304,18 @@ export default function SandboxDetails() {
                 <ListChecks className="size-4" />
               </span>
               <div className="min-w-0">
-                <div className="text-sm font-semibold">Continue setup</div>
+                <div className="text-sm font-semibold">Connect with the SDK</div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
-                    <CheckCircle2 className="size-3.5" />
-                    Box created
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Terminal className="size-3.5" />
-                    {onboardingProgress.commandRan
-                      ? 'Command ran'
-                      : onboardingProgress.terminalOpened
-                        ? 'Command not confirmed'
-                        : 'Open terminal'}
+                    <Code2 className="size-3.5" />
+                    Generate an API key and run the SDK example.
                   </span>
                 </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 sm:justify-end">
-              {!onboardingProgress.terminalOpened && (
-                <Button type="button" size="sm" onClick={openTerminalFromNudge}>
-                  Open Terminal
-                </Button>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                variant={onboardingProgress.terminalOpened ? 'default' : 'outline'}
-                onClick={markOnboardingCommandRan}
-              >
-                I ran this command
+              <Button type="button" size="sm" onClick={() => setShowOnboardingDialog(true)}>
+                Open SDK guide
               </Button>
             </div>
           </div>

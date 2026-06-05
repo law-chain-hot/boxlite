@@ -6,10 +6,16 @@
 
 import boxliteIconBlack from './boxlite-icon-black.png'
 import boxliteIconLight from './boxlite-icon-light.png'
+import boxliteWebsiteLogoDark from './boxlite-website-logo-dark.png'
+import boxliteWebsiteLogoLight from './boxlite-website-logo-light.png'
 
 type LogoProps = {
   className?: string
   decorative?: boolean
+}
+
+type LogoTextProps = {
+  className?: string
 }
 
 export function Logo({ className = 'h-7 w-7', decorative = false }: LogoProps) {
@@ -23,11 +29,13 @@ export function Logo({ className = 'h-7 w-7', decorative = false }: LogoProps) {
   )
 }
 
-export function LogoText() {
+export function LogoText({ className = 'h-9 w-auto' }: LogoTextProps = {}) {
+  const imageClassName = `${className} object-contain`
+
   return (
-    <span className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
-      <Logo className="h-6 w-6" decorative />
-      <span className="hidden sm:inline">BoxLite</span>
+    <span className="inline-flex items-center text-foreground">
+      <img src={boxliteWebsiteLogoLight} alt="BoxLite" className={`block dark:hidden ${imageClassName}`} />
+      <img src={boxliteWebsiteLogoDark} alt="BoxLite" className={`hidden dark:block ${imageClassName}`} />
     </span>
   )
 }

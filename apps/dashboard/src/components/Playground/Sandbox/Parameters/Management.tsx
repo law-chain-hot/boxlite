@@ -69,10 +69,9 @@ const SandboxManagementParameters: React.FC<SandboxManagementParametersProps> = 
   ]
 
   const lifecycleParamsFormData: (NumberParameterFormItem & {
-    key: 'autoStopInterval' | 'autoArchiveInterval' | 'autoDeleteInterval'
+    key: 'autoStopInterval' | 'autoDeleteInterval'
   })[] = [
     { label: 'Stop (min)', key: 'autoStopInterval', min: 0, max: Infinity, placeholder: '15' },
-    { label: 'Archive (min)', key: 'autoArchiveInterval', min: 0, max: Infinity, placeholder: '7' },
     { label: 'Delete (min)', key: 'autoDeleteInterval', min: -1, max: Infinity, placeholder: '' },
   ]
 

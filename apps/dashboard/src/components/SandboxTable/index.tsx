@@ -6,17 +6,11 @@
 
 import { RoutePath } from '@/enums/RoutePath'
 import { useCommandPaletteAnalytics } from '@/hooks/useCommandPaletteAnalytics'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsCompactScreen } from '@/hooks/use-mobile'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { getTemplateDisplayName } from '@/lib/template-display'
 import { cn } from '@/lib/utils'
-import {
-  filterArchivable,
-  filterDeletable,
-  filterStartable,
-  filterStoppable,
-  getBulkActionCounts,
-} from '@/lib/utils/sandbox'
+import { filterDeletable, filterStartable, filterStoppable, getBulkActionCounts } from '@/lib/utils/sandbox'
 import { OrganizationRolePermissionsEnum, Sandbox, SandboxState } from '@boxlite-ai/api-client'
 import { flexRender } from '@tanstack/react-table'
 import { Container } from 'lucide-react'
@@ -30,7 +24,7 @@ import { SelectionToast } from '../SelectionToast'
 import { TableEmptyState } from '../TableEmptyState'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { BulkAction, BulkActionAlertDialog } from './BulkActionAlertDialog'
-import { getSandboxDisplayName, getSandboxLastEvent } from './columns'
+import { getSandboxDisplayName, getSandboxLastEvent, getSandboxPublicIdLabel } from './columns'
 import { SandboxState as SandboxStateComponent } from './SandboxState'
 import { SandboxTableActions } from './SandboxTableActions'
 import { SandboxTableHeader } from './SandboxTableHeader'
@@ -61,8 +55,6 @@ export function SandboxTable({
   handleBulkDelete,
   handleBulkStart,
   handleBulkStop,
-  handleBulkArchive,
-  handleArchive,
   handleVnc,
   getWebTerminalUrl,
   handleCreateSshAccess,
@@ -83,7 +75,7 @@ export function SandboxTable({
   headerAction,
 }: SandboxTableProps) {
   const navigate = useNavigate()
-  const useCompactList = useIsMobile()
+  const useCompactList = useIsCompactScreen()
   const { authenticatedUserHasPermission } = useSelectedOrganization()
   const writePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES)
   const deletePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.DELETE_SANDBOXES)
@@ -96,7 +88,6 @@ export function SandboxTable({
     handleStart,
     handleStop,
     handleDelete,
-    handleArchive,
     handleVnc,
     getWebTerminalUrl,
     handleCreateSshAccess,
@@ -130,7 +121,6 @@ export function SandboxTable({
       [BulkAction.Delete]: () => handleBulkDelete(filterDeletable(selectedSandboxes).map((s) => s.id)),
       [BulkAction.Start]: () => handleBulkStart(filterStartable(selectedSandboxes).map((s) => s.id)),
       [BulkAction.Stop]: () => handleBulkStop(filterStoppable(selectedSandboxes).map((s) => s.id)),
-      [BulkAction.Archive]: () => handleBulkArchive(filterArchivable(selectedSandboxes).map((s) => s.id)),
     }
 
     handlers[pendingBulkAction]()
@@ -169,7 +159,6 @@ export function SandboxTable({
     onDelete: () => setPendingBulkAction(BulkAction.Delete),
     onStart: () => setPendingBulkAction(BulkAction.Start),
     onStop: () => setPendingBulkAction(BulkAction.Stop),
-    onArchive: () => setPendingBulkAction(BulkAction.Archive),
   })
 
   const { setIsOpen } = useCommandPaletteActions()
@@ -253,7 +242,9 @@ export function SandboxTable({
                         <div className="truncate text-sm font-medium text-primary">
                           {getSandboxDisplayName(sandbox)}
                         </div>
-                        <div className="truncate text-xs text-muted-foreground">{sandbox.id}</div>
+                        <div className="truncate font-mono text-xs text-muted-foreground">
+                          {getSandboxPublicIdLabel(sandbox)}
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 gap-x-5 gap-y-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
@@ -289,7 +280,6 @@ export function SandboxTable({
                           onStart={handleStart}
                           onStop={handleStop}
                           onDelete={handleDelete}
-                          onArchive={handleArchive}
                           onVnc={handleVnc}
                           onOpenWebTerminal={handleOpenWebTerminal}
                           onCreateSshAccess={handleCreateSshAccess}
@@ -313,7 +303,7 @@ export function SandboxTable({
         )
       ) : (
         <div className="overflow-x-auto rounded-sm border border-border bg-card">
-          <Table className="min-w-[1320px] border-separate border-spacing-0" style={{ tableLayout: 'fixed' }}>
+          <Table className="min-w-[1360px] border-separate border-spacing-0" style={{ tableLayout: 'fixed' }}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -414,7 +404,6 @@ export function SandboxTable({
                 [BulkAction.Delete]: bulkActionCounts.deletable,
                 [BulkAction.Start]: bulkActionCounts.startable,
                 [BulkAction.Stop]: bulkActionCounts.stoppable,
-                [BulkAction.Archive]: bulkActionCounts.archivable,
               }[pendingBulkAction]
             : 0
         }

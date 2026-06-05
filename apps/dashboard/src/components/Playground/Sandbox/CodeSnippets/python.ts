@@ -70,9 +70,6 @@ export const PythonSnippetGenerator: CodeSnippetGenerator = {
             p.config.useAutoStopInterval
               ? `${ind}auto_stop_interval=${p.state['createSandboxBaseParams']['autoStopInterval']}, # ${p.state['createSandboxBaseParams']['autoStopInterval'] == 0 ? 'Disables the auto-stop feature' : `Box will be stopped after ${p.state['createSandboxBaseParams']['autoStopInterval']} minute${(p.state['createSandboxBaseParams']['autoStopInterval'] as number) > 1 ? 's' : ''}`}`
               : '',
-            p.config.useAutoArchiveInterval
-              ? `${ind}auto_archive_interval=${p.state['createSandboxBaseParams']['autoArchiveInterval']}, # Auto-archive after a Box has been stopped for ${p.state['createSandboxBaseParams']['autoArchiveInterval'] == 0 ? '30 days' : `${p.state['createSandboxBaseParams']['autoArchiveInterval']} minutes`}`
-              : '',
             p.config.useAutoDeleteInterval
               ? `${ind}auto_delete_interval=${p.state['createSandboxBaseParams']['autoDeleteInterval']}, # ${p.state['createSandboxBaseParams']['autoDeleteInterval'] == 0 ? 'Box will be deleted immediately after stopping' : p.state['createSandboxBaseParams']['autoDeleteInterval'] == -1 ? 'Auto-delete functionality disabled' : `Auto-delete after a Box has been stopped for ${p.state['createSandboxBaseParams']['autoDeleteInterval']} minutes`}`
               : '',

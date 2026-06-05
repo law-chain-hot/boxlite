@@ -18,15 +18,15 @@ import {
 } from '@/components/ui/dialog'
 import { Spinner } from '@/components/ui/spinner'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CheckIcon, CopyIcon, EyeIcon, EyeOffIcon, InfoIcon } from 'lucide-react'
+import { CheckIcon, CopyIcon, InfoIcon } from 'lucide-react'
 
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
+import { Textarea } from '@/components/ui/textarea'
 import { useCreateApiKeyMutation } from '@/hooks/mutations/useCreateApiKeyMutation'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { handleApiError } from '@/lib/error-handling'
-import { getMaskedToken } from '@/lib/utils'
 import { ApiKeyResponse, CreateApiKeyPermissionsEnum } from '@boxlite-ai/api-client'
 import { useForm } from '@tanstack/react-form'
 import { Plus } from 'lucide-react'
@@ -121,7 +121,7 @@ export const CreateApiKeyDialog: React.FC<CreateApiKeyDialogProps> = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{createdKey ? 'API Key Created' : 'Create New API Key'}</DialogTitle>
           <DialogDescription>
@@ -242,8 +242,6 @@ function CreatedKeyDisplay({ createdKey, apiUrl }: { createdKey: ApiKeyResponse;
   const [copiedApiKey, copyApiKey] = useCopyToClipboard()
   const [copiedApiUrl, copyApiUrl] = useCopyToClipboard()
 
-  const [apiKeyRevealed, setApiKeyRevealed] = useState(false)
-
   return (
     <div className="space-y-6">
       <Alert variant="warning">
@@ -254,16 +252,22 @@ function CreatedKeyDisplay({ createdKey, apiUrl }: { createdKey: ApiKeyResponse;
         <Field>
           <FieldLabel htmlFor="api-key">API Key</FieldLabel>
 
-          <InputGroup className="pr-1 flex-1">
-            <InputGroupInput
+          <div className="relative">
+            <Textarea
               id="api-key"
-              value={apiKeyRevealed ? createdKey.value : getMaskedToken(createdKey.value)}
+              value={createdKey.value}
               readOnly
+              rows={4}
+              className="min-h-24 resize-none break-all pr-12 font-mono text-xs leading-5"
             />
-            <InputGroupButton variant="ghost" size="icon-xs" onClick={() => setApiKeyRevealed(!apiKeyRevealed)}>
-              {apiKeyRevealed ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
-            </InputGroupButton>
-            <InputGroupButton variant="ghost" size="icon-xs" onClick={() => copyApiKey(createdKey.value)}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Copy API key"
+              className="absolute right-2 top-2"
+              onClick={() => copyApiKey(createdKey.value)}
+            >
               <AnimatePresence initial={false} mode="wait">
                 {copiedApiKey ? (
                   <MotionCheckIcon className="h-4 w-4" key="copied" {...iconProps} />
@@ -271,8 +275,8 @@ function CreatedKeyDisplay({ createdKey, apiUrl }: { createdKey: ApiKeyResponse;
                   <MotionCopyIcon className="h-4 w-4" key="copy" {...iconProps} />
                 )}
               </AnimatePresence>
-            </InputGroupButton>
-          </InputGroup>
+            </Button>
+          </div>
         </Field>
 
         <Field>

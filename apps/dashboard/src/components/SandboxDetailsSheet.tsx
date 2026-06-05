@@ -7,9 +7,10 @@
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { getSandboxPublicId, getSandboxPublicIdLabel, getSandboxRouteId } from '@/lib/sandbox-identity'
 import { formatDuration, formatTimestamp, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox, SandboxState } from '@boxlite-ai/api-client'
-import { Archive, Play, Tag, Trash, Wrench, X } from 'lucide-react'
+import { Play, Tag, Trash, Wrench, X } from 'lucide-react'
 import React, { useState } from 'react'
 import { Link, generatePath } from 'react-router-dom'
 import { RoutePath } from '@/enums/RoutePath'
@@ -32,7 +33,6 @@ interface SandboxDetailsSheetProps {
   handleStart: (id: string) => void
   handleStop: (id: string) => void
   handleDelete: (id: string) => void
-  handleArchive: (id: string) => void
   getWebTerminalUrl: (id: string) => Promise<string | null>
   writePermitted: boolean
   deletePermitted: boolean
@@ -47,7 +47,6 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
   handleStart,
   handleStop,
   handleDelete,
-  handleArchive,
   getWebTerminalUrl,
   writePermitted,
   deletePermitted,
@@ -76,6 +75,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
 
   if (!sandbox) return null
   const templateDisplayName = getTemplateDisplayName(sandbox.template)
+  const publicBoxId = getSandboxPublicId(sandbox)
 
   const getLastEvent = (sandbox: Sandbox): { date: Date; relativeTimeString: string } => {
     return getRelativeTimeString(sandbox.updatedAt)
@@ -88,7 +88,7 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
           <SheetTitle className="text-2xl font-medium">Box Details</SheetTitle>
           <div className="flex gap-2 items-center">
             <Button variant="link" asChild>
-              <Link to={generatePath(RoutePath.BOX_DETAILS, { sandboxId: sandbox.id })}>View</Link>
+              <Link to={generatePath(RoutePath.BOX_DETAILS, { sandboxId: getSandboxRouteId(sandbox) })}>View</Link>
             </Button>
             {writePermitted && (
               <>
@@ -101,17 +101,16 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                     Stop
                   </Button>
                 )}
-                {(sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED) &&
-                  !sandbox.recoverable && (
-                    <Button
-                      variant="outline"
-                      onClick={() => handleStart(sandbox.id)}
-                      disabled={sandboxIsLoading[sandbox.id]}
-                    >
-                      <Play className="w-4 h-4" />
-                      Start
-                    </Button>
-                  )}
+                {sandbox.state === SandboxState.STOPPED && !sandbox.recoverable && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleStart(sandbox.id)}
+                    disabled={sandboxIsLoading[sandbox.id]}
+                  >
+                    <Play className="w-4 h-4" />
+                    Start
+                  </Button>
+                )}
                 {sandbox.state === SandboxState.ERROR && sandbox.recoverable && (
                   <Button
                     variant="outline"
@@ -120,16 +119,6 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                   >
                     <Wrench className="w-4 h-4" />
                     Recover
-                  </Button>
-                )}
-                {sandbox.state === SandboxState.STOPPED && (
-                  <Button
-                    variant="outline"
-                    className="w-8 h-8"
-                    onClick={() => handleArchive(sandbox.id)}
-                    disabled={sandboxIsLoading[sandbox.id]}
-                  >
-                    <Archive className="w-4 h-4" />
                   </Button>
                 )}
               </>
@@ -203,10 +192,10 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                 </div>
               </div>
               <div>
-                <h3 className="text-sm text-muted-foreground">UUID</h3>
+                <h3 className="text-sm text-muted-foreground">Box ID</h3>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{sandbox.id}</p>
-                  <CopyButton value={sandbox.id} tooltipText="Copy UUID" size="icon-xs" />
+                  <p className="text-sm font-mono font-medium truncate">{getSandboxPublicIdLabel(sandbox)}</p>
+                  {publicBoxId && <CopyButton value={publicBoxId} tooltipText="Copy Box ID" size="icon-xs" />}
                 </div>
               </div>
             </div>
@@ -259,12 +248,6 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                 <h3 className="text-sm text-muted-foreground">Auto-stop</h3>
                 <p className="mt-1 text-sm font-medium">
                   {sandbox.autoStopInterval ? formatDuration(sandbox.autoStopInterval) : 'Disabled'}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm text-muted-foreground">Auto-archive</h3>
-                <p className="mt-1 text-sm font-medium">
-                  {sandbox.autoArchiveInterval ? formatDuration(sandbox.autoArchiveInterval) : 'Disabled'}
                 </p>
               </div>
               <div>

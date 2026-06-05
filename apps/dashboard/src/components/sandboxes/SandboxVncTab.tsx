@@ -11,6 +11,7 @@ import { RoutePath } from '@/enums/RoutePath'
 import { useStartVncMutation } from '@/hooks/mutations/useStartVncMutation'
 import { useVncInitialStatusQuery, useVncPollStatusQuery } from '@/hooks/queries/useVncStatusQuery'
 import { useVncSessionQuery } from '@/hooks/queries/useVncSessionQuery'
+import { getSandboxRouteId } from '@/lib/sandbox-identity'
 import { cn } from '@/lib/utils'
 import { isStoppable } from '@/lib/utils/sandbox'
 import { Sandbox } from '@boxlite-ai/api-client'
@@ -188,7 +189,7 @@ export function SandboxVncTab({ sandbox, variant = 'tab' }: { sandbox: Sandbox; 
 
   // Active session
   if (session) {
-    const fullscreenHref = RoutePath.BOX_VNC.replace(':sandboxId', sandbox.id)
+    const fullscreenHref = RoutePath.BOX_VNC.replace(':sandboxId', getSandboxRouteId(sandbox))
     return renderPanel(
       <>
         <iframe
