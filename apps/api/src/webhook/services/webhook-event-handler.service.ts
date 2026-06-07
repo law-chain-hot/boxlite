@@ -8,22 +8,22 @@ import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { WebhookService } from './webhook.service'
 import { SandboxEvents } from '../../sandbox/constants/sandbox-events.constants'
-import { SnapshotEvents } from '../../sandbox/constants/snapshot-events'
+import { SavedImageEvents } from '../../sandbox/constants/saved-image-events'
 import { VolumeEvents } from '../../sandbox/constants/volume-events'
 import { SandboxCreatedEvent } from '../../sandbox/events/sandbox-create.event'
 import { SandboxStateUpdatedEvent } from '../../sandbox/events/sandbox-state-updated.event'
-import { SnapshotCreatedEvent } from '../../sandbox/events/snapshot-created.event'
-import { SnapshotStateUpdatedEvent } from '../../sandbox/events/snapshot-state-updated.event'
-import { SnapshotRemovedEvent } from '../../sandbox/events/snapshot-removed.event'
+import { SavedImageCreatedEvent } from '../../sandbox/events/saved-image-created.event'
+import { SavedImageStateUpdatedEvent } from '../../sandbox/events/saved-image-state-updated.event'
+import { SavedImageRemovedEvent } from '../../sandbox/events/saved-image-removed.event'
 import { VolumeCreatedEvent } from '../../sandbox/events/volume-created.event'
 import { VolumeStateUpdatedEvent } from '../../sandbox/events/volume-state-updated.event'
 import { WebhookEvent } from '../constants/webhook-events.constants'
 import {
   SandboxCreatedWebhookDto,
   SandboxStateUpdatedWebhookDto,
-  SnapshotCreatedWebhookDto,
-  SnapshotStateUpdatedWebhookDto,
-  SnapshotRemovedWebhookDto,
+  SavedImageCreatedWebhookDto,
+  SavedImageStateUpdatedWebhookDto,
+  SavedImageRemovedWebhookDto,
   VolumeCreatedWebhookDto,
   VolumeStateUpdatedWebhookDto,
 } from '../dto/webhook-event-payloads.dto'
@@ -62,45 +62,45 @@ export class WebhookEventHandlerService {
     }
   }
 
-  @OnEvent(SnapshotEvents.CREATED)
-  async handleSnapshotCreated(event: SnapshotCreatedEvent) {
+  @OnEvent(SavedImageEvents.CREATED)
+  async handleSavedImageCreated(event: SavedImageCreatedEvent) {
     if (!this.webhookService.isEnabled()) {
       return
     }
 
     try {
-      const payload = SnapshotCreatedWebhookDto.fromEvent(event, WebhookEvent.SNAPSHOT_CREATED)
-      await this.webhookService.sendWebhook(event.snapshot.organizationId, WebhookEvent.SNAPSHOT_CREATED, payload)
+      const payload = SavedImageCreatedWebhookDto.fromEvent(event, WebhookEvent.SAVED_IMAGE_CREATED)
+      await this.webhookService.sendWebhook(event.savedImage.organizationId, WebhookEvent.SAVED_IMAGE_CREATED, payload)
     } catch (error) {
-      this.logger.error(`Failed to send webhook for snapshot created: ${error.message}`)
+      this.logger.error(`Failed to send webhook for savedImage created: ${error.message}`)
     }
   }
 
-  @OnEvent(SnapshotEvents.STATE_UPDATED)
-  async handleSnapshotStateUpdated(event: SnapshotStateUpdatedEvent) {
+  @OnEvent(SavedImageEvents.STATE_UPDATED)
+  async handleSavedImageStateUpdated(event: SavedImageStateUpdatedEvent) {
     if (!this.webhookService.isEnabled()) {
       return
     }
 
     try {
-      const payload = SnapshotStateUpdatedWebhookDto.fromEvent(event, WebhookEvent.SNAPSHOT_STATE_UPDATED)
-      await this.webhookService.sendWebhook(event.snapshot.organizationId, WebhookEvent.SNAPSHOT_STATE_UPDATED, payload)
+      const payload = SavedImageStateUpdatedWebhookDto.fromEvent(event, WebhookEvent.SAVED_IMAGE_STATE_UPDATED)
+      await this.webhookService.sendWebhook(event.savedImage.organizationId, WebhookEvent.SAVED_IMAGE_STATE_UPDATED, payload)
     } catch (error) {
-      this.logger.error(`Failed to send webhook for snapshot state updated: ${error.message}`)
+      this.logger.error(`Failed to send webhook for savedImage state updated: ${error.message}`)
     }
   }
 
-  @OnEvent(SnapshotEvents.REMOVED)
-  async handleSnapshotRemoved(event: SnapshotRemovedEvent) {
+  @OnEvent(SavedImageEvents.REMOVED)
+  async handleSavedImageRemoved(event: SavedImageRemovedEvent) {
     if (!this.webhookService.isEnabled()) {
       return
     }
 
     try {
-      const payload = SnapshotRemovedWebhookDto.fromEvent(event, WebhookEvent.SNAPSHOT_REMOVED)
-      await this.webhookService.sendWebhook(event.snapshot.organizationId, WebhookEvent.SNAPSHOT_REMOVED, payload)
+      const payload = SavedImageRemovedWebhookDto.fromEvent(event, WebhookEvent.SAVED_IMAGE_REMOVED)
+      await this.webhookService.sendWebhook(event.savedImage.organizationId, WebhookEvent.SAVED_IMAGE_REMOVED, payload)
     } catch (error) {
-      this.logger.error(`Failed to send webhook for snapshot removed: ${error.message}`)
+      this.logger.error(`Failed to send webhook for savedImage removed: ${error.message}`)
     }
   }
 

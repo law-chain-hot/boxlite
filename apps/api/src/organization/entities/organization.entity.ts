@@ -58,16 +58,16 @@ export class Organization {
   @Column({
     type: 'int',
     default: 20,
-    name: 'max_snapshot_size',
+    name: 'max_saved_image_size',
   })
-  maxSnapshotSize: number
+  maxSavedImageSize: number
 
   @Column({
     type: 'int',
     default: 100,
-    name: 'snapshot_quota',
+    name: 'saved_image_quota',
   })
-  snapshotQuota: number
+  savedImageQuota: number
 
   @Column({
     type: 'int',
@@ -173,9 +173,9 @@ export class Organization {
   @Column({
     type: 'int',
     default: 20160,
-    name: 'snapshot_deactivation_timeout_minutes',
+    name: 'saved_image_deactivation_timeout_minutes',
   })
-  snapshotDeactivationTimeoutMinutes: number
+  savedImageDeactivationTimeoutMinutes: number
 
   @Column({
     default: false,

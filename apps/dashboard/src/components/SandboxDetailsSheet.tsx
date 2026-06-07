@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatDuration, formatTimestamp, getRelativeTimeString } from '@/lib/utils'
+import { getSavedImageDisplayName } from '@/lib/saved-image-display'
 import { Sandbox, SandboxState } from '@boxlite-ai/api-client'
 import { Archive, Play, Tag, Trash, Wrench, X } from 'lucide-react'
 import React, { useState } from 'react'
@@ -122,26 +123,6 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
                     Recover
                   </Button>
                 )}
-                {/* {(sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleFork(sandbox.id)}
-                    disabled={sandboxIsLoading[sandbox.id]}
-                  >
-                    <GitFork className="w-4 h-4" />
-                    Fork
-                  </Button>
-                )}
-                {(sandbox.state === SandboxState.STOPPED || sandbox.state === SandboxState.ARCHIVED) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleSnapshot(sandbox.id)}
-                    disabled={sandboxIsLoading[sandbox.id]}
-                  >
-                    <Camera className="w-4 h-4" />
-                    Create Image
-                  </Button>
-                )} */}
                 {sandbox.state === SandboxState.STOPPED && (
                   <Button
                     variant="outline"
@@ -245,8 +226,10 @@ const SandboxDetailsSheet: React.FC<SandboxDetailsSheetProps> = ({
               <div>
                 <h3 className="text-sm text-muted-foreground">Image</h3>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{sandbox.snapshot || '-'}</p>
-                  {sandbox.snapshot && <CopyButton value={sandbox.snapshot} tooltipText="Copy image" size="icon-xs" />}
+                  <p className="text-sm font-medium truncate">
+                    {sandbox.savedImage ? getSavedImageDisplayName(sandbox.savedImage) : '-'}
+                  </p>
+                  {sandbox.savedImage && <CopyButton value={sandbox.savedImage} tooltipText="Copy image" size="icon-xs" />}
                 </div>
               </div>
               <div>

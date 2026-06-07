@@ -21,8 +21,17 @@ export class CreateSandboxDto {
   name?: string
 
   @ApiPropertyOptional({
-    description: 'The ID or name of the snapshot used for the sandbox',
-    example: 'ubuntu-4vcpu-8ram-100gb',
+    description: 'The ID or name of the savedImage used for the sandbox',
+    example: 'ubuntu-saved-image-id',
+  })
+  @IsOptional()
+  @IsString()
+  savedImageId?: string
+
+  @ApiPropertyOptional({
+    description: 'Deprecated alias for savedImageId used by older clients',
+    example: 'ubuntu-saved-image-id',
+    deprecated: true,
   })
   @IsOptional()
   @IsString()

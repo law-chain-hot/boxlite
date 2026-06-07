@@ -33,9 +33,16 @@ export interface CreateSandbox {
      */
     'name'?: string;
     /**
-     * The ID or name of the snapshot used for the sandbox
+     * The ID or name of the savedImage used for the sandbox
      * @type {string}
      * @memberof CreateSandbox
+     */
+    'savedImageId'?: string;
+    /**
+     * Deprecated alias for savedImageId used by older clients
+     * @type {string}
+     * @memberof CreateSandbox
+     * @deprecated
      */
     'snapshot'?: string;
     /**

@@ -43,8 +43,8 @@ export interface CreateApiKey {
 export const CreateApiKeyPermissionsEnum = {
     WRITE_REGISTRIES: 'write:registries',
     DELETE_REGISTRIES: 'delete:registries',
-    WRITE_SNAPSHOTS: 'write:snapshots',
-    DELETE_SNAPSHOTS: 'delete:snapshots',
+    WRITE_SAVED_IMAGES: 'write:saved_images',
+    DELETE_SAVED_IMAGES: 'delete:saved_images',
     WRITE_SANDBOXES: 'write:sandboxes',
     DELETE_SANDBOXES: 'delete:sandboxes',
     READ_VOLUMES: 'read:volumes',

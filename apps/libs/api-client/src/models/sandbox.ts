@@ -51,11 +51,11 @@ export interface Sandbox {
      */
     'name': string;
     /**
-     * The snapshot used for the sandbox
+     * The savedImage used for the sandbox
      * @type {string}
      * @memberof Sandbox
      */
-    'snapshot'?: string;
+    'savedImage'?: string;
     /**
      * The user associated with the project
      * @type {string}

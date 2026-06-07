@@ -24,7 +24,7 @@ import { OnAsyncEvent } from '../../common/decorators/on-async-event.decorator'
 import { UserEvents } from '../../user/constants/user-events.constant'
 import { UserCreatedEvent } from '../../user/events/user-created.event'
 import { UserDeletedEvent } from '../../user/events/user-deleted.event'
-import { Snapshot } from '../../sandbox/entities/snapshot.entity'
+import { SavedImage } from '../../sandbox/entities/saved-image.entity'
 import { SandboxState } from '../../sandbox/enums/sandbox-state.enum'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { OrganizationEvents } from '../constants/organization-events.constant'
@@ -35,8 +35,8 @@ import { RedisLockProvider } from '../../sandbox/common/redis-lock.provider'
 import { OrganizationSuspendedSandboxStoppedEvent } from '../events/organization-suspended-sandbox-stopped.event'
 import { SandboxDesiredState } from '../../sandbox/enums/sandbox-desired-state.enum'
 import { SystemRole } from '../../user/enums/system-role.enum'
-import { SnapshotState } from '../../sandbox/enums/snapshot-state.enum'
-import { OrganizationSuspendedSnapshotDeactivatedEvent } from '../events/organization-suspended-snapshot-deactivated.event'
+import { SavedImageState } from '../../sandbox/enums/saved-image-state.enum'
+import { OrganizationSuspendedSavedImageDeactivatedEvent } from '../events/organization-suspended-saved-image-deactivated.event'
 import { TrackJobExecution } from '../../common/decorators/track-job-execution.decorator'
 import { TrackableJobExecutions } from '../../common/interfaces/trackable-job-executions'
 import { setTimeout } from 'timers/promises'
@@ -66,8 +66,8 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     @InjectRepository(Organization)
     private readonly organizationRepository: Repository<Organization>,
     private readonly sandboxRepository: SandboxRepository,
-    @InjectRepository(Snapshot)
-    private readonly snapshotRepository: Repository<Snapshot>,
+    @InjectRepository(SavedImage)
+    private readonly savedImageRepository: Repository<SavedImage>,
     private readonly eventEmitter: EventEmitter2,
     private readonly configService: TypedConfigService,
     private readonly redisLockProvider: RedisLockProvider,
@@ -178,9 +178,9 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     organization.maxCpuPerSandbox = updateDto.maxCpuPerSandbox ?? organization.maxCpuPerSandbox
     organization.maxMemoryPerSandbox = updateDto.maxMemoryPerSandbox ?? organization.maxMemoryPerSandbox
     organization.maxDiskPerSandbox = updateDto.maxDiskPerSandbox ?? organization.maxDiskPerSandbox
-    organization.maxSnapshotSize = updateDto.maxSnapshotSize ?? organization.maxSnapshotSize
+    organization.maxSavedImageSize = updateDto.maxSavedImageSize ?? organization.maxSavedImageSize
     organization.volumeQuota = updateDto.volumeQuota ?? organization.volumeQuota
-    organization.snapshotQuota = updateDto.snapshotQuota ?? organization.snapshotQuota
+    organization.savedImageQuota = updateDto.savedImageQuota ?? organization.savedImageQuota
     organization.authenticatedRateLimit = updateDto.authenticatedRateLimit ?? organization.authenticatedRateLimit
     organization.sandboxCreateRateLimit = updateDto.sandboxCreateRateLimit ?? organization.sandboxCreateRateLimit
     organization.sandboxLifecycleRateLimit =
@@ -191,8 +191,8 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
       updateDto.sandboxCreateRateLimitTtlSeconds ?? organization.sandboxCreateRateLimitTtlSeconds
     organization.sandboxLifecycleRateLimitTtlSeconds =
       updateDto.sandboxLifecycleRateLimitTtlSeconds ?? organization.sandboxLifecycleRateLimitTtlSeconds
-    organization.snapshotDeactivationTimeoutMinutes =
-      updateDto.snapshotDeactivationTimeoutMinutes ?? organization.snapshotDeactivationTimeoutMinutes
+    organization.savedImageDeactivationTimeoutMinutes =
+      updateDto.savedImageDeactivationTimeoutMinutes ?? organization.savedImageDeactivationTimeoutMinutes
 
     await this.organizationRepository.save(organization)
   }
@@ -489,8 +489,8 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     organization.maxCpuPerSandbox = quota.maxCpuPerSandbox
     organization.maxMemoryPerSandbox = quota.maxMemoryPerSandbox
     organization.maxDiskPerSandbox = quota.maxDiskPerSandbox
-    organization.snapshotQuota = quota.snapshotQuota
-    organization.maxSnapshotSize = quota.maxSnapshotSize
+    organization.savedImageQuota = quota.savedImageQuota
+    organization.maxSavedImageSize = quota.maxSavedImageSize
     organization.volumeQuota = quota.volumeQuota
 
     if (!creatorEmailVerified && !this.configService.get('skipUserEmailVerification')) {
@@ -635,13 +635,13 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     await this.redisLockProvider.unlock(lockKey)
   }
 
-  @Cron(CronExpression.EVERY_MINUTE, { name: 'deactivate-suspended-organization-snapshots' })
+  @Cron(CronExpression.EVERY_MINUTE, { name: 'deactivate-suspended-organization-savedImages' })
   @TrackJobExecution()
-  @LogExecution('deactivate-suspended-organization-snapshots')
+  @LogExecution('deactivate-suspended-organization-savedImages')
   @WithInstrumentation()
-  async deactivateSuspendedOrganizationSnapshots(): Promise<void> {
+  async deactivateSuspendedOrganizationSavedImages(): Promise<void> {
     //  lock the sync to only run one instance at a time
-    const lockKey = 'deactivate-suspended-organization-snapshots'
+    const lockKey = 'deactivate-suspended-organization-savedImages'
     if (!(await this.redisLockProvider.lock(lockKey, 60))) {
       return
     }
@@ -653,12 +653,12 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
       .andWhere(`"suspendedAt" < NOW() - INTERVAL '1 hour' * "suspensionCleanupGracePeriodHours"`)
       .andWhere(`"suspendedAt" > NOW() - INTERVAL '7 day'`)
       .andWhereExists(
-        this.snapshotRepository
-          .createQueryBuilder('snapshot')
+        this.savedImageRepository
+          .createQueryBuilder('savedImage')
           .select('1')
-          .where('snapshot.organizationId = organization.id')
-          .andWhere(`snapshot.state = '${SnapshotState.ACTIVE}'`)
-          .andWhere(`snapshot.general = false`),
+          .where('savedImage.organizationId = organization.id')
+          .andWhere(`savedImage.state = '${SavedImageState.ACTIVE}'`)
+          .andWhere(`savedImage.general = false`),
       )
       .take(100)
       .getRawMany()
@@ -671,21 +671,21 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
       return
     }
 
-    const snapshotQueryResult = await this.snapshotRepository
-      .createQueryBuilder('snapshot')
+    const savedImageQueryResult = await this.savedImageRepository
+      .createQueryBuilder('savedImage')
       .select('id')
-      .where('snapshot.organizationId IN (:...suspendedOrgIds)', { suspendedOrgIds: suspendedOrganizationIds })
-      .andWhere(`snapshot.state = '${SnapshotState.ACTIVE}'`)
-      .andWhere(`snapshot.general = false`)
+      .where('savedImage.organizationId IN (:...suspendedOrgIds)', { suspendedOrgIds: suspendedOrganizationIds })
+      .andWhere(`savedImage.state = '${SavedImageState.ACTIVE}'`)
+      .andWhere(`savedImage.general = false`)
       .take(100)
       .getRawMany()
 
-    const snapshotIds = snapshotQueryResult.map((result) => result.id)
+    const savedImageIds = savedImageQueryResult.map((result) => result.id)
 
-    snapshotIds.map((id) =>
+    savedImageIds.map((id) =>
       this.eventEmitter.emitAsync(
-        OrganizationEvents.SUSPENDED_SNAPSHOT_DEACTIVATED,
-        new OrganizationSuspendedSnapshotDeactivatedEvent(id),
+        OrganizationEvents.SUSPENDED_SAVED_IMAGE_DEACTIVATED,
+        new OrganizationSuspendedSavedImageDeactivatedEvent(id),
       ),
     )
 

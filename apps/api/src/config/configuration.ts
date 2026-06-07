@@ -63,7 +63,7 @@ const configuration = {
     secure: process.env.SMTP_SECURE === 'true',
     from: process.env.SMTP_EMAIL_FROM || 'noreply@mail.boxlite.io',
   },
-  defaultSnapshot: process.env.DEFAULT_SNAPSHOT,
+  defaultSavedImage: process.env.DEFAULT_SAVED_IMAGE,
   dashboardUrl: process.env.DASHBOARD_URL,
   // Default to empty string - dashboard will then hit '/api'
   dashboardBaseApiUrl: process.env.DASHBOARD_BASE_API_URL || '',
@@ -99,7 +99,7 @@ const configuration = {
     domain: process.env.PROXY_DOMAIN,
     protocol: process.env.PROXY_PROTOCOL,
     apiKey: process.env.PROXY_API_KEY,
-    templateUrl: process.env.PROXY_TEMPLATE_URL,
+    savedImageUrl: process.env.PROXY_SAVED_IMAGE_URL,
     toolboxUrl:
       (process.env.PROXY_TOOLBOX_BASE_URL || `${process.env.PROXY_PROTOCOL}://${process.env.PROXY_DOMAIN}`) +
       '/toolbox',
@@ -278,8 +278,8 @@ const configuration = {
     maxCpuPerSandbox: parseInt(process.env.DEFAULT_ORG_QUOTA_MAX_CPU_PER_SANDBOX || '4', 10),
     maxMemoryPerSandbox: parseInt(process.env.DEFAULT_ORG_QUOTA_MAX_MEMORY_PER_SANDBOX || '8', 10),
     maxDiskPerSandbox: parseInt(process.env.DEFAULT_ORG_QUOTA_MAX_DISK_PER_SANDBOX || '10', 10),
-    snapshotQuota: parseInt(process.env.DEFAULT_ORG_QUOTA_SNAPSHOT_QUOTA || '100', 10),
-    maxSnapshotSize: parseInt(process.env.DEFAULT_ORG_QUOTA_MAX_SNAPSHOT_SIZE || '20', 10),
+    savedImageQuota: parseInt(process.env.DEFAULT_ORG_QUOTA_SAVED_IMAGE_QUOTA || '100', 10),
+    maxSavedImageSize: parseInt(process.env.DEFAULT_ORG_QUOTA_MAX_SAVED_IMAGE_SIZE || '20', 10),
     volumeQuota: parseInt(process.env.DEFAULT_ORG_QUOTA_VOLUME_QUOTA || '100', 10),
   },
   defaultRegion: {
@@ -295,8 +295,8 @@ const configuration = {
     maxCpuPerSandbox: parseInt(process.env.ADMIN_MAX_CPU_PER_SANDBOX || '0', 10),
     maxMemoryPerSandbox: parseInt(process.env.ADMIN_MAX_MEMORY_PER_SANDBOX || '0', 10),
     maxDiskPerSandbox: parseInt(process.env.ADMIN_MAX_DISK_PER_SANDBOX || '0', 10),
-    snapshotQuota: parseInt(process.env.ADMIN_SNAPSHOT_QUOTA || '100', 10),
-    maxSnapshotSize: parseInt(process.env.ADMIN_MAX_SNAPSHOT_SIZE || '100', 10),
+    savedImageQuota: parseInt(process.env.ADMIN_SAVED_IMAGE_QUOTA || '100', 10),
+    maxSavedImageSize: parseInt(process.env.ADMIN_MAX_SAVED_IMAGE_SIZE || '100', 10),
     volumeQuota: parseInt(process.env.ADMIN_VOLUME_QUOTA || '0', 10),
   },
   skipUserEmailVerification: process.env.SKIP_USER_EMAIL_VERIFICATION === 'true',
@@ -331,8 +331,14 @@ const configuration = {
     key: process.env.ENCRYPTION_KEY,
     salt: process.env.ENCRYPTION_SALT,
   },
-  failedSnapshotRunnerRetentionHours: parseInt(process.env.FAILED_SNAPSHOT_RUNNER_RETENTION_HOURS || '3', 10),
-  buildInfoSnapshotRunnerStalenessDays: parseInt(process.env.BUILDINFO_SNAPSHOT_RUNNER_STALENESS_DAYS || '7', 10),
+  failedRunnerArtifactCacheRetentionHours: parseInt(
+    process.env.FAILED_RUNNER_ARTIFACT_CACHE_RETENTION_HOURS || '3',
+    10,
+  ),
+  buildInfoRunnerArtifactCacheStalenessDays: parseInt(
+    process.env.BUILDINFO_RUNNER_ARTIFACT_CACHE_STALENESS_DAYS || '7',
+    10,
+  ),
 }
 
 export { configuration }

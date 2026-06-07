@@ -5,6 +5,7 @@
  */
 
 import { formatTimestamp, getRelativeTimeString } from '@/lib/utils'
+import { getSavedImageDisplayName } from '@/lib/saved-image-display'
 import { Sandbox, SandboxDesiredState, SandboxState } from '@boxlite-ai/api-client'
 import { ColumnDef } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp } from 'lucide-react'
@@ -175,7 +176,7 @@ export function getColumns({
       accessorKey: 'state',
     },
     {
-      id: 'snapshot',
+      id: 'savedImage',
       size: 150,
       enableSorting: true,
       enableHiding: false,
@@ -185,15 +186,15 @@ export function getColumns({
       cell: ({ row }) => {
         return (
           <div className="w-full truncate">
-            {row.original.snapshot ? (
-              <EllipsisWithTooltip>{row.original.snapshot}</EllipsisWithTooltip>
+            {row.original.savedImage ? (
+              <EllipsisWithTooltip>{getSavedImageDisplayName(row.original.savedImage)}</EllipsisWithTooltip>
             ) : (
               <div className="truncate text-muted-foreground/50">-</div>
             )}
           </div>
         )
       },
-      accessorKey: 'snapshot',
+      accessorKey: 'savedImage',
     },
     {
       id: 'region',

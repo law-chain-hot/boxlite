@@ -16,7 +16,7 @@
 import type { Configuration } from '../configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
-// Some imports not used depending on template conditions
+// Some imports not used depending on savedImage conditions
 // @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
 // @ts-ignore
@@ -171,9 +171,9 @@ export const DockerRegistryApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          *
-         * @summary Get temporary registry access for pushing snapshots
+         * @summary Get temporary registry access for pushing runtime artifacts
          * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-         * @param {string} [regionId] ID of the region where the snapshot will be available (defaults to organization default region)
+         * @param {string} [regionId] ID of the region where the runtime artifact will be available (defaults to organization default region)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -402,9 +402,9 @@ export const DockerRegistryApiFp = function(configuration?: Configuration) {
         },
         /**
          *
-         * @summary Get temporary registry access for pushing snapshots
+         * @summary Get temporary registry access for pushing runtime artifacts
          * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-         * @param {string} [regionId] ID of the region where the snapshot will be available (defaults to organization default region)
+         * @param {string} [regionId] ID of the region where the runtime artifact will be available (defaults to organization default region)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -501,9 +501,9 @@ export const DockerRegistryApiFactory = function (configuration?: Configuration,
         },
         /**
          *
-         * @summary Get temporary registry access for pushing snapshots
+         * @summary Get temporary registry access for pushing runtime artifacts
          * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-         * @param {string} [regionId] ID of the region where the snapshot will be available (defaults to organization default region)
+         * @param {string} [regionId] ID of the region where the runtime artifact will be available (defaults to organization default region)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -594,9 +594,9 @@ export class DockerRegistryApi extends BaseAPI {
 
     /**
      *
-     * @summary Get temporary registry access for pushing snapshots
+     * @summary Get temporary registry access for pushing runtime artifacts
      * @param {string} [xBoxLiteOrganizationID] Use with JWT to specify the organization ID
-     * @param {string} [regionId] ID of the region where the snapshot will be available (defaults to organization default region)
+     * @param {string} [regionId] ID of the region where the runtime artifact will be available (defaults to organization default region)
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DockerRegistryApi

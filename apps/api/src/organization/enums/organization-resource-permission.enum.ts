@@ -12,9 +12,9 @@ export enum OrganizationResourcePermission {
   WRITE_REGISTRIES = 'write:registries',
   DELETE_REGISTRIES = 'delete:registries',
 
-  // snapshots
-  WRITE_SNAPSHOTS = 'write:snapshots',
-  DELETE_SNAPSHOTS = 'delete:snapshots',
+  // savedImages
+  WRITE_SAVED_IMAGES = 'write:saved_images',
+  DELETE_SAVED_IMAGES = 'delete:saved_images',
 
   // sandboxes
   WRITE_SANDBOXES = 'write:sandboxes',

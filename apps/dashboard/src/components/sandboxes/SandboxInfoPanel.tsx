@@ -9,6 +9,7 @@ import { TimestampTooltip } from '@/components/TimestampTooltip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getSavedImageDisplayName } from '@/lib/saved-image-display'
 import { cn, formatDuration, getRelativeTimeString } from '@/lib/utils'
 import { Sandbox } from '@boxlite-ai/api-client'
 import { AlertCircle, Tag } from 'lucide-react'
@@ -77,10 +78,10 @@ export function SandboxInfoPanel({ sandbox, getRegionName }: SandboxInfoPanelPro
           </div>
         </InfoRow>
         <InfoRow label="Image" className="-mr-2">
-          {sandbox.snapshot ? (
+          {sandbox.savedImage ? (
             <div className="flex items-center gap-1 min-w-0">
-              <span className="truncate font-mono text-sm">{sandbox.snapshot}</span>
-              <CopyButton value={sandbox.snapshot} tooltipText="Copy" size="icon-xs" />
+              <span className="truncate font-mono text-sm">{getSavedImageDisplayName(sandbox.savedImage)}</span>
+              <CopyButton value={sandbox.savedImage} tooltipText="Copy" size="icon-xs" />
             </div>
           ) : (
             <span className="text-muted-foreground font-normal">—</span>

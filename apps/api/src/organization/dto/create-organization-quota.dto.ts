@@ -42,12 +42,12 @@ export class CreateOrganizationQuotaDto {
   @ApiPropertyOptional()
   @IsNumber()
   @IsOptional()
-  snapshotQuota?: number
+  savedImageQuota?: number
 
   @ApiPropertyOptional()
   @IsNumber()
   @IsOptional()
-  maxSnapshotSize?: number
+  maxSavedImageSize?: number
 
   @ApiPropertyOptional()
   @IsNumber()

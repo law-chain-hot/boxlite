@@ -99,11 +99,11 @@ The service automatically sends webhooks for the following events:
 - `sandbox.created` - When a sandbox is created
 - `sandbox.state.updated` - When sandbox state changes
 
-### Snapshot Events
+### SavedImage Events
 
-- `snapshot.created` - When a snapshot is created
-- `snapshot.state.updated` - When snapshot state changes
-- `snapshot.removed` - When a snapshot is removed
+- `savedImage.created` - When a saved image is created
+- `savedImage.state.updated` - When savedImage state changes
+- `savedImage.removed` - When a saved image is removed
 
 ### Volume Events
 
@@ -138,12 +138,12 @@ All webhooks include event-specific data relevant to the resource being updated.
 }
 ```
 
-### Example Snapshot Created Payload
+### Example SavedImage Created Payload
 
 ```json
 {
-  "id": "snapshot-uuid",
-  "name": "my-snapshot",
+  "id": "saved-image-uuid",
+  "name": "my-savedImage",
   "organizationId": "org-uuid",
   "state": "ACTIVE",
   "createdAt": "2025-01-01T00:00:00.000Z"

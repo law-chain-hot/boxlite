@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { SnapshotQueryParams } from './useSnapshotsQuery'
+import { SavedImageQueryParams } from './useSavedImagesPageQuery'
 import type { AuditLogsQueryParams } from './useAuditLogsQuery'
 
 export const queryKeys = {
@@ -56,10 +56,11 @@ export const queryKeys = {
         ...(page !== undefined && perPage !== undefined ? [{ page, perPage }] : []),
       ] as const,
   },
-  snapshots: {
-    all: ['snapshots'] as const,
-    list: (organizationId: string, params?: SnapshotQueryParams) => {
-      const base = [...queryKeys.snapshots.all, organizationId, 'list'] as const
+  savedImages: {
+    all: ['saved-images'] as const,
+    list: (organizationId: string) => [...queryKeys.savedImages.all, organizationId, 'list'] as const,
+    paginatedList: (organizationId: string, params?: SavedImageQueryParams) => {
+      const base = [...queryKeys.savedImages.all, organizationId, 'paginated-list'] as const
       if (!params) return base
       return [
         ...base,

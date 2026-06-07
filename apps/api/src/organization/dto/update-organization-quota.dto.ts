@@ -18,10 +18,10 @@ export class UpdateOrganizationQuotaDto {
   maxDiskPerSandbox?: number
 
   @ApiProperty({ nullable: true })
-  snapshotQuota?: number
+  savedImageQuota?: number
 
   @ApiProperty({ nullable: true })
-  maxSnapshotSize?: number
+  maxSavedImageSize?: number
 
   @ApiProperty({ nullable: true })
   volumeQuota?: number
@@ -44,6 +44,6 @@ export class UpdateOrganizationQuotaDto {
   @ApiProperty({ nullable: true })
   sandboxLifecycleRateLimitTtlSeconds?: number
 
-  @ApiProperty({ nullable: true, description: 'Time in minutes before an unused snapshot is deactivated' })
-  snapshotDeactivationTimeoutMinutes?: number
+  @ApiProperty({ nullable: true, description: 'Time in minutes before an unused savedImage is deactivated' })
+  savedImageDeactivationTimeoutMinutes?: number
 }

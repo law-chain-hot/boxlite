@@ -227,7 +227,7 @@ const RunnerDetailsSheet: React.FC<RunnerDetailsSheetProps> = ({
                 </div>
                 <div>
                   <h4 className="text-muted-foreground text-xs">Images</h4>
-                  <p className="mt-1 text-2xl font-semibold">{runner.currentSnapshotCount ?? 0}</p>
+                  <p className="mt-1 text-2xl font-semibold">{runner.currentArtifactCount ?? 0}</p>
                 </div>
               </div>
             </div>

@@ -18,18 +18,18 @@ import { ToolboxService } from './services/toolbox.deprecated.service'
 import { DockerRegistryModule } from '../docker-registry/docker-registry.module'
 import { SandboxManager } from './managers/sandbox.manager'
 import { ToolboxController } from './controllers/toolbox.deprecated.controller'
-import { Snapshot } from './entities/snapshot.entity'
-import { SnapshotController } from './controllers/snapshot.controller'
-import { SnapshotService } from './services/snapshot.service'
-import { SnapshotManager } from './managers/snapshot.manager'
-import { SnapshotRunner } from './entities/snapshot-runner.entity'
+import { SavedImage } from './entities/saved-image.entity'
+import { SavedImageController } from './controllers/saved-image.controller'
+import { SavedImageService } from './services/saved-image.service'
+import { RuntimeArtifactManager } from './managers/runtime-artifact.manager'
+import { RunnerArtifactCache } from './entities/runner-artifact-cache.entity'
 import { DockerRegistry } from '../docker-registry/entities/docker-registry.entity'
 import { RedisLockProvider } from './common/redis-lock.provider'
 import { OrganizationModule } from '../organization/organization.module'
 import { SandboxWarmPoolService } from './services/sandbox-warm-pool.service'
 import { WarmPool } from './entities/warm-pool.entity'
 import { PreviewController } from './controllers/preview.controller'
-import { SnapshotSubscriber } from './subscribers/snapshot.subscriber'
+import { SavedImageSubscriber } from './subscribers/saved-image.subscriber'
 import { VolumeController } from './controllers/volume.controller'
 import { VolumeService } from './services/volume.service'
 import { VolumeManager } from './managers/volume.manager'
@@ -49,7 +49,7 @@ import { SandboxRepository } from './repositories/sandbox.repository'
 import { ProxyCacheInvalidationService } from './services/proxy-cache-invalidation.service'
 import { RegionModule } from '../region/region.module'
 import { Region } from '../region/entities/region.entity'
-import { SnapshotRegion } from './entities/snapshot-region.entity'
+import { SavedImageRegion } from './entities/saved-image-region.entity'
 import { JobController } from './controllers/job.controller'
 import { JobService } from './services/job.service'
 import { JobStateHandlerService } from './services/job-state-handler.service'
@@ -75,10 +75,10 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     TypeOrmModule.forFeature([
       Sandbox,
       Runner,
-      Snapshot,
+      SavedImage,
       BuildInfo,
-      SnapshotRunner,
-      SnapshotRegion,
+      RunnerArtifactCache,
+      SavedImageRegion,
       DockerRegistry,
       WarmPool,
       Volume,
@@ -92,7 +92,7 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     SandboxController,
     RunnerController,
     ToolboxController,
-    SnapshotController,
+    SavedImageController,
     WorkspaceController,
     PreviewController,
     VolumeController,
@@ -105,12 +105,12 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     SandboxWarmPoolService,
     RunnerService,
     ToolboxService,
-    SnapshotService,
+    SavedImageService,
     ProxyCacheInvalidationService,
     SandboxLookupCacheInvalidationService,
-    SnapshotManager,
+    RuntimeArtifactManager,
     RedisLockProvider,
-    SnapshotSubscriber,
+    SavedImageSubscriber,
     VolumeService,
     VolumeManager,
     VolumeSubscriber,
@@ -144,7 +144,7 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
     SandboxService,
     RunnerService,
     RedisLockProvider,
-    SnapshotService,
+    SavedImageService,
     VolumeService,
     VolumeManager,
     SandboxRepository,

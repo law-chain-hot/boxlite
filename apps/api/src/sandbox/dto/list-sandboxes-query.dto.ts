@@ -16,7 +16,7 @@ export enum SandboxSortField {
   ID = 'id',
   NAME = 'name',
   STATE = 'state',
-  SNAPSHOT = 'snapshot',
+  SAVED_IMAGE = 'savedImage',
   REGION = 'region',
   UPDATED_AT = 'updatedAt',
   CREATED_AT = 'createdAt',
@@ -102,8 +102,8 @@ export class ListSandboxesQueryDto {
   states?: SandboxState[]
 
   @ApiProperty({
-    name: 'snapshots',
-    description: 'List of snapshot names to filter by',
+    name: 'saved-images',
+    description: 'List of saved image names to filter by',
     required: false,
     type: [String],
   })
@@ -111,7 +111,7 @@ export class ListSandboxesQueryDto {
   @ToArray()
   @IsArray()
   @IsString({ each: true })
-  snapshots?: string[]
+  savedImages?: string[]
 
   @ApiProperty({
     name: 'regions',

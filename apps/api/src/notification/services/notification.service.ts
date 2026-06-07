@@ -10,11 +10,11 @@ import { NotificationEmitter } from '../gateways/notification-emitter.abstract'
 import { SandboxEvents } from '../../sandbox/constants/sandbox-events.constants'
 import { SandboxCreatedEvent } from '../../sandbox/events/sandbox-create.event'
 import { SandboxStateUpdatedEvent } from '../../sandbox/events/sandbox-state-updated.event'
-import { SnapshotCreatedEvent } from '../../sandbox/events/snapshot-created.event'
-import { SnapshotEvents } from '../../sandbox/constants/snapshot-events'
-import { SnapshotDto } from '../../sandbox/dto/snapshot.dto'
-import { SnapshotStateUpdatedEvent } from '../../sandbox/events/snapshot-state-updated.event'
-import { SnapshotRemovedEvent } from '../../sandbox/events/snapshot-removed.event'
+import { SavedImageCreatedEvent } from '../../sandbox/events/saved-image-created.event'
+import { SavedImageEvents } from '../../sandbox/constants/saved-image-events'
+import { SavedImageDto } from '../../sandbox/dto/saved-image.dto'
+import { SavedImageStateUpdatedEvent } from '../../sandbox/events/saved-image-state-updated.event'
+import { SavedImageRemovedEvent } from '../../sandbox/events/saved-image-removed.event'
 import { VolumeEvents } from '../../sandbox/constants/volume-events'
 import { VolumeCreatedEvent } from '../../sandbox/events/volume-created.event'
 import { VolumeDto } from '../../sandbox/dto/volume.dto'
@@ -61,22 +61,22 @@ export class NotificationService {
     this.redis.publish(SANDBOX_EVENT_CHANNEL, JSON.stringify(event))
   }
 
-  @OnEvent(SnapshotEvents.CREATED)
-  async handleSnapshotCreated(event: SnapshotCreatedEvent) {
-    const dto = SnapshotDto.fromSnapshot(event.snapshot)
-    this.notificationEmitter.emitSnapshotCreated(dto)
+  @OnEvent(SavedImageEvents.CREATED)
+  async handleSavedImageCreated(event: SavedImageCreatedEvent) {
+    const dto = SavedImageDto.fromSavedImageEntity(event.savedImage)
+    this.notificationEmitter.emitSavedImageCreated(dto)
   }
 
-  @OnEvent(SnapshotEvents.STATE_UPDATED)
-  async handleSnapshotStateUpdated(event: SnapshotStateUpdatedEvent) {
-    const dto = SnapshotDto.fromSnapshot(event.snapshot)
-    this.notificationEmitter.emitSnapshotStateUpdated(dto, event.oldState, event.newState)
+  @OnEvent(SavedImageEvents.STATE_UPDATED)
+  async handleSavedImageStateUpdated(event: SavedImageStateUpdatedEvent) {
+    const dto = SavedImageDto.fromSavedImageEntity(event.savedImage)
+    this.notificationEmitter.emitSavedImageStateUpdated(dto, event.oldState, event.newState)
   }
 
-  @OnEvent(SnapshotEvents.REMOVED)
-  async handleSnapshotRemoved(event: SnapshotRemovedEvent) {
-    const dto = SnapshotDto.fromSnapshot(event.snapshot)
-    this.notificationEmitter.emitSnapshotRemoved(dto)
+  @OnEvent(SavedImageEvents.REMOVED)
+  async handleSavedImageRemoved(event: SavedImageRemovedEvent) {
+    const dto = SavedImageDto.fromSavedImageEntity(event.savedImage)
+    this.notificationEmitter.emitSavedImageRemoved(dto)
   }
 
   @OnEvent(VolumeEvents.CREATED)

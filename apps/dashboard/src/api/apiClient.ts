@@ -20,7 +20,7 @@ import {
   RegionsApi,
   RunnersApi,
   SandboxApi,
-  SnapshotsApi,
+  SavedImagesApi,
   ToolboxApi,
   UsersApi,
   VolumesApi,
@@ -31,7 +31,7 @@ import { BoxliteError } from './errors'
 
 export class ApiClient {
   private config: Configuration
-  private _snapshotApi: SnapshotsApi
+  private _savedImagesApi: SavedImagesApi
   private _sandboxApi: SandboxApi
   private _userApi: UsersApi
   private _apiKeyApi: ApiKeysApi
@@ -72,7 +72,7 @@ export class ApiClient {
     )
 
     // Initialize APIs
-    this._snapshotApi = new SnapshotsApi(this.config, undefined, axiosInstance)
+    this._savedImagesApi = new SavedImagesApi(this.config, undefined, axiosInstance)
     this._sandboxApi = new SandboxApi(this.config, undefined, axiosInstance)
     this._userApi = new UsersApi(this.config, undefined, axiosInstance)
     this._apiKeyApi = new ApiKeysApi(this.config, undefined, axiosInstance)
@@ -108,8 +108,8 @@ export class ApiClient {
     this.config.accessToken = accessToken
   }
 
-  public get snapshotApi() {
-    return this._snapshotApi
+  public get savedImagesApi() {
+    return this._savedImagesApi
   }
 
   public get sandboxApi() {

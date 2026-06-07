@@ -27,8 +27,8 @@ const DEFAULT_STALE_TIMEOUT_MINUTES = 10
  * Jobs not listed here use DEFAULT_STALE_TIMEOUT_MINUTES.
  */
 const JOB_STALE_TIMEOUT_MINUTES: Partial<Record<JobType, number>> = {
-  [JobType.BUILD_SNAPSHOT]: 120,
-  [JobType.PULL_SNAPSHOT]: 120,
+  [JobType.BUILD_ARTIFACT]: 120,
+  [JobType.PULL_ARTIFACT]: 120,
 }
 
 @Injectable()
@@ -46,7 +46,7 @@ export class JobService {
   /**
    * Create a job within the provided transaction manager
    * If manager is null, uses the default repository (for non-transactional operations)
-   * @template T The JobType enum value - ensures compile-time type safety for resourceType and payload
+   * @savedImage T The JobType enum value - ensures compile-time type safety for resourceType and payload
    */
   async createJob<T extends JobType>(
     manager: EntityManager | null,
@@ -265,7 +265,7 @@ export class JobService {
     const updatedJob = await this.jobRepository.save(job)
     this.logger.debug(`Updated job ${jobId} status to ${status}`)
 
-    // Handle job completion for v2 runners - update sandbox/snapshot/backup state
+    // Handle job completion for v2 runners - update sandbox, artifact, or backup state.
     if (status === JobStatus.COMPLETED || status === JobStatus.FAILED) {
       // Fire and forget - don't block the response
       this.jobStateHandlerService.handleJobCompletion(updatedJob).catch((error) => {

@@ -48,7 +48,7 @@ import { LabelFilter, LabelFilterIndicator } from './filters/LabelFilter'
 import { LastEventFilter, LastEventFilterIndicator } from './filters/LastEventFilter'
 import { RegionFilter, RegionFilterIndicator } from './filters/RegionFilter'
 import { ResourceFilter, ResourceFilterIndicator, ResourceFilterValue } from './filters/ResourceFilter'
-import { SnapshotFilter, SnapshotFilterIndicator } from './filters/SnapshotFilter'
+import { SavedImageFilter, SavedImageFilterIndicator } from './filters/SavedImageFilter'
 import { StateFilter, StateFilterIndicator } from './filters/StateFilter'
 import { SandboxTableHeaderProps } from './types'
 
@@ -62,10 +62,8 @@ export function SandboxTableHeader({
   table,
   regionOptions,
   regionsDataIsLoading,
-  snapshots,
-  snapshotsDataIsLoading,
-  snapshotsDataHasMore,
-  onChangeSnapshotSearchValue,
+  savedImages,
+  savedImagesDataIsLoading,
   onRefresh,
   isRefreshing = false,
 }: SandboxTableHeaderProps) {
@@ -77,13 +75,13 @@ export function SandboxTableHeader({
   const sortableColumns = [
     { id: 'name', label: 'Name' },
     { id: 'state', label: 'State' },
-    { id: 'snapshot', label: 'Image' },
+    { id: 'savedImage', label: 'Image' },
     { id: 'region', label: 'Region' },
     { id: 'lastEvent', label: 'Last Event' },
   ]
 
   const stateFilterValue = (table.getColumn('state')?.getFilterValue() as string[]) || []
-  const snapshotFilterValue = (table.getColumn('snapshot')?.getFilterValue() as string[]) || []
+  const savedImageFilterValue = (table.getColumn('savedImage')?.getFilterValue() as string[]) || []
   const regionFilterValue = (table.getColumn('region')?.getFilterValue() as string[]) || []
   const resourceFilterValue = (table.getColumn('resources')?.getFilterValue() as ResourceFilterValue) || {}
   const labelFilterValue = (table.getColumn('labels')?.getFilterValue() as string[]) || []
@@ -91,7 +89,7 @@ export function SandboxTableHeader({
 
   const hasActiveFilters =
     stateFilterValue.length > 0 ||
-    snapshotFilterValue.length > 0 ||
+    savedImageFilterValue.length > 0 ||
     regionFilterValue.length > 0 ||
     RESOURCE_FILTERS.some((filter) => Boolean(resourceFilterValue[filter.type])) ||
     labelFilterValue.length > 0 ||
@@ -247,13 +245,11 @@ export function SandboxTableHeader({
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent className="p-0 w-64">
-                  <SnapshotFilter
-                    value={snapshotFilterValue}
-                    onFilterChange={(value) => table.getColumn('snapshot')?.setFilterValue(value)}
-                    snapshots={snapshots}
-                    isLoading={snapshotsDataIsLoading}
-                    hasMore={snapshotsDataHasMore}
-                    onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
+                  <SavedImageFilter
+                    value={savedImageFilterValue}
+                    onFilterChange={(value) => table.getColumn('savedImage')?.setFilterValue(value)}
+                    savedImages={savedImages}
+                    isLoading={savedImagesDataIsLoading}
                   />
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
@@ -337,14 +333,12 @@ export function SandboxTableHeader({
             />
           )}
 
-          {snapshotFilterValue.length > 0 && (
-            <SnapshotFilterIndicator
-              value={snapshotFilterValue}
-              onFilterChange={(value) => table.getColumn('snapshot')?.setFilterValue(value)}
-              snapshots={snapshots}
-              isLoading={snapshotsDataIsLoading}
-              hasMore={snapshotsDataHasMore}
-              onChangeSnapshotSearchValue={onChangeSnapshotSearchValue}
+          {savedImageFilterValue.length > 0 && (
+            <SavedImageFilterIndicator
+              value={savedImageFilterValue}
+              onFilterChange={(value) => table.getColumn('savedImage')?.setFilterValue(value)}
+              savedImages={savedImages}
+              isLoading={savedImagesDataIsLoading}
             />
           )}
 

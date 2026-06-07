@@ -34,11 +34,11 @@ export class OrganizationUsageOverviewDto {
   })
   regionUsage: RegionUsageOverviewDto[]
 
-  // Snapshot usage
+  // SavedImage usage
   @ApiProperty()
-  totalSnapshotQuota: number
+  totalSavedImageQuota: number
   @ApiProperty()
-  currentSnapshotUsage: number
+  currentSavedImageUsage: number
 
   // Volume usage
   @ApiProperty()

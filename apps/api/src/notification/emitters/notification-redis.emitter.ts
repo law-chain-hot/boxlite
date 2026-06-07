@@ -12,9 +12,9 @@ import { SandboxDto } from '../../sandbox/dto/sandbox.dto'
 import { SandboxState } from '../../sandbox/enums/sandbox-state.enum'
 import { SandboxDesiredState } from '../../sandbox/enums/sandbox-desired-state.enum'
 import { SandboxEvents } from '../../sandbox/constants/sandbox-events.constants'
-import { SnapshotDto } from '../../sandbox/dto/snapshot.dto'
-import { SnapshotState } from '../../sandbox/enums/snapshot-state.enum'
-import { SnapshotEvents } from '../../sandbox/constants/snapshot-events'
+import { SavedImageDto } from '../../sandbox/dto/saved-image.dto'
+import { SavedImageState } from '../../sandbox/enums/saved-image-state.enum'
+import { SavedImageEvents } from '../../sandbox/constants/saved-image-events'
 import { VolumeDto } from '../../sandbox/dto/volume.dto'
 import { VolumeState } from '../../sandbox/enums/volume-state.enum'
 import { VolumeEvents } from '../../sandbox/constants/volume-events'
@@ -54,18 +54,16 @@ export class NotificationRedisEmitter extends NotificationEmitter implements OnM
       .emit(SandboxEvents.DESIRED_STATE_UPDATED, { sandbox, oldDesiredState, newDesiredState })
   }
 
-  emitSnapshotCreated(snapshot: SnapshotDto) {
-    this.emitter.to(snapshot.organizationId).emit(SnapshotEvents.CREATED, snapshot)
+  emitSavedImageCreated(savedImage: SavedImageDto) {
+    this.emitter.to(savedImage.organizationId).emit(SavedImageEvents.CREATED, savedImage)
   }
 
-  emitSnapshotStateUpdated(snapshot: SnapshotDto, oldState: SnapshotState, newState: SnapshotState) {
-    this.emitter
-      .to(snapshot.organizationId)
-      .emit(SnapshotEvents.STATE_UPDATED, { snapshot: snapshot, oldState, newState })
+  emitSavedImageStateUpdated(savedImage: SavedImageDto, oldState: SavedImageState, newState: SavedImageState) {
+    this.emitter.to(savedImage.organizationId).emit(SavedImageEvents.STATE_UPDATED, { savedImage, oldState, newState })
   }
 
-  emitSnapshotRemoved(snapshot: SnapshotDto) {
-    this.emitter.to(snapshot.organizationId).emit(SnapshotEvents.REMOVED, snapshot)
+  emitSavedImageRemoved(savedImage: SavedImageDto) {
+    this.emitter.to(savedImage.organizationId).emit(SavedImageEvents.REMOVED, savedImage)
   }
 
   emitVolumeCreated(volume: VolumeDto) {

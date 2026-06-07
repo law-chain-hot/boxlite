@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { RoutePath } from '@/enums/RoutePath'
 import { useCreateSandboxMutation } from '@/hooks/mutations/useCreateSandboxMutation'
-import { useSnapshotsQuery } from '@/hooks/queries/useSnapshotsQuery'
+import { useSavedImagesPageQuery } from '@/hooks/queries/useSavedImagesPageQuery'
 import { useConfig } from '@/hooks/useConfig'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
 import { useRegions } from '@/hooks/useRegions'
@@ -32,6 +32,7 @@ import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { parseEnvFile } from '@/lib/env'
 import { handleApiError } from '@/lib/error-handling'
 import { imageNameSchema } from '@/lib/schema'
+import { getSavedImageDisplayName } from '@/lib/saved-image-display'
 import { cn, getRegionFullDisplayName } from '@/lib/utils'
 import { Sandbox } from '@boxlite-ai/sdk'
 import { useForm } from '@tanstack/react-form'
@@ -50,7 +51,7 @@ const NAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/
 const NONE_VALUE = '__none__'
 
 enum Source {
-  SNAPSHOT = 'snapshot',
+  SAVED_IMAGE = 'savedImage',
   IMAGE = 'image',
 }
 
@@ -101,13 +102,13 @@ const buildFormSchema = (maxCpu?: number, maxMemory?: number, maxDisk?: number) 
   const base = buildBaseFormSchema(maxCpu, maxMemory, maxDisk)
   return z.discriminatedUnion('source', [
     base.extend({
-      source: z.literal(Source.SNAPSHOT),
-      snapshot: z.string().optional(),
+      source: z.literal(Source.SAVED_IMAGE),
+      savedImage: z.string().optional(),
       image: z.string().optional(),
     }),
     base.extend({
       source: z.literal(Source.IMAGE),
-      snapshot: z.string().optional(),
+      savedImage: z.string().optional(),
       image: imageNameSchema,
     }),
   ])
@@ -115,14 +116,14 @@ const buildFormSchema = (maxCpu?: number, maxMemory?: number, maxDisk?: number) 
 
 type FormValues = z.input<ReturnType<typeof buildBaseFormSchema>> & {
   source: Source
-  snapshot?: string
+  savedImage?: string
   image?: string
 }
 
 const defaultValues: FormValues = {
   name: '',
-  source: Source.SNAPSHOT,
-  snapshot: undefined,
+  source: Source.SAVED_IMAGE,
+  savedImage: undefined,
   image: '',
   regionId: undefined,
   cpu: undefined,
@@ -170,7 +171,7 @@ export const CreateSandboxSheet = ({
 
   const formSchema = useMemo(() => buildFormSchema(maxCpu, maxMemory, maxDisk), [maxCpu, maxMemory, maxDisk])
 
-  const { data: snapshotsData, isLoading: snapshotsLoading } = useSnapshotsQuery({
+  const { data: savedImagesData, isLoading: savedImagesLoading } = useSavedImagesPageQuery({
     page: 1,
     pageSize: 100,
   })
@@ -234,7 +235,7 @@ export const CreateSandboxSheet = ({
         } else {
           sandbox = await createSandboxMutation.mutateAsync({
             ...baseParams,
-            snapshot: value.snapshot || undefined,
+            savedImageId: value.savedImage || undefined,
           })
         }
 
@@ -259,13 +260,13 @@ export const CreateSandboxSheet = ({
   const handleSourceChange = useCallback(
     (val: string) => {
       form.setFieldValue('source', val as Source)
-      if (val === Source.SNAPSHOT) {
+      if (val === Source.SAVED_IMAGE) {
         form.setFieldValue('image', '')
         form.setFieldValue('cpu', undefined)
         form.setFieldValue('memory', undefined)
         form.setFieldValue('disk', undefined)
       } else {
-        form.setFieldValue('snapshot', undefined)
+        form.setFieldValue('savedImage', undefined)
       }
     },
     [form],
@@ -387,20 +388,20 @@ export const CreateSandboxSheet = ({
                   <div className="flex flex-col gap-2">
                     <FieldLabel>Source</FieldLabel>
                     <TabsList className="w-full">
-                      <TabsTrigger value={Source.SNAPSHOT} className="flex-1">
-                        Saved Image
+                      <TabsTrigger value={Source.SAVED_IMAGE} className="flex-1">
+                        Image
                       </TabsTrigger>
                       <TabsTrigger value={Source.IMAGE} className="flex-1">
-                        Container Image
+                        Custom image
                       </TabsTrigger>
                     </TabsList>
                   </div>
 
-                  <TabsContent value={Source.SNAPSHOT}>
-                    <form.Field name="snapshot">
+                  <TabsContent value={Source.SAVED_IMAGE}>
+                    <form.Field name="savedImage">
                       {(field) => (
                         <Field>
-                          <FieldLabel htmlFor={field.name}>Saved Image</FieldLabel>
+                          <FieldLabel htmlFor={field.name}>Image</FieldLabel>
                           <Select
                             value={field.state.value || NONE_VALUE}
                             onValueChange={(val) => field.handleChange(val === NONE_VALUE ? '' : val)}
@@ -408,18 +409,18 @@ export const CreateSandboxSheet = ({
                             <SelectTrigger
                               className="h-8"
                               id={field.name}
-                              disabled={snapshotsLoading}
-                              loading={snapshotsLoading}
+                              disabled={savedImagesLoading}
+                              loading={savedImagesLoading}
                             >
-                              <SelectValue placeholder={snapshotsLoading ? 'Loading images...' : 'Select an image'} />
+                              <SelectValue placeholder={savedImagesLoading ? 'Loading images...' : 'Select an image'} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value={NONE_VALUE}>
-                                {config.defaultSnapshot} <Badge variant="secondary">default</Badge>
+                                {config.defaultSavedImage} <Badge variant="secondary">default</Badge>
                               </SelectItem>
-                              {snapshotsData?.items?.map((snapshot) => (
-                                <SelectItem key={snapshot.id} value={snapshot.name}>
-                                  {snapshot.name}
+                              {savedImagesData?.items?.map((savedImage) => (
+                                <SelectItem key={savedImage.id} value={savedImage.id}>
+                                  {savedImage.displayName || getSavedImageDisplayName(savedImage.name)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -435,7 +436,7 @@ export const CreateSandboxSheet = ({
                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                         return (
                           <Field data-invalid={isInvalid}>
-                            <FieldLabel htmlFor={field.name}>Container Image</FieldLabel>
+                            <FieldLabel htmlFor={field.name}>Image</FieldLabel>
                             <Input
                               aria-invalid={isInvalid}
                               id={field.name}

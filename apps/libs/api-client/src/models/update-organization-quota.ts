@@ -43,13 +43,13 @@ export interface UpdateOrganizationQuota {
      * @type {number}
      * @memberof UpdateOrganizationQuota
      */
-    'snapshotQuota': number | null;
+    'savedImageQuota': number | null;
     /**
      *
      * @type {number}
      * @memberof UpdateOrganizationQuota
      */
-    'maxSnapshotSize': number | null;
+    'maxSavedImageSize': number | null;
     /**
      *
      * @type {number}
@@ -93,9 +93,9 @@ export interface UpdateOrganizationQuota {
      */
     'sandboxLifecycleRateLimitTtlSeconds': number | null;
     /**
-     * Time in minutes before an unused snapshot is deactivated
+     * Time in minutes before an unused savedImage is deactivated
      * @type {number}
      * @memberof UpdateOrganizationQuota
      */
-    'snapshotDeactivationTimeoutMinutes': number | null;
+    'savedImageDeactivationTimeoutMinutes': number | null;
 }

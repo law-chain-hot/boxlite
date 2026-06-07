@@ -26,7 +26,7 @@ import { BOXLITE_DOCS_URL } from '@/constants/ExternalLinks'
 import { DEFAULT_PAGE_SIZE } from '@/constants/Pagination'
 import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { RoutePath } from '@/enums/RoutePath'
-import { SnapshotFilters, SnapshotQueryParams, useSnapshotsQuery } from '@/hooks/queries/useSnapshotsQuery'
+import { SavedImageQueryParams, useSavedImagesPageQuery } from '@/hooks/queries/useSavedImagesPageQuery'
 import { CopyableValue } from '@/components/ui/copyable-value'
 import { useApi } from '@/hooks/useApi'
 import { useConfig } from '@/hooks/useConfig'
@@ -273,38 +273,27 @@ const Sandboxes: React.FC = () => {
   const [sshSandboxId, setSshSandboxId] = useState<string>('')
   const [copied, setCopied] = useState<string | null>(null)
 
-  // Snapshot Filter
+  // Image Filter
 
-  const [snapshotFilters, setSnapshotFilters] = useState<SnapshotFilters>({})
-
-  const handleSnapshotFiltersChange = useCallback((filters: Partial<SnapshotFilters>) => {
-    setSnapshotFilters((prev) => ({ ...prev, ...filters }))
-  }, [])
-
-  const snapshotsQueryParams = useMemo<SnapshotQueryParams>(
+  const savedImagesQueryParams = useMemo<SavedImageQueryParams>(
     () => ({
       page: 1,
       pageSize: 100,
-      filters: snapshotFilters,
     }),
-    [snapshotFilters],
+    [],
   )
 
   const {
-    data: snapshotsData,
-    isLoading: snapshotsDataIsLoading,
-    error: snapshotsDataError,
-  } = useSnapshotsQuery(snapshotsQueryParams)
-
-  const snapshotsDataHasMore = useMemo(() => {
-    return snapshotsData && snapshotsData.totalPages > 1
-  }, [snapshotsData])
+    data: savedImagesData,
+    isLoading: savedImagesDataIsLoading,
+    error: savedImagesDataError,
+  } = useSavedImagesPageQuery(savedImagesQueryParams)
 
   useEffect(() => {
-    if (snapshotsDataError) {
-      handleApiError(snapshotsDataError, 'Failed to fetch images')
+    if (savedImagesDataError) {
+      handleApiError(savedImagesDataError, 'Failed to fetch images')
     }
-  }, [snapshotsDataError])
+  }, [savedImagesDataError])
 
   // Region Filter
 
@@ -964,10 +953,8 @@ const Sandboxes: React.FC = () => {
           isRefreshing={sandboxDataIsRefreshing}
           data={sandboxesData?.items || []}
           loading={sandboxesDataIsLoading}
-          snapshots={snapshotsData?.items || []}
-          snapshotsDataIsLoading={snapshotsDataIsLoading}
-          snapshotsDataHasMore={snapshotsDataHasMore}
-          onChangeSnapshotSearchValue={(name?: string) => handleSnapshotFiltersChange({ name })}
+          savedImages={savedImagesData?.items || []}
+          savedImagesDataIsLoading={savedImagesDataIsLoading}
           regionsData={regionsData || []}
           regionsDataIsLoading={regionsDataIsLoading}
           onRowClick={(sandbox: Sandbox) => {
