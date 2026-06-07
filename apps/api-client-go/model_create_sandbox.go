@@ -22,7 +22,9 @@ var _ MappedNullable = &CreateSandbox{}
 type CreateSandbox struct {
 	// The name of the sandbox. If not provided, the sandbox ID will be used as the name
 	Name *string `json:"name,omitempty"`
-	// The ID or name of the snapshot used for the sandbox
+	// The ID or name of the saved image used for the sandbox
+	SavedImageId *string `json:"savedImageId,omitempty"`
+	// Deprecated alias for savedImageId used by older clients
 	Snapshot *string `json:"snapshot,omitempty"`
 	// The user associated with the project
 	User *string `json:"user,omitempty"`
@@ -57,7 +59,7 @@ type CreateSandbox struct {
 	// Array of volumes to attach to the sandbox
 	Volumes []SandboxVolume `json:"volumes,omitempty"`
 	// Build information for the sandbox
-	BuildInfo *CreateBuildInfo `json:"buildInfo,omitempty"`
+	BuildInfo            *CreateBuildInfo `json:"buildInfo,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -112,7 +114,40 @@ func (o *CreateSandbox) SetName(v string) {
 	o.Name = &v
 }
 
+// GetSavedImageId returns the SavedImageId field value if set, zero value otherwise.
+func (o *CreateSandbox) GetSavedImageId() string {
+	if o == nil || IsNil(o.SavedImageId) {
+		var ret string
+		return ret
+	}
+	return *o.SavedImageId
+}
+
+// GetSavedImageIdOk returns a tuple with the SavedImageId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CreateSandbox) GetSavedImageIdOk() (*string, bool) {
+	if o == nil || IsNil(o.SavedImageId) {
+		return nil, false
+	}
+	return o.SavedImageId, true
+}
+
+// HasSavedImageId returns a boolean if a field has been set.
+func (o *CreateSandbox) HasSavedImageId() bool {
+	if o != nil && !IsNil(o.SavedImageId) {
+		return true
+	}
+
+	return false
+}
+
+// SetSavedImageId gets a reference to the given string and assigns it to the SavedImageId field.
+func (o *CreateSandbox) SetSavedImageId(v string) {
+	o.SavedImageId = &v
+}
+
 // GetSnapshot returns the Snapshot field value if set, zero value otherwise.
+// Deprecated: use GetSavedImageId instead.
 func (o *CreateSandbox) GetSnapshot() string {
 	if o == nil || IsNil(o.Snapshot) {
 		var ret string
@@ -123,6 +158,7 @@ func (o *CreateSandbox) GetSnapshot() string {
 
 // GetSnapshotOk returns a tuple with the Snapshot field value if set, nil otherwise
 // and a boolean to check if the value has been set.
+// Deprecated: use GetSavedImageIdOk instead.
 func (o *CreateSandbox) GetSnapshotOk() (*string, bool) {
 	if o == nil || IsNil(o.Snapshot) {
 		return nil, false
@@ -131,6 +167,7 @@ func (o *CreateSandbox) GetSnapshotOk() (*string, bool) {
 }
 
 // HasSnapshot returns a boolean if a field has been set.
+// Deprecated: use HasSavedImageId instead.
 func (o *CreateSandbox) HasSnapshot() bool {
 	if o != nil && !IsNil(o.Snapshot) {
 		return true
@@ -140,6 +177,7 @@ func (o *CreateSandbox) HasSnapshot() bool {
 }
 
 // SetSnapshot gets a reference to the given string and assigns it to the Snapshot field.
+// Deprecated: use SetSavedImageId instead.
 func (o *CreateSandbox) SetSnapshot(v string) {
 	o.Snapshot = &v
 }
@@ -689,7 +727,7 @@ func (o *CreateSandbox) SetBuildInfo(v CreateBuildInfo) {
 }
 
 func (o CreateSandbox) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -701,7 +739,9 @@ func (o CreateSandbox) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
 	}
-	if !IsNil(o.Snapshot) {
+	if !IsNil(o.SavedImageId) {
+		toSerialize["savedImageId"] = o.SavedImageId
+	} else if !IsNil(o.Snapshot) {
 		toSerialize["snapshot"] = o.Snapshot
 	}
 	if !IsNil(o.User) {
@@ -778,6 +818,7 @@ func (o *CreateSandbox) UnmarshalJSON(data []byte) (err error) {
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "name")
+		delete(additionalProperties, "savedImageId")
 		delete(additionalProperties, "snapshot")
 		delete(additionalProperties, "user")
 		delete(additionalProperties, "env")
