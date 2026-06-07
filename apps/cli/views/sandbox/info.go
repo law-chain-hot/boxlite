@@ -112,8 +112,8 @@ func getStateLabel(state apiclient.SandboxState) string {
 		return common.StartingStyle.Render("STARTING")
 	case apiclient.SANDBOXSTATE_STOPPING:
 		return common.StoppingStyle.Render("STOPPING")
-	case apiclient.SANDBOXSTATE_PULLING_SNAPSHOT:
-		return common.CreatingStyle.Render("PULLING SNAPSHOT")
+	case apiclient.SANDBOXSTATE_PULLING_ARTIFACT:
+		return common.CreatingStyle.Render("PULLING ARTIFACT")
 	case apiclient.SANDBOXSTATE_ARCHIVING:
 		return common.CreatingStyle.Render("ARCHIVING")
 	case apiclient.SANDBOXSTATE_ARCHIVED:

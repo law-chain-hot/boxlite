@@ -146,7 +146,7 @@ var CreateCmd = &cobra.Command{
 				return err
 			}
 
-			err = common.AwaitSandboxState(ctx, apiClient, sandbox.Id, apiclient.SANDBOXSTATE_BUILDING_SNAPSHOT)
+			err = common.AwaitSandboxState(ctx, apiClient, sandbox.Id, apiclient.SANDBOXSTATE_BUILDING_ARTIFACT)
 			if err != nil {
 				return err
 			}
