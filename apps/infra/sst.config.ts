@@ -66,6 +66,9 @@ const HEALTH_DEFAULTS = {
 // Env var with fallback. Empty string also falls through.
 const envOr = <T>(key: string, fallback: T) => process.env[key] || fallback;
 
+const optionalEnv = (key: string) => process.env[key]?.trim() || undefined;
+const AWS_PROFILE = optionalEnv("AWS_PROFILE");
+
 // HTTP health check with defaults + optional overrides.
 const httpHealth = (
   path: string,
@@ -99,7 +102,7 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
       providers: {
-        aws: { region: REGION, profile: envOr("AWS_PROFILE", "default") },
+        aws: { region: REGION, ...(AWS_PROFILE ? { profile: AWS_PROFILE } : {}) },
         cloudflare: "6.15.0",
         random: "4.16.6",
         // Post-deploy runner registration (see RegisterExtraRunners in run()).
