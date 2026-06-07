@@ -21,11 +21,12 @@ ENV NX_SKIP_NX_CACHE=true
 COPY apps/api/ apps/api/
 COPY apps/dashboard/ apps/dashboard/
 
-COPY apps/libs/runner-api-client/ apps/libs/runner-api-client/
-COPY apps/libs/api-client/ apps/libs/api-client/
-COPY apps/libs/analytics-api-client/ apps/libs/analytics-api-client/
-COPY apps/libs/toolbox-api-client/ apps/libs/toolbox-api-client/
-COPY apps/libs/sdk-typescript/ apps/libs/sdk-typescript/
+COPY apps/libs/runner-api-client/ libs/runner-api-client/
+COPY apps/libs/api-client/ libs/api-client/
+COPY apps/libs/analytics-api-client/ libs/analytics-api-client/
+COPY apps/libs/toolbox-api-client/ libs/toolbox-api-client/
+COPY apps/libs/sdk-typescript/ libs/sdk-typescript/
+RUN ln -sfn ../libs apps/libs
 
 RUN echo 1777389170 && yarn nx build api --configuration=production --nxBail=true
 
