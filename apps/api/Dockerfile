@@ -28,7 +28,9 @@ COPY apps/libs/sdk-typescript/ libs/sdk-typescript/
 
 RUN echo 1777389170 && yarn nx build api --configuration=production --nxBail=true
 
-RUN VITE_BASE_API_URL=%BOXLITE_BASE_API_URL% yarn nx build dashboard --configuration=production --nxBail=true --output-style=stream
+RUN VITE_BASE_API_URL=%BOXLITE_BASE_API_URL% yarn nx build dashboard --configuration=production --nxBail=true --output-style=stream && \
+  mkdir -p dist/apps && \
+  cp -a ../dist/apps/dashboard dist/apps/dashboard
 
 ARG VERSION=0.0.1
 ENV VERSION=${VERSION}
