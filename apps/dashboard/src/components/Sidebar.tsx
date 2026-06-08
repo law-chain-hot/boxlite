@@ -259,7 +259,7 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
             className="inline-flex h-14 shrink-0 items-center text-foreground"
             aria-label="BoxLite home"
           >
-            <LogoText className="h-8 w-auto" />
+            <LogoText className="h-8 w-auto sm:h-9" />
           </Link>
 
           <nav className="hidden h-14 shrink-0 items-stretch gap-1 md:flex">
