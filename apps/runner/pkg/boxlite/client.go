@@ -48,6 +48,8 @@ type ClientConfig struct {
 	Logger                       *slog.Logger
 	HomeDir                      string
 	InsecureRegistries           []string
+	GhcrUsername                 string
+	GhcrToken                    string
 	AWSRegion                    string
 	AWSEndpointUrl               string
 	AWSAccessKeyId               string
@@ -93,6 +95,35 @@ func daemonSandboxEnv(sandboxDto dto.CreateSandboxDTO) map[string]string {
 	return env
 }
 
+// buildImageRegistries assembles the runtime-scoped OCI registry list handed to boxlite-core:
+// the existing insecure (HTTP, no-auth) registries, plus — when ghcr credentials are provided —
+// a single authenticated ghcr.io HTTPS entry so core can pull our private first-party images
+// directly from ghcr (no self-hosted registry mirror required). Auth is runtime-scoped because
+// boxlite.Runtime.Create has no per-call credential parameter. When ghcrUsername/ghcrToken are
+// empty this is byte-for-byte the previous behavior (anonymous), so it is safe to ship dark.
+// Kept as a pure function so the wiring can be unit-tested without constructing a real runtime.
+func buildImageRegistries(insecureRegistries []string, ghcrUsername, ghcrToken string) []boxlite.ImageRegistry {
+	registries := make([]boxlite.ImageRegistry, 0, len(insecureRegistries)+1)
+	for _, host := range insecureRegistries {
+		registries = append(registries, boxlite.ImageRegistry{
+			Host:       host,
+			Transport:  boxlite.RegistryTransportHTTP,
+			SkipVerify: true,
+		})
+	}
+	if ghcrUsername != "" && ghcrToken != "" {
+		registries = append(registries, boxlite.ImageRegistry{
+			Host:      "ghcr.io",
+			Transport: boxlite.RegistryTransportHTTPS,
+			Auth: boxlite.ImageRegistryAuth{
+				Username: ghcrUsername,
+				Password: ghcrToken,
+			},
+		})
+	}
+	return registries
+}
+
 // NewClient creates a new BoxLite client backed by the BoxLite VM runtime.
 func NewClient(ctx context.Context, config ClientConfig) (*Client, error) {
 	toolboxReadyTimeout := config.ToolboxReadyTimeout
@@ -105,15 +136,8 @@ func NewClient(ctx context.Context, config ClientConfig) (*Client, error) {
 		opts = append(opts, boxlite.WithHomeDir(config.HomeDir))
 	}
 	insecureRegistries := normalizeRegistryHosts(config.InsecureRegistries)
-	if len(insecureRegistries) > 0 {
-		registries := make([]boxlite.ImageRegistry, 0, len(insecureRegistries))
-		for _, host := range insecureRegistries {
-			registries = append(registries, boxlite.ImageRegistry{
-				Host:       host,
-				Transport:  boxlite.RegistryTransportHTTP,
-				SkipVerify: true,
-			})
-		}
+	registries := buildImageRegistries(insecureRegistries, config.GhcrUsername, config.GhcrToken)
+	if len(registries) > 0 {
 		opts = append(opts, boxlite.WithImageRegistries(registries...))
 	}
 
