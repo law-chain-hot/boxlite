@@ -37,11 +37,11 @@ export interface Organization {
    */
   createdBy: string
   /**
-   * Personal organization flag
+   * Whether this organization is the authenticated user default organization
    * @type {boolean}
    * @memberof Organization
    */
-  personal: boolean
+  isDefaultForAuthenticatedUser: boolean
   /**
    * Creation timestamp
    * @type {Date}

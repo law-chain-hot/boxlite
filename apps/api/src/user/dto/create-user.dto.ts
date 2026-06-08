@@ -26,12 +26,12 @@ export class CreateUserDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  personalOrganizationQuota?: CreateOrganizationQuotaDto
+  defaultOrganizationQuota?: CreateOrganizationQuotaDto
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  personalOrganizationDefaultRegionId?: string
+  defaultOrganizationDefaultRegionId?: string
 
   @ApiPropertyOptional({
     enum: SystemRole,

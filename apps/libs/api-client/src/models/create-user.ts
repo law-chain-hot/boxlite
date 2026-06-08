@@ -45,13 +45,13 @@ export interface CreateUser {
    * @type {CreateOrganizationQuota}
    * @memberof CreateUser
    */
-  personalOrganizationQuota?: CreateOrganizationQuota
+  defaultOrganizationQuota?: CreateOrganizationQuota
   /**
    *
    * @type {string}
    * @memberof CreateUser
    */
-  personalOrganizationDefaultRegionId?: string
+  defaultOrganizationDefaultRegionId?: string
   /**
    *
    * @type {string}

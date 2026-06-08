@@ -25,9 +25,9 @@ export class OrganizationDto {
   createdBy: string
 
   @ApiProperty({
-    description: 'Personal organization flag',
+    description: 'Whether this organization is the authenticated user default organization',
   })
-  personal: boolean
+  isDefaultForAuthenticatedUser: boolean
 
   @ApiProperty({
     description: 'Creation timestamp',
@@ -137,7 +137,7 @@ export class OrganizationDto {
   })
   sandboxLifecycleRateLimitTtlSeconds: number | null
 
-  static fromOrganization(organization: Organization): OrganizationDto {
+  static fromOrganization(organization: Organization, isDefaultForAuthenticatedUser = false): OrganizationDto {
     const experimentalConfig = organization._experimentalConfig
     if (experimentalConfig && experimentalConfig.otel && experimentalConfig.otel.headers) {
       experimentalConfig.otel.headers = Object.entries(experimentalConfig.otel.headers).reduce(
@@ -153,7 +153,7 @@ export class OrganizationDto {
       id: organization.id,
       name: organization.name,
       createdBy: organization.createdBy,
-      personal: organization.personal,
+      isDefaultForAuthenticatedUser,
       createdAt: organization.createdAt,
       updatedAt: organization.updatedAt,
       suspended: organization.suspended,

@@ -71,7 +71,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         name: payload.name || payload.username || 'Unknown',
         email: email || '',
         emailVerified: payload.email_verified || false,
-        personalOrganizationQuota: this.configService.getOrThrow('defaultOrganizationQuota'),
+        defaultOrganizationQuota: this.configService.getOrThrow('defaultOrganizationQuota'),
       })
       this.logger.debug(`Created new user with ID: ${userId}`)
     } else if (user.name === 'Unknown' || !user.email) {

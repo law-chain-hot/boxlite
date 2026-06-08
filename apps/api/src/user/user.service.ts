@@ -50,8 +50,8 @@ export class UserService {
         new UserCreatedEvent(
           em,
           user,
-          createUserDto.personalOrganizationQuota,
-          createUserDto.personalOrganizationDefaultRegionId,
+          createUserDto.defaultOrganizationQuota,
+          createUserDto.defaultOrganizationDefaultRegionId,
         ),
       )
     })
