@@ -19,7 +19,7 @@
 //   6. API
 // ─────────────────────────────────────────────────────────────────────────────
 
-const REGION = "ap-southeast-1";
+const REGION = 'ap-southeast-1'
 
 // Container ports each service listens on internally
 const PORTS = {
@@ -35,146 +35,152 @@ const PORTS = {
   MAILDEV_UI: 1080,
   PGADMIN: 80,
   REGISTRY_UI: 80,
-} as const;
+} as const
 
 // Pinned third-party images
 const IMAGES = {
-  jaeger: "jaegertracing/all-in-one:1.67.0",
-  pgadmin: "dpage/pgadmin4:9.2.0",
-  registryUi: "joxit/docker-registry-ui:main",
-  maildev: "maildev/maildev:latest",
-} as const;
+  jaeger: 'jaegertracing/all-in-one:1.67.0',
+  pgadmin: 'dpage/pgadmin4:9.2.0',
+  registryUi: 'joxit/docker-registry-ui:main',
+  maildev: 'maildev/maildev:latest',
+} as const
 
 // Runner EC2 sizing
 const RUNNER = {
-  instanceType: "c8i.2xlarge",
+  instanceType: 'c8i.2xlarge',
   rootDiskGB: 100,
-  ubuntuOwnerId: "099720109477",
-  ubuntuNamePattern: "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*",
-} as const;
+  ubuntuOwnerId: '099720109477',
+  ubuntuNamePattern: 'ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*',
+} as const
 
 // ALB target-group health check defaults
 const HEALTH_DEFAULTS = {
-  interval: "30 seconds",
-  timeout: "5 seconds",
+  interval: '30 seconds',
+  timeout: '5 seconds',
   healthyThreshold: 2,
   unhealthyThreshold: 3,
-} as const;
+} as const
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 // Env var with fallback. Empty string also falls through.
-const envOr = <T>(key: string, fallback: T) => process.env[key] || fallback;
+const envOr = <T>(key: string, fallback: T) => process.env[key] || fallback
 
 // HTTP health check with defaults + optional overrides.
-const httpHealth = (
-  path: string,
-  overrides: Partial<{ successCodes: string }> = {},
-) => ({ path, ...HEALTH_DEFAULTS, ...overrides });
+const httpHealth = (path: string, overrides: Partial<{ successCodes: string }> = {}) => ({
+  path,
+  ...HEALTH_DEFAULTS,
+  ...overrides,
+})
 
 // The four env vars the API needs for each registry (transient + internal).
-const registryEnv = (
-  prefix: "TRANSIENT" | "INTERNAL",
-  defaultUrl: $util.Output<string>,
-) => ({
+const registryEnv = (prefix: 'TRANSIENT' | 'INTERNAL', defaultUrl: $util.Output<string>) => ({
   [`${prefix}_REGISTRY_URL`]: envOr(`${prefix}_REGISTRY_URL`, defaultUrl),
-  [`${prefix}_REGISTRY_ADMIN`]: envOr(`${prefix}_REGISTRY_ADMIN`, "admin"),
-  [`${prefix}_REGISTRY_PASSWORD`]: envOr(`${prefix}_REGISTRY_PASSWORD`, "password"),
-  [`${prefix}_REGISTRY_PROJECT_ID`]: envOr(`${prefix}_REGISTRY_PROJECT_ID`, "boxlite"),
-});
+  [`${prefix}_REGISTRY_ADMIN`]: envOr(`${prefix}_REGISTRY_ADMIN`, 'admin'),
+  [`${prefix}_REGISTRY_PASSWORD`]: envOr(`${prefix}_REGISTRY_PASSWORD`, 'password'),
+  [`${prefix}_REGISTRY_PROJECT_ID`]: envOr(`${prefix}_REGISTRY_PROJECT_ID`, 'boxlite'),
+})
 
 // OIDC issuer URL — must be set (Auth0, Okta, etc.). No default.
 const requireOidcIssuer = () => {
-  const v = process.env.OIDC_ISSUER_BASE_URL;
-  if (!v) throw new Error("OIDC_ISSUER_BASE_URL is required (e.g. https://<tenant>.auth0.com/)");
-  return v;
-};
+  const v = process.env.OIDC_ISSUER_BASE_URL
+  if (!v) throw new Error('OIDC_ISSUER_BASE_URL is required (e.g. https://<tenant>.auth0.com/)')
+  return v
+}
 
 // Runner endpoint overrides — use RUNNER_PRIVATE_IP shortcut when set.
 const runnerEndpoint = (override: string, port: number, scheme: string) =>
   envOr(
     override,
-    process.env.RUNNER_PRIVATE_IP
-      ? `${scheme}${process.env.RUNNER_PRIVATE_IP}:${port}`
-      : `${scheme}localhost:${port}`,
-  );
+    process.env.RUNNER_PRIVATE_IP ? `${scheme}${process.env.RUNNER_PRIVATE_IP}:${port}` : `${scheme}localhost:${port}`,
+  )
 
 // ── app config ───────────────────────────────────────────────────────────────
 export default $config({
   app(input) {
     return {
-      name: "boxlite",
-      removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws",
+      name: 'boxlite',
+      removal: input?.stage === 'production' ? 'retain' : 'remove',
+      home: 'aws',
       providers: {
-        aws: { region: REGION, profile: envOr("AWS_PROFILE", "default") },
-        cloudflare: "6.15.0",
-        random: "4.16.6",
+        aws: { region: REGION, ...(process.env.AWS_PROFILE ? { profile: process.env.AWS_PROFILE } : {}) },
+        cloudflare: '6.15.0',
+        random: '4.16.6',
       },
-    };
+    }
   },
 
   async run() {
     // Load .env overrides (anything unset falls back to auto-generated values)
-    const { config } = await import("dotenv");
-    config();
+    const { config } = await import('dotenv')
+    config()
 
     // Strip trailing slash from service.url so path concat produces clean URLs
     // (api.url = "https://api.dev.boxlite.ai/" → apiBase = "https://api.dev.boxlite.ai").
-    const stripTrailingSlash = (url: $util.Output<string>) =>
-      url.apply((u) => (u.endsWith("/") ? u.slice(0, -1) : u));
+    const stripTrailingSlash = (url: $util.Output<string>) => url.apply((u) => (u.endsWith('/') ? u.slice(0, -1) : u))
+
+    const clickHouseWriterEndpoint =
+      process.env.CLICKHOUSE_WRITER_ENDPOINT || process.env.CLICKHOUSE_ENDPOINT || process.env.CLICKHOUSE_OTEL_ENDPOINT
+    const clickHouseWriterPassword = process.env.CLICKHOUSE_WRITER_PASSWORD || process.env.CLICKHOUSE_PASSWORD
+    const clickHouseReaderUrl = process.env.CLICKHOUSE_READER_URL || process.env.CLICKHOUSE_URL
+    const clickHouseReaderHost = process.env.CLICKHOUSE_READER_HOST || process.env.CLICKHOUSE_HOST
+    const clickHouseExporterEnabled = process.env.CLICKHOUSE_EXPORTER_ENABLED === 'true'
+    if (clickHouseExporterEnabled && !clickHouseWriterEndpoint) {
+      throw new Error('CLICKHOUSE_WRITER_ENDPOINT or CLICKHOUSE_ENDPOINT is required when CLICKHOUSE_EXPORTER_ENABLED=true')
+    }
+    if (clickHouseExporterEnabled && !clickHouseWriterPassword) {
+      throw new Error('CLICKHOUSE_WRITER_PASSWORD or CLICKHOUSE_PASSWORD is required when CLICKHOUSE_EXPORTER_ENABLED=true')
+    }
+    const collectorExporters = clickHouseExporterEnabled ? '[boxlite_exporter,clickhouse]' : '[boxlite_exporter]'
 
     // HTTPS everywhere: the Router CloudFront Function deletes customOriginConfig
     // for http origins and CF then falls back to match-viewer (→ tries HTTPS on a
     // port-80-only ALB → 502). We side-step that by giving Api and Dex ALBs
     // HTTPS listeners with a wildcard ACM cert, so Router routes to https://
     // origins and the non-buggy branch runs.
-    const stackDomain = process.env.STACK_DOMAIN;
+    const stackDomain = process.env.STACK_DOMAIN
     if (!stackDomain) {
-      throw new Error(
-        "STACK_DOMAIN is required (Cloudflare-managed subdomain, e.g. dev.boxlite.ai)",
-      );
+      throw new Error('STACK_DOMAIN is required (Cloudflare-managed subdomain, e.g. dev.boxlite.ai)')
     }
-    const cloudflareDns = sst.cloudflare.dns();
+    const cloudflareDns = sst.cloudflare.dns()
     const serviceDomain = (name: string) => ({
       name: `${name}.${stackDomain}`,
       dns: cloudflareDns,
-    });
+    })
 
     // ─── 1. SECRETS ──────────────────────────────────────────────────────────
     // Auto-generated — override any one by setting the matching env var.
-    const randomKey = (name: string, length = 32) =>
-      new random.RandomPassword(name, { length, special: false });
+    const randomKey = (name: string, length = 32) => new random.RandomPassword(name, { length, special: false })
 
-    const encryptionKey = randomKey("EncryptionKey", 64);
-    const encryptionSalt = randomKey("EncryptionSalt", 32);
-    const proxyApiKey = randomKey("ProxyApiKey");
-    const sshGatewayApiKey = randomKey("SshGatewayApiKey");
-    const adminApiKey = randomKey("AdminApiKey");
-    const defaultRunnerApiKey = randomKey("DefaultRunnerApiKey");
-    const pgAdminPassword = randomKey("PgAdminPassword", 24);
+    const encryptionKey = randomKey('EncryptionKey', 64)
+    const encryptionSalt = randomKey('EncryptionSalt', 32)
+    const proxyApiKey = randomKey('ProxyApiKey')
+    const sshGatewayApiKey = randomKey('SshGatewayApiKey')
+    const adminApiKey = randomKey('AdminApiKey')
+    const defaultRunnerApiKey = randomKey('DefaultRunnerApiKey')
+    const pgAdminPassword = randomKey('PgAdminPassword', 24)
 
     // ─── 2. PLATFORM ─────────────────────────────────────────────────────────
-    const vpc = new sst.aws.Vpc("Vpc", { nat: "ec2" });
-    const db = new sst.aws.Postgres("Database", { vpc, instance: "t4g.micro", storage: "20 GB" });
-    const redis = new sst.aws.Redis("Cache", { vpc, cluster: false }); // NestJS uses SELECT (multi-DB)
-    const storage = new sst.aws.Bucket("Storage");
-    const cluster = new sst.aws.Cluster("Cluster", { vpc, forceUpgrade: "v2" });
+    const vpc = new sst.aws.Vpc('Vpc', { nat: 'ec2' })
+    const db = new sst.aws.Postgres('Database', { vpc, instance: 't4g.micro', storage: '20 GB' })
+    const redis = new sst.aws.Redis('Cache', { vpc, cluster: false }) // NestJS uses SELECT (multi-DB)
+    const storage = new sst.aws.Bucket('Storage')
+    const cluster = new sst.aws.Cluster('Cluster', { vpc, forceUpgrade: 'v2' })
 
     // ─── 3. IAM ──────────────────────────────────────────────────────────────
     // S3 IAM user: API signs STS tokens for sandbox S3 uploads.
-    const s3User = new aws.iam.User("S3User", {});
-    new aws.iam.UserPolicy("S3UserPolicy", {
+    const s3User = new aws.iam.User('S3User', {})
+    new aws.iam.UserPolicy('S3UserPolicy', {
       user: s3User.name,
       policy: JSON.stringify({
-        Version: "2012-10-17",
+        Version: '2012-10-17',
         Statement: [
-          { Effect: "Allow", Action: ["s3:*"], Resource: ["*"] },
-          { Effect: "Allow", Action: ["sts:AssumeRole", "sts:GetCallerIdentity"], Resource: ["*"] },
+          { Effect: 'Allow', Action: ['s3:*'], Resource: ['*'] },
+          { Effect: 'Allow', Action: ['sts:AssumeRole', 'sts:GetCallerIdentity'], Resource: ['*'] },
         ],
       }),
-    });
-    const s3AccessKey = new aws.iam.AccessKey("S3AccessKey", { user: s3User.name });
+    })
+    const s3AccessKey = new aws.iam.AccessKey('S3AccessKey', { user: s3User.name })
 
     // ─── 4. AUTH ─────────────────────────────────────────────────────────────
     // OIDC is delegated to an external provider (Auth0/Okta/etc.) via
@@ -187,7 +193,7 @@ export default $config({
     // customOriginConfig set by its CloudFront Function for HTTPS origins
     // (CF rejects the TLS handshake → 502). Flip it to `https-only` so CF
     // respects the CF-Function's HTTPS override.
-    const router = new sst.aws.Router("ApiCdn", {
+    const router = new sst.aws.Router('ApiCdn', {
       domain: { name: stackDomain, dns: cloudflareDns },
       transform: {
         cdn: (cdnArgs) => {
@@ -195,48 +201,100 @@ export default $config({
             (origins ?? []).map((o: any) => ({
               ...o,
               customOriginConfig: o.customOriginConfig
-                ? { ...o.customOriginConfig, originProtocolPolicy: "https-only", originReadTimeout: 60 }
+                ? { ...o.customOriginConfig, originProtocolPolicy: 'https-only', originReadTimeout: 60 }
                 : o.customOriginConfig,
             })),
-          );
+          )
         },
       },
-    });
+    })
 
     // ─── 5. ARTIFACT REGISTRY (S3-backed OCI registry) ──────────────────────
     // Replaces upstream registry:2.8.2 — runtime artifacts persist in S3,
     // not on an ephemeral container disk.
-    const artifactRegistry = new sst.aws.Service("ArtifactRegistry", {
+    const artifactRegistry = new sst.aws.Service('ArtifactRegistry', {
       cluster,
-      image: { context: "../..", dockerfile: "apps/artifact-registry/Dockerfile", cache: false },
+      image: { context: '../..', dockerfile: 'apps/artifact-registry/Dockerfile', cache: false },
       loadBalancer: {
-        rules: [{ listen: "80/http", forward: `${PORTS.ARTIFACT_REGISTRY}/http` }],
-        health: { [`${PORTS.ARTIFACT_REGISTRY}/http`]: httpHealth("/healthz") },
+        rules: [{ listen: '80/http', forward: `${PORTS.ARTIFACT_REGISTRY}/http` }],
+        health: { [`${PORTS.ARTIFACT_REGISTRY}/http`]: httpHealth('/healthz') },
       },
       environment: {
-        ARTIFACT_REGISTRY_STORAGE_DRIVER: "s3",
+        ARTIFACT_REGISTRY_STORAGE_DRIVER: 's3',
         ARTIFACT_REGISTRY_STORAGE_S3_REGION: REGION,
         ARTIFACT_REGISTRY_STORAGE_S3_BUCKET: storage.name,
         ARTIFACT_REGISTRY_STORAGE_S3_ACCESSKEY: s3AccessKey.id,
         ARTIFACT_REGISTRY_STORAGE_S3_SECRETKEY: s3AccessKey.secret,
-        ARTIFACT_REGISTRY_STORAGE_DELETE_ENABLED: "true",
-        ARTIFACT_REGISTRY_AUTH_TYPE: "none",
+        ARTIFACT_REGISTRY_STORAGE_DELETE_ENABLED: 'true',
+        ARTIFACT_REGISTRY_AUTH_TYPE: 'none',
       },
-    });
-    const registry = artifactRegistry; // API uses this URL for both transient + internal registries
+    })
+    const registry = artifactRegistry // API uses this URL for both transient + internal registries
 
-    // ─── 6. API (NestJS control plane) ───────────────────────────────────────
-    const api = new sst.aws.Service("Api", {
+    // ─── 6. OBSERVABILITY INGEST ─────────────────────────────────────────────
+    // Created before Api so API, runner, host, and box can all emit OTLP to the
+    // same Collector. ClickHouse is external/managed only; no in-cluster
+    // ClickHouseSpike fallback is part of the target architecture.
+    new sst.aws.Service('Jaeger', {
+      cluster,
+      image: IMAGES.jaeger,
+      loadBalancer: { rules: [{ listen: '80/http', forward: `${PORTS.JAEGER_UI}/http` }] },
+      environment: { COLLECTOR_OTLP_ENABLED: 'true' },
+    })
+
+    const otelCollector = new sst.aws.Service('OtelCollector', {
+      cluster,
+      image: { context: '../..', dockerfile: 'apps/otel-collector/Dockerfile', cache: false },
+      command: [
+        '--config',
+        '/otelcol/collector-config.yaml',
+        '--set',
+        `service::pipelines::traces::exporters=${collectorExporters}`,
+        '--set',
+        `service::pipelines::metrics::exporters=${collectorExporters}`,
+        '--set',
+        `service::pipelines::logs::exporters=${collectorExporters}`,
+      ],
+      loadBalancer: {
+        rules: [
+          { listen: `${PORTS.OTLP_HTTP}/http`, forward: `${PORTS.OTLP_HTTP}/http` },
+          { listen: '80/http', forward: `${PORTS.OTEL_HEALTH}/http` },
+        ],
+        health: {
+          // The OTLP HTTP receiver returns a client-error status for a bare
+          // health-check GET, which still proves the receiver is listening.
+          [`${PORTS.OTLP_HTTP}/http`]: httpHealth('/', { successCodes: '200-499' }),
+          [`${PORTS.OTEL_HEALTH}/http`]: httpHealth('/health/status'),
+        },
+      },
+      environment: {
+        CLICKHOUSE_ENDPOINT: clickHouseWriterEndpoint || 'https://clickhouse-disabled.invalid:443',
+        CLICKHOUSE_DATABASE: envOr('CLICKHOUSE_WRITER_DATABASE', envOr('CLICKHOUSE_DATABASE', 'otel')),
+        CLICKHOUSE_USERNAME: envOr('CLICKHOUSE_WRITER_USERNAME', envOr('CLICKHOUSE_USERNAME', 'default')),
+        CLICKHOUSE_PASSWORD: clickHouseWriterPassword || 'unused',
+        CLICKHOUSE_CREATE_SCHEMA: envOr('CLICKHOUSE_CREATE_SCHEMA', 'false'),
+        CLICKHOUSE_COMPRESS: envOr('CLICKHOUSE_COMPRESS', 'none'),
+        BOXLITE_API_URL: envOr('BOXLITE_API_URL', `https://api.${stackDomain}/api`),
+        BOXLITE_API_KEY: envOr(
+          'BOXLITE_API_KEY',
+          envOr('OTEL_COLLECTOR_API_KEY', envOr('ADMIN_API_KEY', adminApiKey.result)),
+        ),
+      },
+    })
+    const otelCollectorOtlpHttpUrl = stripTrailingSlash(otelCollector.url).apply((url) => `${url}:${PORTS.OTLP_HTTP}`)
+
+    // ─── 7. API (NestJS control plane) ───────────────────────────────────────
+    const api = new sst.aws.Service('Api', {
       cluster,
       image: {
-        context: "../..",
-        dockerfile: "apps/api/Dockerfile",
+        context: '../..',
+        dockerfile: 'apps/api/Dockerfile',
         cache: false,
         args: { CACHE_BUST: Date.now().toString() },
       },
       loadBalancer: {
-        domain: serviceDomain("api"),
-        rules: [{ listen: "443/https", forward: `${PORTS.API}/http` }],
+        domain: serviceDomain('api'),
+        rules: [{ listen: '443/https', forward: `${PORTS.API}/http` }],
       },
       // AWS ALB default idle_timeout is 60s; per AWS docs (HTTP 408 troubleshooting),
       // raise to match expected WebSocket session length so SDK exec attaches survive
@@ -246,42 +304,55 @@ export default $config({
       // guidance: target keep-alive must be >= LB idle).
       transform: {
         loadBalancer: (lbArgs) => {
-          lbArgs.idleTimeout = 3600;
+          lbArgs.idleTimeout = 3600
         },
       },
       link: [db, redis, storage],
+      permissions: [
+        {
+          actions: ['logs:DescribeLogGroups'],
+          resources: ['*'],
+        },
+        {
+          actions: ['logs:FilterLogEvents'],
+          resources: [
+            $interpolate`arn:aws:logs:${REGION}:${aws.getCallerIdentityOutput().accountId}:log-group:/sst/cluster/${cluster.nodes.cluster.name}/*`,
+            $interpolate`arn:aws:logs:${REGION}:${aws.getCallerIdentityOutput().accountId}:log-group:/sst/cluster/${cluster.nodes.cluster.name}/*:*`,
+          ],
+        },
+      ],
       scaling: { min: 1, max: 4 },
       environment: {
         // Core
-        NODE_ENV: "production",
+        NODE_ENV: 'production',
         PORT: String(PORTS.API),
-        ENVIRONMENT: "production",
-        RUN_MIGRATIONS: "true",
-        VERSION: "0.1.0",
-        DEFAULT_REGION_ENFORCE_QUOTAS: "false",
-        DEFAULT_TEMPLATE: envOr("DEFAULT_TEMPLATE", "boxlite/base"),
-        BOXLITE_SYSTEM_IMAGE_TAG: envOr("BOXLITE_SYSTEM_IMAGE_TAG", "20260605-p0-r3"),
+        ENVIRONMENT: 'production',
+        RUN_MIGRATIONS: 'true',
+        VERSION: '0.1.0',
+        DEFAULT_REGION_ENFORCE_QUOTAS: 'false',
+        DEFAULT_TEMPLATE: envOr('DEFAULT_TEMPLATE', 'boxlite/base'),
+        BOXLITE_SYSTEM_IMAGE_TAG: envOr('BOXLITE_SYSTEM_IMAGE_TAG', '20260605-p0-r3'),
         BOXLITE_SYSTEM_BASE_IMAGE: envOr(
-          "BOXLITE_SYSTEM_BASE_IMAGE",
-          "ghcr.io/boxlite-ai/boxlite-agent-base@sha256:834dcb65465985fc2f648451d76c81d166bc7672391c9064a0a115ce6306c85f",
+          'BOXLITE_SYSTEM_BASE_IMAGE',
+          'ghcr.io/boxlite-ai/boxlite-agent-base@sha256:834dcb65465985fc2f648451d76c81d166bc7672391c9064a0a115ce6306c85f',
         ),
         BOXLITE_SYSTEM_PYTHON_IMAGE: envOr(
-          "BOXLITE_SYSTEM_PYTHON_IMAGE",
-          "ghcr.io/boxlite-ai/boxlite-agent-python@sha256:80d562a57f4bc12def4e54dbdb9e7d26d3268fe0767a2955ab5ad718041145d6",
+          'BOXLITE_SYSTEM_PYTHON_IMAGE',
+          'ghcr.io/boxlite-ai/boxlite-agent-python@sha256:80d562a57f4bc12def4e54dbdb9e7d26d3268fe0767a2955ab5ad718041145d6',
         ),
         BOXLITE_SYSTEM_NODE_IMAGE: envOr(
-          "BOXLITE_SYSTEM_NODE_IMAGE",
-          "ghcr.io/boxlite-ai/boxlite-agent-node@sha256:fcb8b840ab68567975853666c82fb6c59a3c1d14a0cdc31d7cbf3a01e6c6d247",
+          'BOXLITE_SYSTEM_NODE_IMAGE',
+          'ghcr.io/boxlite-ai/boxlite-agent-node@sha256:fcb8b840ab68567975853666c82fb6c59a3c1d14a0cdc31d7cbf3a01e6c6d247',
         ),
         ...(process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_URL && {
           BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME: envOr(
-            "BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME",
-            "BoxLite System Source Registry",
+            'BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME',
+            'BoxLite System Source Registry',
           ),
           BOXLITE_SYSTEM_SOURCE_REGISTRY_URL: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_URL,
-          BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME: envOr("BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME", ""),
-          BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD: envOr("BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD", ""),
-          BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID: envOr("BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID", ""),
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME: envOr('BOXLITE_SYSTEM_SOURCE_REGISTRY_USERNAME', ''),
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD: envOr('BOXLITE_SYSTEM_SOURCE_REGISTRY_PASSWORD', ''),
+          BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID: envOr('BOXLITE_SYSTEM_SOURCE_REGISTRY_PROJECT_ID', ''),
         }),
 
         // Database (SST-linked)
@@ -295,22 +366,22 @@ export default $config({
         REDIS_HOST: redis.host,
         REDIS_PORT: redis.port.apply(String),
         REDIS_PASSWORD: redis.password,
-        REDIS_TLS: "true",
+        REDIS_TLS: 'true',
 
         // Encryption
-        ENCRYPTION_KEY: envOr("ENCRYPTION_KEY", encryptionKey.result),
-        ENCRYPTION_SALT: envOr("ENCRYPTION_SALT", encryptionSalt.result),
+        ENCRYPTION_KEY: envOr('ENCRYPTION_KEY', encryptionKey.result),
+        ENCRYPTION_SALT: envOr('ENCRYPTION_SALT', encryptionSalt.result),
 
         // OIDC — external provider (Auth0/Okta/etc.)
-        OIDC_CLIENT_ID: envOr("OIDC_CLIENT_ID", "boxlite"),
-        OIDC_AUDIENCE: envOr("OIDC_AUDIENCE", "boxlite"),
+        OIDC_CLIENT_ID: envOr('OIDC_CLIENT_ID', 'boxlite'),
+        OIDC_AUDIENCE: envOr('OIDC_AUDIENCE', 'boxlite'),
         OIDC_ISSUER_BASE_URL: requireOidcIssuer(),
         ...(process.env.PUBLIC_OIDC_DOMAIN && {
           PUBLIC_OIDC_DOMAIN: process.env.PUBLIC_OIDC_DOMAIN,
         }),
         // Optional: Auth0 Management API (enables account linking etc.)
-        ...(process.env.OIDC_MANAGEMENT_API_ENABLED === "true" && {
-          OIDC_MANAGEMENT_API_ENABLED: "true",
+        ...(process.env.OIDC_MANAGEMENT_API_ENABLED === 'true' && {
+          OIDC_MANAGEMENT_API_ENABLED: 'true',
           OIDC_MANAGEMENT_API_CLIENT_ID: process.env.OIDC_MANAGEMENT_API_CLIENT_ID!,
           OIDC_MANAGEMENT_API_CLIENT_SECRET: process.env.OIDC_MANAGEMENT_API_CLIENT_SECRET!,
           OIDC_MANAGEMENT_API_AUDIENCE: process.env.OIDC_MANAGEMENT_API_AUDIENCE!,
@@ -320,10 +391,7 @@ export default $config({
         // to the dashboard when the IdP itself lacks end_session_endpoint
         // (e.g. Dex). For Auth0/Okta the API hides this and the SPA uses the
         // IdP's real endpoint advertised in /.well-known/openid-configuration.
-        OIDC_END_SESSION_ENDPOINT: envOr(
-          "OIDC_END_SESSION_ENDPOINT",
-          `https://${stackDomain}/api/auth/end-session`,
-        ),
+        OIDC_END_SESSION_ENDPOINT: envOr('OIDC_END_SESSION_ENDPOINT', `https://${stackDomain}/api/auth/end-session`),
         ...(process.env.OIDC_POST_LOGOUT_REDIRECT_ALLOWLIST && {
           OIDC_POST_LOGOUT_REDIRECT_ALLOWLIST: process.env.OIDC_POST_LOGOUT_REDIRECT_ALLOWLIST,
         }),
@@ -336,21 +404,76 @@ export default $config({
         S3_SECRET_KEY: s3AccessKey.secret,
         S3_DEFAULT_BUCKET: storage.name,
         S3_ACCOUNT_ID: aws.getCallerIdentityOutput().accountId,
-        S3_ROLE_NAME: "BoxliteS3Role",
+        S3_ROLE_NAME: 'BoxliteS3Role',
 
         // Proxy
-        PROXY_DOMAIN: envOr("PROXY_DOMAIN", `proxy.${stackDomain}`),
-        PROXY_PROTOCOL: envOr("PROXY_PROTOCOL", "https"),
-        PROXY_API_KEY: envOr("PROXY_API_KEY", proxyApiKey.result),
-        PROXY_TEMPLATE_URL: envOr("PROXY_TEMPLATE_URL", `https://proxy.${stackDomain}`),
+        PROXY_DOMAIN: envOr('PROXY_DOMAIN', `proxy.${stackDomain}`),
+        PROXY_PROTOCOL: envOr('PROXY_PROTOCOL', 'https'),
+        PROXY_API_KEY: envOr('PROXY_API_KEY', proxyApiKey.result),
+        PROXY_TEMPLATE_URL: envOr('PROXY_TEMPLATE_URL', `https://proxy.${stackDomain}`),
 
         // SSH Gateway — friendly hostname `ssh.<stackDomain>` is provisioned
         // as a Cloudflare CNAME pointing at the SshGateway NLB further below.
-        SSH_GATEWAY_URL: envOr("SSH_GATEWAY_URL", `ssh://ssh.${stackDomain}:${PORTS.SSH_GATEWAY}`),
-        SSH_GATEWAY_API_KEY: envOr("SSH_GATEWAY_API_KEY", sshGatewayApiKey.result),
+        SSH_GATEWAY_URL: envOr('SSH_GATEWAY_URL', `ssh://ssh.${stackDomain}:${PORTS.SSH_GATEWAY}`),
+        SSH_GATEWAY_API_KEY: envOr('SSH_GATEWAY_API_KEY', sshGatewayApiKey.result),
 
         // Admin
-        ADMIN_API_KEY: envOr("ADMIN_API_KEY", adminApiKey.result),
+        ADMIN_API_KEY: envOr('ADMIN_API_KEY', adminApiKey.result),
+
+        // Observability read/write path. These stay server-side; never expose
+        // ClickHouse credentials to the dashboard bundle.
+        OTEL_ENABLED: envOr('OTEL_ENABLED', 'true'),
+        OTEL_EXPORTER_OTLP_ENDPOINT: envOr('OTEL_EXPORTER_OTLP_ENDPOINT', otelCollectorOtlpHttpUrl),
+        ...(process.env.OTEL_EXPORTER_OTLP_HEADERS && {
+          OTEL_EXPORTER_OTLP_HEADERS: process.env.OTEL_EXPORTER_OTLP_HEADERS,
+        }),
+        ...(clickHouseReaderUrl
+          ? {
+              CLICKHOUSE_URL: clickHouseReaderUrl,
+              CLICKHOUSE_DATABASE: envOr('CLICKHOUSE_READER_DATABASE', envOr('CLICKHOUSE_DATABASE', 'otel')),
+              CLICKHOUSE_USERNAME: envOr('CLICKHOUSE_READER_USERNAME', envOr('CLICKHOUSE_USERNAME', 'default')),
+              CLICKHOUSE_PASSWORD: envOr('CLICKHOUSE_READER_PASSWORD', envOr('CLICKHOUSE_PASSWORD', '')),
+            }
+          : clickHouseReaderHost
+            ? {
+                CLICKHOUSE_HOST: clickHouseReaderHost,
+                CLICKHOUSE_PORT: envOr('CLICKHOUSE_READER_PORT', envOr('CLICKHOUSE_PORT', '443')),
+                CLICKHOUSE_DATABASE: envOr('CLICKHOUSE_READER_DATABASE', envOr('CLICKHOUSE_DATABASE', 'otel')),
+                CLICKHOUSE_USERNAME: envOr('CLICKHOUSE_READER_USERNAME', envOr('CLICKHOUSE_USERNAME', 'default')),
+                CLICKHOUSE_PASSWORD: envOr('CLICKHOUSE_READER_PASSWORD', envOr('CLICKHOUSE_PASSWORD', '')),
+                CLICKHOUSE_PROTOCOL: envOr('CLICKHOUSE_READER_PROTOCOL', envOr('CLICKHOUSE_PROTOCOL', 'https')),
+              }
+            : {}),
+        SANDBOX_OTEL_ENDPOINT_URL: envOr(
+          'SANDBOX_OTEL_ENDPOINT_URL',
+          envOr('OTEL_EXPORTER_OTLP_ENDPOINT', otelCollectorOtlpHttpUrl),
+        ),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_REGION: envOr('ADMIN_OBSERVABILITY_CLOUDWATCH_REGION', REGION),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUPS: envOr('ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUPS', ''),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUP_PREFIX: envOr(
+          'ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUP_PREFIX',
+          $interpolate`/sst/cluster/${cluster.nodes.cluster.name}/`,
+        ),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_LIMIT_PER_GROUP: envOr('ADMIN_OBSERVABILITY_CLOUDWATCH_LIMIT_PER_GROUP', '25'),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_MAX_LOG_GROUPS: envOr('ADMIN_OBSERVABILITY_CLOUDWATCH_MAX_LOG_GROUPS', '20'),
+        ADMIN_OBSERVABILITY_S3_REGION: envOr('ADMIN_OBSERVABILITY_S3_REGION', REGION),
+        ADMIN_OBSERVABILITY_S3_BUCKETS: envOr('ADMIN_OBSERVABILITY_S3_BUCKETS', storage.name),
+        ADMIN_OBSERVABILITY_S3_MAX_OBJECTS: envOr('ADMIN_OBSERVABILITY_S3_MAX_OBJECTS', '25'),
+        ...(process.env.ADMIN_OBSERVABILITY_CLICKSTACK_URL && {
+          ADMIN_OBSERVABILITY_CLICKSTACK_URL: process.env.ADMIN_OBSERVABILITY_CLICKSTACK_URL,
+        }),
+        ...(process.env.ADMIN_OBSERVABILITY_CLICKSTACK_DASHBOARD_URL && {
+          ADMIN_OBSERVABILITY_CLICKSTACK_DASHBOARD_URL: process.env.ADMIN_OBSERVABILITY_CLICKSTACK_DASHBOARD_URL,
+        }),
+        ...(process.env.ADMIN_OBSERVABILITY_CLICKSTACK_LOG_SOURCE_ID && {
+          ADMIN_OBSERVABILITY_CLICKSTACK_LOG_SOURCE_ID: process.env.ADMIN_OBSERVABILITY_CLICKSTACK_LOG_SOURCE_ID,
+        }),
+        ...(process.env.ADMIN_OBSERVABILITY_CLICKSTACK_TRACE_SOURCE_ID && {
+          ADMIN_OBSERVABILITY_CLICKSTACK_TRACE_SOURCE_ID: process.env.ADMIN_OBSERVABILITY_CLICKSTACK_TRACE_SOURCE_ID,
+        }),
+        ...(process.env.ADMIN_OBSERVABILITY_CLICKSTACK_METRIC_SOURCE_ID && {
+          ADMIN_OBSERVABILITY_CLICKSTACK_METRIC_SOURCE_ID: process.env.ADMIN_OBSERVABILITY_CLICKSTACK_METRIC_SOURCE_ID,
+        }),
 
         // Dashboard — point its API client at the direct `api.<stackDomain>`
         // ALB hostname so long-lived /attach WS, build-log SSE, and file
@@ -359,25 +482,25 @@ export default $config({
         // (index.html + /assets/*) still serve through the CF Router at the
         // root domain. CORS on the API is already `origin: true` so the
         // cross-origin dashboard→API path works without further changes.
-        DASHBOARD_URL: envOr("DASHBOARD_URL", `https://${stackDomain}`),
-        APP_URL: envOr("APP_URL", ""),
-        DASHBOARD_BASE_API_URL: envOr("DASHBOARD_BASE_API_URL", `https://api.${stackDomain}`),
+        DASHBOARD_URL: envOr('DASHBOARD_URL', `https://${stackDomain}`),
+        APP_URL: envOr('APP_URL', ''),
+        DASHBOARD_BASE_API_URL: envOr('DASHBOARD_BASE_API_URL', `https://api.${stackDomain}`),
 
         // Docker registries (both default to the in-cluster ArtifactRegistry)
-        ...registryEnv("TRANSIENT", registry.url),
-        ...registryEnv("INTERNAL", registry.url),
+        ...registryEnv('TRANSIENT', registry.url),
+        ...registryEnv('INTERNAL', registry.url),
 
         // Default runner — wire via RUNNER_PRIVATE_IP after the first deploy
-        DEFAULT_RUNNER_NAME: envOr("DEFAULT_RUNNER_NAME", "default"),
-        DEFAULT_RUNNER_API_KEY: envOr("DEFAULT_RUNNER_API_KEY", defaultRunnerApiKey.result),
-        DEFAULT_RUNNER_DOMAIN: runnerEndpoint("DEFAULT_RUNNER_DOMAIN", PORTS.RUNNER, ""),
-        DEFAULT_RUNNER_API_URL: runnerEndpoint("DEFAULT_RUNNER_API_URL", PORTS.RUNNER, "http://"),
-        DEFAULT_RUNNER_PROXY_URL: runnerEndpoint("DEFAULT_RUNNER_PROXY_URL", PORTS.PROXY, "http://"),
+        DEFAULT_RUNNER_NAME: envOr('DEFAULT_RUNNER_NAME', 'default'),
+        DEFAULT_RUNNER_API_KEY: envOr('DEFAULT_RUNNER_API_KEY', defaultRunnerApiKey.result),
+        DEFAULT_RUNNER_DOMAIN: runnerEndpoint('DEFAULT_RUNNER_DOMAIN', PORTS.RUNNER, ''),
+        DEFAULT_RUNNER_API_URL: runnerEndpoint('DEFAULT_RUNNER_API_URL', PORTS.RUNNER, 'http://'),
+        DEFAULT_RUNNER_PROXY_URL: runnerEndpoint('DEFAULT_RUNNER_PROXY_URL', PORTS.PROXY, 'http://'),
 
         // PostHog (enables the dashboard's "Create Sandbox" feature flag)
         ...(process.env.POSTHOG_API_KEY && {
           POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
-          POSTHOG_HOST: envOr("POSTHOG_HOST", "https://us.posthog.com"),
+          POSTHOG_HOST: envOr('POSTHOG_HOST', 'https://us.posthog.com'),
         }),
 
         // Svix (webhook delivery; without this dashboard logs cosmetic errors)
@@ -386,153 +509,114 @@ export default $config({
           ...(process.env.SVIX_SERVER_URL && { SVIX_SERVER_URL: process.env.SVIX_SERVER_URL }),
         }),
       },
-    });
+    })
 
     // ─── 7. EDGE SERVICES ────────────────────────────────────────────────────
     // Proxy: routes `<port>-<sandboxid>.proxy.<stack>` to the sandbox port.
     // Wildcard cert covers *.proxy.<stack>; Cloudflare serves wildcard DNS.
-    const proxyDomain = `proxy.${stackDomain}`;
-    new sst.aws.Service("Proxy", {
+    const proxyDomain = `proxy.${stackDomain}`
+    new sst.aws.Service('Proxy', {
       cluster,
-      image: { context: "../..", dockerfile: "apps/proxy/Dockerfile", cache: false },
+      image: { context: '../..', dockerfile: 'apps/proxy/Dockerfile', cache: false },
       loadBalancer: {
         domain: {
           name: proxyDomain,
           aliases: [`*.${proxyDomain}`],
           dns: cloudflareDns,
         },
-        rules: [{ listen: "443/https", forward: `${PORTS.PROXY}/http` }],
-        health: { [`${PORTS.PROXY}/http`]: httpHealth("/health") },
+        rules: [{ listen: '443/https', forward: `${PORTS.PROXY}/http` }],
+        health: { [`${PORTS.PROXY}/http`]: httpHealth('/health') },
       },
       // Same reasoning as the Api LB: bump idle to 1h so dashboard iframe
       // terminals (https://22222-<sbx>.proxy.<stack>/) survive idle pauses
       // until the runner-side keepalive in handleWebSocketTerminal lands.
       transform: {
         loadBalancer: (lbArgs) => {
-          lbArgs.idleTimeout = 3600;
+          lbArgs.idleTimeout = 3600
         },
       },
       environment: {
         PROXY_PORT: String(PORTS.PROXY),
-        PROXY_PROTOCOL: envOr("PROXY_PROTOCOL", "http"),
-        PROXY_API_KEY: envOr("PROXY_API_KEY", proxyApiKey.result),
+        PROXY_PROTOCOL: envOr('PROXY_PROTOCOL', 'http'),
+        PROXY_API_KEY: envOr('PROXY_API_KEY', proxyApiKey.result),
         // api-client-go appends paths like "/config" directly → include /api suffix
         BOXLITE_API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
-        OIDC_CLIENT_ID: envOr("OIDC_CLIENT_ID", "boxlite"),
-        OIDC_AUDIENCE: envOr("OIDC_AUDIENCE", "boxlite"),
+        OIDC_CLIENT_ID: envOr('OIDC_CLIENT_ID', 'boxlite'),
+        OIDC_AUDIENCE: envOr('OIDC_AUDIENCE', 'boxlite'),
         OIDC_DOMAIN: requireOidcIssuer(),
       },
-    });
+    })
 
     // SSH Gateway: `ssh <sandbox>@ssh.<stackDomain>:2222` proxies to the sandbox.
     // The NLB has no domain field (TCP listeners don't take ACM certs); instead we
     // attach a Cloudflare CNAME directly via cloudflareDns.createAlias below so users
     // get a stable, memorable hostname instead of the auto-generated NLB DNS name.
-    const sshGateway = new sst.aws.Service("SshGateway", {
+    const sshGateway = new sst.aws.Service('SshGateway', {
       cluster,
-      image: { context: "../..", dockerfile: "apps/ssh-gateway/Dockerfile", cache: false },
+      image: { context: '../..', dockerfile: 'apps/ssh-gateway/Dockerfile', cache: false },
       loadBalancer: { rules: [{ listen: `${PORTS.SSH_GATEWAY}/tcp`, forward: `${PORTS.SSH_GATEWAY}/tcp` }] },
       environment: {
         // api-client-go composes paths like "/sandbox/ssh-access/validate" directly.
         // The Nest control plane is globally mounted under /api, so the gateway
         // must use the API base path rather than the raw ALB root.
         API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
-        API_KEY: envOr("SSH_GATEWAY_API_KEY", sshGatewayApiKey.result), // NB: not SSH_GATEWAY_API_KEY
-        SSH_PRIVATE_KEY: envOr("SSH_PRIVATE_KEY_B64", ""),
-        SSH_HOST_KEY: envOr("SSH_HOST_KEY_B64", ""),
+        API_KEY: envOr('SSH_GATEWAY_API_KEY', sshGatewayApiKey.result), // NB: not SSH_GATEWAY_API_KEY
+        SSH_PRIVATE_KEY: envOr('SSH_PRIVATE_KEY_B64', ''),
+        SSH_HOST_KEY: envOr('SSH_HOST_KEY_B64', ''),
       },
-    });
+    })
 
     cloudflareDns.createAlias(
-      "SshGateway",
+      'SshGateway',
       {
         name: `ssh.${stackDomain}`,
         aliasName: sshGateway.nodes.loadBalancer.dnsName,
         aliasZone: sshGateway.nodes.loadBalancer.zoneId,
       },
       {},
-    );
-
-    // ─── 8. OBSERVABILITY ────────────────────────────────────────────────────
-    new sst.aws.Service("Jaeger", {
-      cluster,
-      image: IMAGES.jaeger,
-      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.JAEGER_UI}/http` }] },
-      environment: { COLLECTOR_OTLP_ENABLED: "true" },
-    });
-
-    // OtelCollector — BoxLite's custom ocb build. The ClickHouse exporter is
-    // compiled in but dropped at runtime via --set (dev has no ClickHouse).
-    // Placeholder CLICKHOUSE_* env vars keep config.yaml parsing clean.
-    new sst.aws.Service("OtelCollector", {
-      cluster,
-      image: { context: "../..", dockerfile: "apps/otel-collector/Dockerfile", cache: false },
-      command: [
-        "--config", "/otelcol/collector-config.yaml",
-        "--set", "service::pipelines::traces::exporters=[boxlite_exporter]",
-        "--set", "service::pipelines::metrics::exporters=[boxlite_exporter]",
-        "--set", "service::pipelines::logs::exporters=[boxlite_exporter]",
-      ],
-      loadBalancer: {
-        rules: [
-          { listen: `${PORTS.OTLP_HTTP}/http`, forward: `${PORTS.OTLP_HTTP}/http` },
-          { listen: "80/http", forward: `${PORTS.OTEL_HEALTH}/http` },
-        ],
-        health: {
-          // The OTLP HTTP receiver returns a client-error status for a bare
-          // health-check GET, which still proves the receiver is listening.
-          [`${PORTS.OTLP_HTTP}/http`]: httpHealth("/", { successCodes: "200-499" }),
-          [`${PORTS.OTEL_HEALTH}/http`]: httpHealth("/health/status"),
-        },
-      },
-      environment: {
-        CLICKHOUSE_ENDPOINT: "tcp://localhost:9000",
-        CLICKHOUSE_PASSWORD: "unused",
-        BOXLITE_API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
-      },
-    });
+    )
 
     // ─── 9. ADMIN UIs ────────────────────────────────────────────────────────
-    new sst.aws.Service("PgAdmin", {
+    new sst.aws.Service('PgAdmin', {
       cluster,
       image: IMAGES.pgadmin,
       loadBalancer: {
-        rules: [{ listen: "80/http", forward: `${PORTS.PGADMIN}/http` }],
-        health: { [`${PORTS.PGADMIN}/http`]: httpHealth("/", { successCodes: "200-399" }) },
+        rules: [{ listen: '80/http', forward: `${PORTS.PGADMIN}/http` }],
+        health: { [`${PORTS.PGADMIN}/http`]: httpHealth('/', { successCodes: '200-399' }) },
       },
       environment: {
-        PGADMIN_DEFAULT_EMAIL: "admin@boxlite.dev",
+        PGADMIN_DEFAULT_EMAIL: 'admin@boxlite.dev',
         PGADMIN_DEFAULT_PASSWORD: pgAdminPassword.result,
-        PGADMIN_CONFIG_SERVER_MODE: "False",
-        PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False",
+        PGADMIN_CONFIG_SERVER_MODE: 'False',
+        PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False',
       },
-    });
+    })
 
-    new sst.aws.Service("RegistryUI", {
+    new sst.aws.Service('RegistryUI', {
       cluster,
       image: IMAGES.registryUi,
-      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.REGISTRY_UI}/http` }] },
+      loadBalancer: { rules: [{ listen: '80/http', forward: `${PORTS.REGISTRY_UI}/http` }] },
       environment: {
-        SINGLE_REGISTRY: "true",
-        REGISTRY_TITLE: "BoxLite Registry",
-        DELETE_IMAGES: "true",
-        SHOW_CONTENT_DIGEST: "true",
+        SINGLE_REGISTRY: 'true',
+        REGISTRY_TITLE: 'BoxLite Registry',
+        DELETE_IMAGES: 'true',
+        SHOW_CONTENT_DIGEST: 'true',
         NGINX_PROXY_PASS_URL: artifactRegistry.url,
-        SHOW_CATALOG_NB_TAGS: "true",
-        REGISTRY_SECURED: "false",
-        CATALOG_ELEMENTS_LIMIT: "1000",
+        SHOW_CATALOG_NB_TAGS: 'true',
+        REGISTRY_SECURED: 'false',
+        CATALOG_ELEMENTS_LIMIT: '1000',
       },
-    });
+    })
 
-    new sst.aws.Service("MailDev", {
+    new sst.aws.Service('MailDev', {
       cluster,
       image: IMAGES.maildev,
-      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.MAILDEV_UI}/http` }] },
-    });
+      loadBalancer: { rules: [{ listen: '80/http', forward: `${PORTS.MAILDEV_UI}/http` }] },
+    })
 
     // ─── 10. CDN ROUTES ──────────────────────────────────────────────────────
     // Router (declared in section 4) fronts the Api with HTTPS.
-    router.route("/", api.url);
+    router.route('/', api.url)
 
     // ─── 11. RUNNER (EC2 with nested KVM) ────────────────────────────────────
     // Pulls runner image from ECR, runs privileged with /dev/kvm mounted.
@@ -540,39 +624,44 @@ export default $config({
       mostRecent: true,
       owners: [RUNNER.ubuntuOwnerId],
       filters: [
-        { name: "name", values: [RUNNER.ubuntuNamePattern] },
-        { name: "architecture", values: ["x86_64"] },
+        { name: 'name', values: [RUNNER.ubuntuNamePattern] },
+        { name: 'architecture', values: ['x86_64'] },
       ],
-    });
+    })
 
-    const runnerRole = new aws.iam.Role("RunnerRole", {
+    const runnerRole = new aws.iam.Role('RunnerRole', {
       assumeRolePolicy: JSON.stringify({
-        Version: "2012-10-17",
-        Statement: [{ Effect: "Allow", Principal: { Service: "ec2.amazonaws.com" }, Action: "sts:AssumeRole" }],
+        Version: '2012-10-17',
+        Statement: [{ Effect: 'Allow', Principal: { Service: 'ec2.amazonaws.com' }, Action: 'sts:AssumeRole' }],
       }),
-    });
-    new aws.iam.RolePolicyAttachment("RunnerSsmPolicy", {
+    })
+    new aws.iam.RolePolicyAttachment('RunnerSsmPolicy', {
       role: runnerRole.name,
-      policyArn: "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
-    });
-    new aws.iam.RolePolicy("RunnerVolumeS3Policy", {
+      policyArn: 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore',
+    })
+    new aws.iam.RolePolicy('RunnerVolumeS3Policy', {
       role: runnerRole.name,
       policy: JSON.stringify({
-        Version: "2012-10-17",
+        Version: '2012-10-17',
         Statement: [
           {
-            Effect: "Allow",
-            Action: ["s3:*"],
-            Resource: ["arn:aws:s3:::boxlite-volume-*", "arn:aws:s3:::boxlite-volume-*/*"],
+            Effect: 'Allow',
+            Action: ['s3:*'],
+            Resource: ['arn:aws:s3:::boxlite-volume-*', 'arn:aws:s3:::boxlite-volume-*/*'],
           },
         ],
       }),
-    });
-    const runnerInstanceProfile = new aws.iam.InstanceProfile("RunnerProfile", { role: runnerRole.name });
+    })
+    const runnerInstanceProfile = new aws.iam.InstanceProfile('RunnerProfile', { role: runnerRole.name })
 
-    const runnerUserData = $resolve([api.url, defaultRunnerApiKey.result, registry.url]).apply(
-      ([apiUrl, token, registryUrl]) => buildRunnerUserData({ apiUrl, token, registryUrl }),
-    );
+    const runnerUserData = $resolve([
+      api.url,
+      defaultRunnerApiKey.result,
+      registry.url,
+      otelCollectorOtlpHttpUrl,
+    ]).apply(([apiUrl, token, registryUrl, otelEndpoint]) =>
+      buildRunnerUserData({ apiUrl, token, registryUrl, otelEndpoint }),
+    )
 
     // Runner holds load-bearing sandbox state (/var/lib/boxlite + in-memory
     // libkrun VMs). Two Pulumi resource options keep it persistent across
@@ -588,39 +677,45 @@ export default $config({
     //   `pulumi destroy` or stack-wide teardown. Deliberate decommission
     //   requires editing this file to `protect: false`, deploying that
     //   change, then `pulumi destroy --target ...Runner`.
-    new aws.ec2.Instance("Runner", {
-      ami: ubuntuAmi.then((a) => a.id),
-      instanceType: RUNNER.instanceType,
-      subnetId: vpc.publicSubnets[0],
-      iamInstanceProfile: runnerInstanceProfile.name,
-      cpuOptions: { nestedVirtualization: "enabled" },
-      associatePublicIpAddress: true,
-      userDataBase64: runnerUserData,
-      rootBlockDevice: { volumeSize: RUNNER.rootDiskGB },
-      tags: { Name: "boxlite-runner" },
-    }, {
-      ignoreChanges: ["ami", "userDataBase64"],
-      protect: true,
-    });
+    new aws.ec2.Instance(
+      'Runner',
+      {
+        ami: ubuntuAmi.then((a) => a.id),
+        instanceType: RUNNER.instanceType,
+        subnetId: vpc.publicSubnets[0],
+        iamInstanceProfile: runnerInstanceProfile.name,
+        cpuOptions: { nestedVirtualization: 'enabled' },
+        associatePublicIpAddress: true,
+        userDataBase64: runnerUserData,
+        rootBlockDevice: { volumeSize: RUNNER.rootDiskGB },
+        tags: { Name: 'boxlite-runner' },
+      },
+      {
+        ignoreChanges: ['ami', 'userDataBase64'],
+        protect: true,
+      },
+    )
   },
-});
+})
 
 // ── runner bootstrap ─────────────────────────────────────────────────────────
 // EC2 user-data: downloads prebuilt runner binary from GitHub Releases
 // and runs it directly with BoxLite VM isolation.
 async function buildRunnerUserData(input: {
-  apiUrl: string;
-  token: string;
-  registryUrl: string;
+  apiUrl: string
+  token: string
+  registryUrl: string
+  otelEndpoint: string
 }): Promise<string> {
-  const { readFileSync } = await import("fs");
-  const { resolve } = await import("path");
+  const { readFileSync } = await import('fs')
+  const { resolve } = await import('path')
 
   // SST invokes from apps/infra/ as cwd; Cargo.toml lives at repo root.
-  const RUNNER_VERSION = readFileSync(resolve(process.cwd(), "../../Cargo.toml"), "utf-8")
-    .match(/^version\s*=\s*"(.+?)"/m)![1];
+  const RUNNER_VERSION = readFileSync(resolve(process.cwd(), '../../Cargo.toml'), 'utf-8').match(
+    /^version\s*=\s*"(.+?)"/m,
+  )![1]
 
-  const registryHost = input.registryUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const registryHost = input.registryUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
   const script = `#!/bin/bash
 exec > /var/log/runner-setup.log 2>&1
@@ -661,7 +756,7 @@ RestartSec=5
 # internally via Client.Shutdown(); 60s here leaves headroom for in-flight
 # HTTP handlers + the deferred Close).
 TimeoutStopSec=60
-Environment=BOXLITE_API_URL=${input.apiUrl.replace(/\/$/, "")}/api
+Environment=BOXLITE_API_URL=${input.apiUrl.replace(/\/$/, '')}/api
 Environment=BOXLITE_RUNNER_TOKEN=${input.token}
 Environment=API_VERSION=2
 Environment=API_PORT=${PORTS.RUNNER}
@@ -669,6 +764,9 @@ Environment=RUNNER_DOMAIN=\$HOST_IP
 Environment=BOXLITE_HOME_DIR=/var/lib/boxlite
 Environment=INSECURE_REGISTRIES=${registryHost}
 Environment=AWS_REGION=${REGION}
+Environment=OTEL_LOGGING_ENABLED=true
+Environment=OTEL_TRACING_ENABLED=true
+Environment=OTEL_EXPORTER_OTLP_ENDPOINT=${input.otelEndpoint}
 
 [Install]
 WantedBy=multi-user.target
@@ -680,6 +778,6 @@ systemctl enable boxlite-runner
 systemctl start boxlite-runner
 
 echo "Runner setup complete"
-`;
-  return Buffer.from(script).toString("base64");
+`
+  return Buffer.from(script).toString('base64')
 }

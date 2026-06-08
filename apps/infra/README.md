@@ -180,6 +180,8 @@ For Auth0 specifically:
 | **ArtifactRegistry** | S3-backed docker registry            | internal only                                |
 | **Jaeger**          | Trace viewer                         | public ALB                                   |
 | **OtelCollector**   | OTLP ingest                          | internal + public health                     |
+| **ClickHouse Cloud** | Managed OTel storage                 | external service; configured by env         |
+| **ClickStack**      | Logs/traces/metrics explorer         | external ClickHouse Cloud UI                |
 | **PgAdmin**         | Postgres admin UI                    | public ALB                                   |
 | **RegistryUI**      | Browse snapshot images               | public ALB                                   |
 | **MailDev**         | Mock SMTP + web UI                   | public ALB                                   |
