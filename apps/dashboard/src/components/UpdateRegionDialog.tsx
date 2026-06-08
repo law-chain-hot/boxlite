@@ -140,8 +140,8 @@ export const UpdateRegionDialog: React.FC<UpdateRegionDialogProps> = ({
               placeholder="https://artifact-registry.example.com"
             />
             <p className="text-sm text-muted-foreground mt-1 pl-1">
-              (Optional) URL of the custom artifact registry for this region. Cannot be changed if images exist in
-              this region.
+              (Optional) URL of the custom artifact registry for this region. Cannot be changed if images exist in this
+              region.
             </p>
           </div>
         </form>
