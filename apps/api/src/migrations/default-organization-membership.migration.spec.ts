@@ -5,7 +5,8 @@
  */
 
 import { DefaultOrganizationMembership1780912800000 } from './pre-deploy/1780912800000-migration'
-import { DropOrganizationPersonal1780912800001 } from './post-deploy/1780912800001-migration'
+import { existsSync } from 'fs'
+import { join } from 'path'
 
 function createQueryRunner() {
   return {
@@ -27,11 +28,7 @@ describe('default organization membership migrations', () => {
     expect(sql).toContain('WHERE "isDefaultForUser" = true')
   })
 
-  it('drops the obsolete organization-level personal flag after deploy', async () => {
-    const queryRunner = createQueryRunner()
-
-    await new DropOrganizationPersonal1780912800001().up(queryRunner as never)
-
-    expect(queryRunner.query).toHaveBeenCalledWith('ALTER TABLE "organization" DROP COLUMN "personal"')
+  it('does not drop the deprecated organization-level personal flag in the compatibility rollout', () => {
+    expect(existsSync(join(__dirname, 'post-deploy/1780912800001-migration.ts'))).toBe(false)
   })
 })

@@ -43,6 +43,13 @@ export interface Organization {
    */
   isDefaultForAuthenticatedUser: boolean
   /**
+   * Deprecated alias for isDefaultForAuthenticatedUser. Kept for backward compatibility with older REST clients.
+   * @type {boolean}
+   * @memberof Organization
+   * @deprecated
+   */
+  personal: boolean
+  /**
    * Creation timestamp
    * @type {Date}
    * @memberof Organization

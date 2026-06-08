@@ -30,6 +30,13 @@ export class OrganizationDto {
   isDefaultForAuthenticatedUser: boolean
 
   @ApiProperty({
+    description:
+      'Deprecated alias for isDefaultForAuthenticatedUser. Kept for backward compatibility with older REST clients.',
+    deprecated: true,
+  })
+  personal: boolean
+
+  @ApiProperty({
     description: 'Creation timestamp',
   })
   createdAt: Date
@@ -154,6 +161,7 @@ export class OrganizationDto {
       name: organization.name,
       createdBy: organization.createdBy,
       isDefaultForAuthenticatedUser,
+      personal: isDefaultForAuthenticatedUser,
       createdAt: organization.createdAt,
       updatedAt: organization.updatedAt,
       suspended: organization.suspended,

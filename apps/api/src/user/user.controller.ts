@@ -89,6 +89,8 @@ export class UserController {
         email: req.body?.email,
         defaultOrganizationQuota: req.body?.defaultOrganizationQuota,
         defaultOrganizationDefaultRegionId: req.body?.defaultOrganizationDefaultRegionId,
+        personalOrganizationQuota: req.body?.personalOrganizationQuota,
+        personalOrganizationDefaultRegionId: req.body?.personalOrganizationDefaultRegionId,
         role: req.body?.role,
         emailVerified: req.body?.emailVerified,
       }),

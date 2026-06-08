@@ -14,6 +14,7 @@ import { OrganizationInvitationAcceptedEvent } from '../events/organization-invi
 import { SystemRole } from '../../user/enums/system-role.enum'
 import { UserCreatedEvent } from '../../user/events/user-created.event'
 import { UserDeletedEvent } from '../../user/events/user-deleted.event'
+import { OrganizationDto } from '../dto/organization.dto'
 
 const defaultQuota: CreateOrganizationQuotaDto = {
   totalCpuQuota: 10,
@@ -69,6 +70,34 @@ function createOrganizationService() {
 }
 
 describe('default organization membership semantics', () => {
+  it('keeps the deprecated Organization.personal response field as an alias for the authenticated user default flag', () => {
+    const dto = OrganizationDto.fromOrganization(
+      {
+        id: 'org-1',
+        name: 'Default Organization',
+        createdBy: 'user-1',
+        createdAt: new Date('2026-06-08T00:00:00.000Z'),
+        updatedAt: new Date('2026-06-08T00:00:00.000Z'),
+        suspended: false,
+        maxCpuPerSandbox: 4,
+        maxMemoryPerSandbox: 8,
+        maxDiskPerSandbox: 10,
+        templateDeactivationTimeoutMinutes: 20160,
+        sandboxLimitedNetworkEgress: false,
+        authenticatedRateLimit: null,
+        sandboxCreateRateLimit: null,
+        sandboxLifecycleRateLimit: null,
+        authenticatedRateLimitTtlSeconds: null,
+        sandboxCreateRateLimitTtlSeconds: null,
+        sandboxLifecycleRateLimitTtlSeconds: null,
+      } as never,
+      true,
+    )
+
+    expect(dto.isDefaultForAuthenticatedUser).toBe(true)
+    expect(dto.personal).toBe(true)
+  })
+
   it('creates signup default organizations as normal organizations with a default owner membership', async () => {
     const { entityManager, saved } = createEntityManager()
     const service = createOrganizationService()
