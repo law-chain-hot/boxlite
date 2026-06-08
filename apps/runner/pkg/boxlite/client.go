@@ -19,6 +19,7 @@ import (
 	"github.com/boxlite-ai/runner/pkg/api/dto"
 	"github.com/boxlite-ai/runner/pkg/models/enums"
 	"github.com/containerd/errdefs"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 // Client wraps the BoxLite Go SDK to provide the same interface as the Docker client.
@@ -79,7 +80,7 @@ func networkSpec(blockAll *bool, allowList *string) boxlite.NetworkSpec {
 	return spec
 }
 
-func daemonSandboxEnv(sandboxDto dto.CreateSandboxDTO) map[string]string {
+func daemonSandboxEnv(ctx context.Context, sandboxDto dto.CreateSandboxDTO) map[string]string {
 	env := map[string]string{
 		"BOXLITE_SANDBOX_ID": sandboxDto.Id,
 	}
@@ -91,6 +92,17 @@ func daemonSandboxEnv(sandboxDto dto.CreateSandboxDTO) map[string]string {
 	}
 	if sandboxDto.RegionId != nil && *sandboxDto.RegionId != "" {
 		env["BOXLITE_REGION_ID"] = *sandboxDto.RegionId
+	}
+	// Propagate the active W3C trace context into the box so the in-box daemon's telemetry
+	// joins the SAME traceId as the api->runner spans, instead of rooting a fresh disjoint
+	// trace. With no active span the carrier is empty => env is byte-identical to before.
+	carrier := propagation.MapCarrier{}
+	propagation.TraceContext{}.Inject(ctx, carrier)
+	if traceParent := carrier.Get("traceparent"); traceParent != "" {
+		env["BOXLITE_TRACEPARENT"] = traceParent
+		if traceState := carrier.Get("tracestate"); traceState != "" {
+			env["BOXLITE_TRACESTATE"] = traceState
+		}
 	}
 	return env
 }
@@ -230,7 +242,7 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 	for k, v := range sandboxDto.Env {
 		opts = append(opts, boxlite.WithEnv(k, v))
 	}
-	for k, v := range daemonSandboxEnv(sandboxDto) {
+	for k, v := range daemonSandboxEnv(ctx, sandboxDto) {
 		opts = append(opts, boxlite.WithEnv(k, v))
 	}
 
