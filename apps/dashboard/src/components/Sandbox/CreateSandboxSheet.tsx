@@ -336,7 +336,8 @@ export const CreateSandboxSheet = ({
                               key={template.id}
                               className={cn(
                                 'group flex min-w-0 cursor-pointer items-start gap-3 rounded-md border bg-background p-3 text-left transition-colors hover:border-primary/35 hover:bg-muted/30',
-                                isSelected && 'border-primary/60 bg-primary/5 shadow-[inset_2px_0_0_hsl(var(--primary))]',
+                                isSelected &&
+                                  'border-primary/60 bg-primary/5 shadow-[inset_2px_0_0_hsl(var(--primary))]',
                               )}
                             >
                               <RadioGroupItem id={radioId} value={template.id} className="mt-1 shrink-0" />
