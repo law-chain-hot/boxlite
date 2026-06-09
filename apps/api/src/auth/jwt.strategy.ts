@@ -72,6 +72,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         email: email || '',
         emailVerified: payload.email_verified || false,
         defaultOrganizationQuota: this.configService.getOrThrow('defaultOrganizationQuota'),
+        // Anchor the auto-created default organization to the platform's
+        // default region, matching the admin-seed path in AppService. Without
+        // this, OrganizationService.handleUserCreatedEvent creates the org
+        // with defaultRegionId=undefined and downstream callers that read
+        // organization.defaultRegionId fail for every OIDC-created user.
+        defaultOrganizationDefaultRegionId: this.configService.getOrThrow('defaultRegion.id'),
       })
       this.logger.debug(`Created new user with ID: ${userId}`)
     } else if (user.name === 'Unknown' || !user.email) {
