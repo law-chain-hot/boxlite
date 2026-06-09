@@ -15,7 +15,6 @@ import { BackupState } from '../../enums/backup-state.enum'
 import { RunnerState } from '../../enums/runner-state.enum'
 import { BoxTemplateService } from '../../services/box-template.service'
 import { DockerRegistryService } from '../../../docker-registry/services/docker-registry.service'
-import { DockerRegistry } from '../../../docker-registry/entities/docker-registry.entity'
 import { RunnerService } from '../../services/runner.service'
 import { RunnerAdapterFactory } from '../../runner-adapter/runnerAdapter'
 import { RuntimeArtifactStateError } from '../../errors/runtime-artifact-state-error'
@@ -150,18 +149,11 @@ export class SandboxStartAction extends SandboxAction {
   }
 
   async pullTemplateArtifactToRunner(template: BoxTemplate, runner: Runner) {
-    const internalRegistry = await this.dockerRegistryService.findInternalRegistryByArtifactRef(
-      template.artifactRef,
-      runner.region,
-    )
-    if (!internalRegistry) {
-      throw new Error('No internal registry found for sandbox artifact')
-    }
-
     const runnerAdapter = await this.runnerAdapterFactory.create(runner)
 
-    // Fire the pull request (runner returns 202 immediately)
-    await runnerAdapter.pullArtifact(template.artifactRef, internalRegistry)
+    // Fire the pull request (runner returns 202 immediately).
+    // The runner pulls the ghcr ref directly using its runtime-scoped ghcr auth.
+    await runnerAdapter.pullArtifact(template.artifactRef, undefined)
 
     const pollTimeoutMs = 60 * 60 * 1_000 // 1 hour
     const pollIntervalMs = 5 * 1_000 // 5 seconds
@@ -196,14 +188,6 @@ export class SandboxStartAction extends SandboxAction {
     const template = await this.boxTemplateService.getBoxTemplateByName(sandbox.template, sandbox.organizationId)
     const artifactRef = template.artifactRef
 
-    const internalRegistry = await this.dockerRegistryService.findInternalRegistryByArtifactRef(
-      artifactRef,
-      runner.region,
-    )
-    if (!internalRegistry) {
-      throw new Error('No registry found for artifact')
-    }
-
     const entrypoint = template.entrypoint
 
     const metadata = {
@@ -211,10 +195,11 @@ export class SandboxStartAction extends SandboxAction {
       sandboxName: sandbox.name,
     }
 
+    // The runner pulls the ghcr ref directly using its runtime-scoped ghcr auth.
     const result = await runnerAdapter.createSandbox(
       sandbox,
       artifactRef,
-      internalRegistry,
+      undefined,
       entrypoint,
       metadata,
       this.configService.get('sandboxOtel.endpointUrl'),

@@ -56,7 +56,6 @@ import {
   SYSTEM_TEMPLATES,
   SystemTemplateDefinition,
 } from '../constants/system-templates'
-import { isBoxLiteInternalArtifactRef } from '../utils/artifact-ref.util'
 
 const IMAGE_NAME_REGEX = /^[a-zA-Z0-9_.\-:]+(\/[a-zA-Z0-9_.\-:]+)*(@sha256:[a-f0-9]{64})?$/
 @Injectable()
@@ -150,7 +149,9 @@ export class BoxTemplateService {
 
     try {
       const entrypoint = createBoxTemplateDto.entrypoint
-      const artifactRef: string | undefined = undefined
+      // The artifact ref is the ghcr image ref itself; the runner pulls it directly with its
+      // runtime-scoped ghcr auth, so there is no internal-registry indirection to resolve.
+      const artifactRef: string = createBoxTemplateDto.imageName
       const state: BoxTemplateState = BoxTemplateState.PENDING
 
       const nameValidationError = this.validateBoxTemplateName(createBoxTemplateDto.name)
@@ -241,10 +242,12 @@ export class BoxTemplateService {
     )
     const activeSystemTemplateMissingRef =
       existingTemplate.state === BoxTemplateState.ACTIVE && !existingTemplate.artifactRef?.trim()
-    const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(regionId)
-    const activeSystemTemplatePinnedToPreviousRegistry =
+    // The artifact ref is now the ghcr image ref itself. Repair active templates whose ref
+    // still points at a legacy internal registry instead of the ghcr image name.
+    const activeSystemTemplatePinnedToLegacyRef =
       existingTemplate.state === BoxTemplateState.ACTIVE &&
-      this.isPinnedToDifferentInternalRegistry(existingTemplate.artifactRef, internalRegistry?.url)
+      Boolean(existingTemplate.artifactRef?.trim()) &&
+      existingTemplate.artifactRef !== templateDefinition.imageName
 
     const desiredImageName = templateDefinition.imageName
     const imageNameChanged = existingTemplate.imageName !== desiredImageName
@@ -270,16 +273,12 @@ export class BoxTemplateService {
       shouldSaveTemplate = true
     }
 
-    if (
-      shouldReactivateSystemTemplate ||
-      activeSystemTemplateMissingRef ||
-      activeSystemTemplatePinnedToPreviousRegistry
-    ) {
+    if (shouldReactivateSystemTemplate || activeSystemTemplateMissingRef || activeSystemTemplatePinnedToLegacyRef) {
       existingTemplate.state = BoxTemplateState.PENDING
       existingTemplate.errorReason = undefined
       shouldSaveTemplate = true
 
-      if (shouldReactivateSystemTemplate || activeSystemTemplatePinnedToPreviousRegistry) {
+      if (shouldReactivateSystemTemplate || activeSystemTemplatePinnedToLegacyRef) {
         existingTemplate.artifactRef = null
         existingTemplate.initialRunnerId = null
         existingTemplate.size = null
@@ -330,15 +329,6 @@ export class BoxTemplateService {
     }
 
     await this.boxTemplateRepository.save(templates.map((template) => ({ ...template, hideFromUsers: true })))
-  }
-
-  private isPinnedToDifferentInternalRegistry(artifactRef?: string | null, internalRegistryUrl?: string | null) {
-    if (!artifactRef || !internalRegistryUrl || !isBoxLiteInternalArtifactRef(artifactRef)) {
-      return false
-    }
-
-    const currentRegistryPrefix = `${internalRegistryUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')}/`
-    return !artifactRef.startsWith(currentRegistryPrefix)
   }
 
   async removeBoxTemplate(templateId: string) {

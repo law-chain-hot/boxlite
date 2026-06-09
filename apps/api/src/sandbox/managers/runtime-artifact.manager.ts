@@ -35,14 +35,12 @@ import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateCreatedEvent } from '../events/box-template-created.event'
 import { BoxTemplateService } from '../services/box-template.service'
 import { OnAsyncEvent } from '../../common/decorators/on-async-event.decorator'
-import { parseDockerImage } from '../../common/utils/docker-image.util'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
 import { BackupState } from '../enums/backup-state.enum'
 import { BadRequestError } from '../../exceptions/bad-request.exception'
 import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
-import { createBoxLiteInternalArtifactRef } from '../utils/artifact-ref.util'
 import { getSystemTemplateDefinition } from '../constants/system-templates'
 
 const SYNC_AGAIN = 'sync-again'
@@ -287,28 +285,8 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
         return
       }
 
-      // regionId -> registry
-      const internalRegistriesMap = new Map<string, DockerRegistry>()
-
-      for (const regionId of [...sharedRegionIds, ...organizationRegionIds]) {
-        const registry = await this.dockerRegistryService.findInternalRegistryByArtifactRef(
-          template.artifactRef,
-          regionId,
-        )
-        if (registry) {
-          internalRegistriesMap.set(regionId, registry)
-        }
-      }
-
       const results = await Promise.allSettled(
         runnersToPropagateTo.map(async (runner) => {
-          const internalRegistry = internalRegistriesMap.get(runner.region)
-          if (!internalRegistry) {
-            throw new Error(
-              `No internal registry found for artifact ${template.artifactRef} in region ${runner.region}`,
-            )
-          }
-
           let runnerArtifactCache = await this.runnerService.getRunnerArtifactCache(runner.id, template.artifactRef)
 
           try {
@@ -319,7 +297,8 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
                 RunnerArtifactCacheState.PULLING_ARTIFACT,
               )
               runnerArtifactCache = await this.runnerService.getRunnerArtifactCache(runner.id, template.artifactRef)
-              await this.pullRunnerArtifactCache(runner, template.artifactRef, internalRegistry)
+              // Runner pulls the ghcr ref directly with its runtime-scoped ghcr auth.
+              await this.pullRunnerArtifactCache(runner, template.artifactRef, undefined)
             } else if (runnerArtifactCache.state === RunnerArtifactCacheState.PULLING_ARTIFACT) {
               await this.handleRunnerArtifactCacheStatePullingArtifact(runnerArtifactCache, runner)
             }
@@ -395,16 +374,8 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     const retryTimeoutMinutes = 10
     const retryTimeoutMs = retryTimeoutMinutes * 60 * 1000
     if (Date.now() - runnerArtifactCache.createdAt.getTime() > retryTimeoutMs) {
-      const internalRegistry = await this.dockerRegistryService.findInternalRegistryByArtifactRef(
-        runnerArtifactCache.artifactRef,
-        runner.region,
-      )
-      if (!internalRegistry) {
-        throw new Error(
-          `No internal registry found for artifact ${runnerArtifactCache.artifactRef} in region ${runner.region}`,
-        )
-      }
-      await this.pullRunnerArtifactCache(runner, runnerArtifactCache.artifactRef, internalRegistry)
+      // Runner re-pulls the ghcr ref directly with its runtime-scoped ghcr auth.
+      await this.pullRunnerArtifactCache(runner, runnerArtifactCache.artifactRef, undefined)
       return
     }
   }
@@ -486,21 +457,11 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
                     }
                   }
 
-                  // Find the backup registry to use as source for the pull
+                  // Find the backup registry to use as source for the pull. When the backup is
+                  // not pinned to a registry, the runner pulls with its runtime-scoped auth.
                   const registry = sandbox.backupRegistryId
                     ? await this.dockerRegistryService.findOne(sandbox.backupRegistryId)
-                    : await this.dockerRegistryService.findInternalRegistryByArtifactRef(
-                        sandbox.backupSnapshot,
-                        targetRunner.region,
-                      )
-
-                  if (!registry) {
-                    this.logger.warn(
-                      `No registry found for backup snapshot ${sandbox.backupSnapshot} of sandbox ${sandbox.id}`,
-                    )
-                    await this.redisLockProvider.unlock(sandboxLockKey)
-                    return
-                  }
+                    : undefined
 
                   // Create runner artifact cache entry on the target runner
                   await this.runnerService.createRunnerArtifactCacheEntry(
@@ -508,7 +469,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
                     sandbox.backupSnapshot,
                     RunnerArtifactCacheState.PULLING_ARTIFACT,
                   )
-                  await this.pullRunnerArtifactCache(targetRunner, sandbox.backupSnapshot, registry)
+                  await this.pullRunnerArtifactCache(targetRunner, sandbox.backupSnapshot, registry ?? undefined)
 
                   this.logger.log(
                     `Created runner artifact cache entry for sandbox ${sandbox.id} backup ${sandbox.backupSnapshot} on runner ${targetRunner.id} (migrating from draining runner ${runner.id})`,
@@ -750,15 +711,8 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
       }
     }
 
-    const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(runner.region)
-    if (!internalRegistry) {
-      throw new Error('No internal registry found for template artifact')
-    }
-
     const digestSyncState = await this.processTemplateArtifactDigest(
       template,
-      internalRegistry,
-      artifactInfoResponse.hash,
       artifactInfoResponse.sizeGB,
       artifactInfoResponse.entrypoint,
     )
@@ -769,7 +723,8 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
     let inspectedArtifactDigest: ArtifactDigestResponse | undefined
     try {
-      inspectedArtifactDigest = await runnerAdapter.inspectArtifactInRegistry(template.artifactRef, internalRegistry)
+      // Runner inspects the ghcr ref directly using its runtime-scoped ghcr auth.
+      inspectedArtifactDigest = await runnerAdapter.inspectArtifactInRegistry(template.artifactRef, undefined)
     } catch (error) {
       this.logger.error(`Failed to inspect artifact ${template.artifactRef} in registry: ${error}`)
       return DONT_SYNC_AGAIN
@@ -778,8 +733,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     if (template.size == null && typeof inspectedArtifactDigest?.sizeGB === 'number') {
       await this.processTemplateArtifactDigest(
         template,
-        internalRegistry,
-        artifactInfoResponse.hash,
         inspectedArtifactDigest.sizeGB,
         artifactInfoResponse.entrypoint,
       )
@@ -840,120 +793,18 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     return DONT_SYNC_AGAIN
   }
 
-  async processPullOnInitialRunner(template: BoxTemplate, runner: Runner) {
-    // Check for timeout - allow up to 30 minutes
-    const timeoutMinutes = 30
-    const timeoutMs = timeoutMinutes * 60 * 1000
-    if (Date.now() - template.updatedAt.getTime() > timeoutMs) {
-      await this.updateBoxTemplateState(
-        template.id,
-        BoxTemplateState.ERROR,
-        'Timeout processing template artifact pull on initial runner',
-      )
-      return DONT_SYNC_AGAIN
-    }
-
-    let sourceRegistry = await this.dockerRegistryService.findSourceRegistryByTemplateImageName(
-      template.imageName,
-      runner.region,
-      template.organizationId,
-    )
-    if (!sourceRegistry) {
-      sourceRegistry = await this.dockerRegistryService.getDefaultDockerHubRegistry()
-    }
-    const destinationRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(runner.region)
-
-    // Fire pull request (runner returns 202 immediately)
-    // Post-processing (digest, cleanup) is handled by handleCheckInitialRunnerTemplateArtifact on the next poll cycle
-    try {
-      await this.pullRunnerArtifactCache(
-        runner,
-        template.imageName,
-        sourceRegistry,
-        destinationRegistry ?? undefined,
-        template.artifactRef ? template.artifactRef : undefined,
-      )
-    } catch (err) {
-      // Validation errors are still returned synchronously
-      await this.updateBoxTemplateState(template.id, BoxTemplateState.ERROR, err.message)
-      throw err
-    }
-  }
-
   async handleBoxTemplateStatePending(template: BoxTemplate): Promise<SyncState> {
-    let initialRunner: Runner | undefined = undefined
-
-    if (!template.initialRunnerId) {
-      const excludedRunnerIds = await this.runnerService.getRunnersWithMultipleArtifactsPulling()
-
-      try {
-        const regions = await this.boxTemplateService.getBoxTemplateRegions(template.id)
-        if (!regions.length) {
-          throw new Error('No regions found for template')
-        }
-
-        initialRunner = await this.runnerService.getRandomAvailableRunner({
-          regions: regions.map((region) => region.id),
-          excludedRunnerIds: excludedRunnerIds,
-        })
-      } catch (error) {
-        this.logger.warn(`Failed to get initial runner: ${fromAxiosError(error)}`)
-      }
-
-      if (!initialRunner) {
-        // No runners available, retry later
-        return DONT_SYNC_AGAIN
-      }
-
-      template.initialRunnerId = initialRunner.id
-      await this.boxTemplateRepository.save(template)
-    } else {
-      initialRunner = await this.runnerService.findOneOrFail(template.initialRunnerId)
-    }
-
+    // The template's artifact is the ghcr image ref itself. The runner pulls it directly
+    // at create-time using its runtime-scoped ghcr auth, so there is no internal-registry
+    // mirror to populate before activation.
     if (!template.artifactRef) {
-      const runnerAdapter = await this.runnerAdapterFactory.create(initialRunner)
-      const registry = await this.dockerRegistryService.findRegistryByImageName(
-        template.imageName,
-        initialRunner.region,
-        template.organizationId,
-      )
-
-      const image = parseDockerImage(template.imageName)
-      if (registry && !image.registry) {
-        image.registry = registry.url.replace(/^(https?:\/\/)/, '')
-      }
-      const imageName = image.getFullName()
-
-      const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(initialRunner.region)
-      if (!internalRegistry) {
-        throw new Error('No internal registry found for template artifact')
-      }
-
-      const artifactDigestResponse = await runnerAdapter.inspectArtifactInRegistry(imageName, registry)
-      const digestSyncState = await this.processTemplateArtifactDigest(
-        template,
-        internalRegistry,
-        artifactDigestResponse.hash,
-        artifactDigestResponse.sizeGB,
-      )
-
-      if (digestSyncState === DONT_SYNC_AGAIN) {
-        return DONT_SYNC_AGAIN
-      }
-
+      template.artifactRef = template.imageName
       await this.boxTemplateRepository.save(template)
     }
 
-    await this.updateBoxTemplateState(template.id, BoxTemplateState.PULLING)
-    await this.runnerService.createRunnerArtifactCacheEntry(
-      initialRunner.id,
-      template.artifactRef,
-      RunnerArtifactCacheState.PULLING_ARTIFACT,
-    )
-    await this.processPullOnInitialRunner(template, initialRunner)
+    await this.updateBoxTemplateState(template.id, BoxTemplateState.ACTIVE)
 
-    return SYNC_AGAIN
+    return DONT_SYNC_AGAIN
   }
 
   private async updateBoxTemplateState(
@@ -1113,8 +964,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
   private async processTemplateArtifactDigest(
     template: BoxTemplate,
-    internalRegistry: DockerRegistry,
-    hash: string,
     sizeGB?: number,
     entrypoint?: string[] | string,
   ): Promise<SyncState | void> {
@@ -1122,7 +971,9 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
     if (!template.artifactRef) {
       shouldSave = true
-      template.artifactRef = createBoxLiteInternalArtifactRef(internalRegistry.url, internalRegistry.project, hash)
+      // Pull the ghcr image ref directly; the runner authenticates against ghcr with its
+      // runtime-scoped credentials, so no internal-registry indirection is needed.
+      template.artifactRef = template.imageName
     }
 
     if (template.size == null && typeof sizeGB === 'number') {
