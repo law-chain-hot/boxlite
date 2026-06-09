@@ -7,7 +7,6 @@
 import { ApiProperty, ApiPropertyOptional, ApiSchema } from '@nestjs/swagger'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { IsEnum, IsOptional } from 'class-validator'
-import { BackupState } from '../enums/backup-state.enum'
 import { Sandbox } from '../entities/sandbox.entity'
 import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
 import { SandboxClass } from '../enums/sandbox-class.enum'
@@ -175,24 +174,6 @@ export class SandboxDto {
   recoverable?: boolean
 
   @ApiPropertyOptional({
-    description: 'The state of the backup',
-    enum: BackupState,
-    example: Object.values(BackupState)[0],
-    required: false,
-  })
-  @IsEnum(BackupState)
-  @IsOptional()
-  backupState?: BackupState
-
-  @ApiPropertyOptional({
-    description: 'The creation timestamp of the last backup',
-    example: '2024-10-01T12:00:00Z',
-    required: false,
-  })
-  @IsOptional()
-  backupCreatedAt?: string
-
-  @ApiPropertyOptional({
     description: 'Auto-stop interval in minutes (0 means disabled)',
     example: 30,
     required: false,
@@ -289,8 +270,6 @@ export class SandboxDto {
       desiredState: sandbox.desiredState,
       errorReason: sandbox.errorReason,
       recoverable: sandbox.recoverable,
-      backupState: sandbox.backupState,
-      backupCreatedAt: sandbox.lastBackupAt ? new Date(sandbox.lastBackupAt).toISOString() : undefined,
       autoStopInterval: sandbox.autoStopInterval,
       autoDeleteInterval: sandbox.autoDeleteInterval,
       class: sandbox.class,

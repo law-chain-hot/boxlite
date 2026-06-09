@@ -139,8 +139,6 @@ func (e *Executor) executeJob(ctx context.Context, job *apiclient.Job) (any, err
 		resultMetadata, err = e.destroySandbox(ctx, job)
 	case apiclient.JOBTYPE_RESIZE_SANDBOX:
 		resultMetadata, err = e.resizeSandbox(ctx, job)
-	case apiclient.JOBTYPE_CREATE_BACKUP:
-		resultMetadata, err = e.createBackup(ctx, job)
 	case apiclient.JOBTYPE_PULL_ARTIFACT:
 		resultMetadata, err = e.pullArtifact(ctx, job)
 	case apiclient.JOBTYPE_REMOVE_ARTIFACT:

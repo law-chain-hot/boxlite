@@ -17,7 +17,6 @@ import { RunnerService } from './runner.service'
 import { SandboxError } from '../../exceptions/sandbox-error.exception'
 import { BadRequestError } from '../../exceptions/bad-request.exception'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { BackupState } from '../enums/backup-state.enum'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { resolveSystemTemplateName } from '../constants/system-templates'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
@@ -30,7 +29,6 @@ import { Runner } from '../entities/runner.entity'
 import { Organization } from '../../organization/entities/organization.entity'
 import { SandboxEvents } from '../constants/sandbox-events.constants'
 import { SandboxStateUpdatedEvent } from '../events/sandbox-state-updated.event'
-import { SandboxBackupCreatedEvent } from '../events/sandbox-backup-created.event'
 import { SandboxDestroyedEvent } from '../events/sandbox-destroyed.event'
 import { SandboxStartedEvent } from '../events/sandbox-started.event'
 import { SandboxStoppedEvent } from '../events/sandbox-stopped.event'
@@ -562,22 +560,6 @@ export class SandboxService {
       new SandboxStateUpdatedEvent(updatedSandbox, SandboxState.STARTED, SandboxState.STARTED),
     )
     return this.toSandboxDto(updatedSandbox)
-  }
-
-  async createBackup(sandboxIdOrName: string, organizationId?: string): Promise<Sandbox> {
-    const sandbox = await this.findOneByIdOrName(sandboxIdOrName, organizationId)
-
-    if (sandbox.autoDeleteInterval === 0) {
-      throw new SandboxError('Ephemeral sandboxes cannot be backed up')
-    }
-
-    if (![BackupState.COMPLETED, BackupState.NONE].includes(sandbox.backupState)) {
-      throw new SandboxError('Sandbox backup is already in progress')
-    }
-
-    this.eventEmitter.emit(SandboxEvents.BACKUP_CREATED, new SandboxBackupCreatedEvent(sandbox))
-
-    return sandbox
   }
 
   async findAllDeprecated(
@@ -1896,27 +1878,5 @@ export class SandboxService {
     }
 
     return { valid: true, sandboxId: sshAccess.sandbox.id }
-  }
-
-  async updateSandboxBackupState(
-    sandboxId: string,
-    backupState: BackupState,
-    backupSnapshot?: string | null,
-    backupRegistryId?: string | null,
-    backupErrorReason?: string | null,
-  ): Promise<void> {
-    const sandboxToUpdate = await this.sandboxRepository.findOneByOrFail({
-      id: sandboxId,
-    })
-
-    const updateData = Sandbox.getBackupStateUpdate(
-      sandboxToUpdate,
-      backupState,
-      backupSnapshot,
-      backupRegistryId,
-      backupErrorReason,
-    )
-
-    await this.sandboxRepository.update(sandboxId, { updateData, entity: sandboxToUpdate })
   }
 }

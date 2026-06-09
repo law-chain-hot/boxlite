@@ -13,5 +13,4 @@ export const SandboxEvents = {
   DESTROYED: 'sandbox.destroyed',
   PUBLIC_STATUS_UPDATED: 'sandbox.public-status.updated',
   ORGANIZATION_UPDATED: 'sandbox.organization.updated',
-  BACKUP_CREATED: 'sandbox.backup.created',
 } as const

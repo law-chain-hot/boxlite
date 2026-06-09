@@ -47,9 +47,6 @@ type SandboxBackend interface {
 	GetImageInfo(ctx context.Context, imageName string) (*ImageMeta, error)
 	InspectImageInRegistry(ctx context.Context, imageName string, registry *dto.RegistryDTO) (*RegistryDigest, error)
 
-	// Backup
-	CreateBackup(ctx context.Context, sandboxId string, backupDto dto.CreateBackupDTO) error
-
 	// Health
 	Ping(ctx context.Context) error
 }

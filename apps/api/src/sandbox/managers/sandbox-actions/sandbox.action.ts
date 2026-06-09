@@ -10,7 +10,6 @@ import { RunnerAdapterFactory } from '../../runner-adapter/runnerAdapter'
 import { Sandbox } from '../../entities/sandbox.entity'
 import { SandboxRepository } from '../../repositories/sandbox.repository'
 import { SandboxState } from '../../enums/sandbox-state.enum'
-import { BackupState } from '../../enums/backup-state.enum'
 import { getStateChangeLockKey } from '../../utils/lock-key.util'
 import { LockCode, RedisLockProvider } from '../../common/redis-lock.provider'
 
@@ -38,7 +37,6 @@ export abstract class SandboxAction {
     runnerId?: string | null | undefined,
     errorReason?: string,
     daemonVersion?: string,
-    backupState?: BackupState,
     recoverable?: boolean,
   ) {
     //  check if the lock code is still valid
@@ -87,14 +85,6 @@ export abstract class SandboxAction {
 
     if (daemonVersion !== undefined) {
       updateData.daemonVersion = daemonVersion
-    }
-
-    if (state == SandboxState.DESTROYED) {
-      updateData.backupState = BackupState.NONE
-    }
-
-    if (backupState !== undefined) {
-      Object.assign(updateData, Sandbox.getBackupStateUpdate(sandbox, backupState))
     }
 
     if (recoverable !== undefined) {

@@ -24,10 +24,8 @@ import {
   SandboxApi,
   EnumsSandboxState,
   ArtifactsApi,
-  EnumsBackupState,
   DefaultApi,
   CreateSandboxDTO,
-  CreateBackupDTO,
   PullArtifactRequestDTO,
   UpdateNetworkSettingsDTO,
   InspectArtifactInRegistryRequest,
@@ -36,7 +34,6 @@ import {
 import { Sandbox } from '../entities/sandbox.entity'
 import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
-import { BackupState } from '../enums/backup-state.enum'
 import { RunnerApiError } from '../errors/runner-api-error'
 
 const isDebugEnabled = process.env.DEBUG === 'true'
@@ -75,21 +72,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
         return SandboxState.PULLING_ARTIFACT
       default:
         return SandboxState.UNKNOWN
-    }
-  }
-
-  private convertBackupState(state: EnumsBackupState): BackupState {
-    switch (state) {
-      case EnumsBackupState.BackupStatePending:
-        return BackupState.PENDING
-      case EnumsBackupState.BackupStateInProgress:
-        return BackupState.IN_PROGRESS
-      case EnumsBackupState.BackupStateCompleted:
-        return BackupState.COMPLETED
-      case EnumsBackupState.BackupStateFailed:
-        return BackupState.ERROR
-      default:
-        return BackupState.NONE
     }
   }
 
@@ -175,9 +157,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
     const sandboxInfo = await this.sandboxApiClient.info(sandboxId)
     return {
       state: this.convertSandboxState(sandboxInfo.data.state),
-      backupState: this.convertBackupState(sandboxInfo.data.backupState),
-      backupSnapshot: sandboxInfo.data.backupSnapshot,
-      backupErrorReason: sandboxInfo.data.backupError,
       daemonVersion: sandboxInfo.data.daemonVersion,
     }
   }
@@ -259,24 +238,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
 
   async destroySandbox(sandboxId: string): Promise<void> {
     await this.sandboxApiClient.destroy(sandboxId)
-  }
-
-  async createBackup(sandbox: Sandbox, backupSnapshotName: string, registry?: DockerRegistry): Promise<void> {
-    const request: CreateBackupDTO = {
-      snapshot: backupSnapshotName,
-      registry: undefined,
-    }
-
-    if (registry) {
-      request.registry = {
-        project: registry.project,
-        url: registry.url,
-        username: registry.username,
-        password: registry.password,
-      }
-    }
-
-    await this.sandboxApiClient.createBackup(sandbox.id, request)
   }
 
   async removeArtifact(artifactRef: string): Promise<void> {
@@ -398,7 +359,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
       networkBlockAll: sandbox.networkBlockAll,
       networkAllowList: sandbox.networkAllowList,
       errorReason: sandbox.errorReason,
-      backupErrorReason: sandbox.backupErrorReason,
     }
     await this.sandboxApiClient.recover(sandbox.id, recoverSandboxDTO)
   }

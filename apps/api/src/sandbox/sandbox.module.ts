@@ -34,7 +34,6 @@ import { VolumeController } from './controllers/volume.controller'
 import { VolumeService } from './services/volume.service'
 import { VolumeManager } from './managers/volume.manager'
 import { Volume } from './entities/volume.entity'
-import { BackupManager } from './managers/backup.manager'
 import { VolumeSubscriber } from './subscribers/volume.subscriber'
 import { RunnerSubscriber } from './subscribers/runner.subscriber'
 import { WorkspaceController } from './controllers/workspace.deprecated.controller'
@@ -97,7 +96,6 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
   providers: [
     SandboxService,
     SandboxManager,
-    BackupManager,
     SandboxWarmPoolService,
     RunnerService,
     ToolboxService,

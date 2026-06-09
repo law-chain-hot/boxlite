@@ -7,7 +7,7 @@
 import { Injectable, Logger, NotFoundException, OnApplicationShutdown } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { In, IsNull, Not, Repository } from 'typeorm'
+import { In, Not, Repository } from 'typeorm'
 import { DockerRegistryService } from '../../docker-registry/services/docker-registry.service'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
@@ -35,11 +35,6 @@ import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateCreatedEvent } from '../events/box-template-created.event'
 import { BoxTemplateService } from '../services/box-template.service'
 import { OnAsyncEvent } from '../../common/decorators/on-async-event.decorator'
-import { SandboxState } from '../enums/sandbox-state.enum'
-import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
-import { BackupState } from '../enums/backup-state.enum'
-import { BadRequestError } from '../../exceptions/bad-request.exception'
-import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
 import { getSystemTemplateDefinition } from '../constants/system-templates'
 
@@ -65,7 +60,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     private readonly runnerArtifactCacheRepository: Repository<RunnerArtifactCache>,
     @InjectRepository(Runner)
     private readonly runnerRepository: Repository<Runner>,
-    private readonly sandboxRepository: SandboxRepository,
     private readonly runnerService: RunnerService,
     private readonly dockerRegistryService: DockerRegistryService,
     private readonly runnerAdapterFactory: RunnerAdapterFactory,
@@ -377,123 +371,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
       // Runner re-pulls the ghcr ref directly with its runtime-scoped ghcr auth.
       await this.pullRunnerArtifactCache(runner, runnerArtifactCache.artifactRef, undefined)
       return
-    }
-  }
-
-  // Pulls stopped sandboxes' backup snapshots to another runner to prepare for reassignment during draining
-  @Cron(CronExpression.EVERY_10_SECONDS, { name: 'migrate-draining-runner-backup-snapshots', waitForCompletion: true })
-  @TrackJobExecution()
-  @LogExecution('migrate-draining-runner-backup-snapshots')
-  @WithInstrumentation()
-  private async handleMigrateDrainingRunnerBackupSnapshots() {
-    const lockKey = 'migrate-draining-runner-backup-snapshots'
-    const hasLock = await this.redisLockProvider.lock(lockKey, 60)
-    if (!hasLock) {
-      return
-    }
-
-    try {
-      const drainingRunners = await this.runnerRepository.find({
-        where: {
-          draining: true,
-          state: RunnerState.READY,
-        },
-      })
-
-      this.logger.debug(`Checking ${drainingRunners.length} draining runners for backup snapshot migration`)
-
-      await Promise.allSettled(
-        drainingRunners.map(async (runner) => {
-          try {
-            const sandboxes = await this.sandboxRepository.find({
-              where: {
-                runnerId: runner.id,
-                state: SandboxState.STOPPED,
-                desiredState: SandboxDesiredState.STOPPED,
-                backupState: BackupState.COMPLETED,
-                backupSnapshot: Not(IsNull()),
-              },
-              take: 100,
-            })
-
-            this.logger.debug(
-              `Found ${sandboxes.length} eligible sandboxes on draining runner ${runner.id} for backup snapshot migration`,
-            )
-
-            await Promise.allSettled(
-              sandboxes.map(async (sandbox) => {
-                const sandboxLockKey = `draining-runner-backup-snapshot-migration:${sandbox.id}`
-                const hasSandboxLock = await this.redisLockProvider.lock(sandboxLockKey, 3600)
-                if (!hasSandboxLock) {
-                  return
-                }
-
-                try {
-                  // Get an available runner in the same region with the same class
-                  const targetRunner = await this.runnerService.getRandomAvailableRunner({
-                    regions: [sandbox.region],
-                    sandboxClass: sandbox.class,
-                    excludedRunnerIds: [runner.id],
-                  })
-
-                  // Check if runner artifact cache entry already exists
-                  const existingEntry = await this.runnerService.getRunnerArtifactCache(
-                    targetRunner.id,
-                    sandbox.backupSnapshot,
-                  )
-                  if (existingEntry) {
-                    if (existingEntry.state === RunnerArtifactCacheState.ERROR) {
-                      // Clean up the failed entry so we can retry
-                      this.logger.warn(
-                        `Removing ERROR runner artifact cache entry ${existingEntry.id} for runner ${targetRunner.id} and backup snapshot ${sandbox.backupSnapshot} to allow retry`,
-                      )
-                      await this.runnerArtifactCacheRepository.delete(existingEntry.id)
-                    } else {
-                      this.logger.debug(
-                        `Runner artifact cache entry already exists for runner ${targetRunner.id} and backup snapshot ${sandbox.backupSnapshot} (state: ${existingEntry.state})`,
-                      )
-                      // Do not unlock to avoid duplicates
-                      return
-                    }
-                  }
-
-                  // Find the backup registry to use as source for the pull. When the backup is
-                  // not pinned to a registry, the runner pulls with its runtime-scoped auth.
-                  const registry = sandbox.backupRegistryId
-                    ? await this.dockerRegistryService.findOne(sandbox.backupRegistryId)
-                    : undefined
-
-                  // Create runner artifact cache entry on the target runner
-                  await this.runnerService.createRunnerArtifactCacheEntry(
-                    targetRunner.id,
-                    sandbox.backupSnapshot,
-                    RunnerArtifactCacheState.PULLING_ARTIFACT,
-                  )
-                  await this.pullRunnerArtifactCache(targetRunner, sandbox.backupSnapshot, registry ?? undefined)
-
-                  this.logger.log(
-                    `Created runner artifact cache entry for sandbox ${sandbox.id} backup ${sandbox.backupSnapshot} on runner ${targetRunner.id} (migrating from draining runner ${runner.id})`,
-                  )
-                  await this.redisLockProvider.unlock(sandboxLockKey)
-                } catch (e) {
-                  if (e instanceof BadRequestError && e.message === 'No available runners') {
-                    this.logger.warn(
-                      `No available runners found in region ${sandbox.region} for sandbox ${sandbox.id} backup snapshot migration`,
-                    )
-                  } else {
-                    this.logger.error(`Error migrating backup snapshot for sandbox ${sandbox.id}`, e)
-                  }
-                  await this.redisLockProvider.unlock(sandboxLockKey)
-                }
-              }),
-            )
-          } catch (e) {
-            this.logger.error(`Error processing draining runner ${runner.id} for backup snapshot migration`, e)
-          }
-        }),
-      )
-    } finally {
-      await this.redisLockProvider.unlock(lockKey)
     }
   }
 

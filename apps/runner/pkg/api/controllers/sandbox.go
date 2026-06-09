@@ -5,7 +5,6 @@
 package controllers
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/boxlite-ai/runner/pkg/api/dto"
@@ -96,55 +95,6 @@ func Destroy(ctx *gin.Context) {
 	common.ContainerOperationCount.WithLabelValues("destroy", string(common.PrometheusOperationStatusSuccess)).Inc()
 
 	ctx.JSON(http.StatusOK, "Sandbox destroyed")
-}
-
-// CreateBackup godoc
-//
-//	@Tags			sandbox
-//	@Summary		Create sandbox backup
-//	@Description	Create sandbox backup
-//	@Produce		json
-//	@Param			sandboxId	path		string				true	"Sandbox ID"
-//	@Param			sandbox		body		dto.CreateBackupDTO	true	"Create backup"
-//	@Success		201			{string}	string				"Backup started"
-//	@Failure		400			{object}	common_errors.ErrorResponse
-//	@Failure		401			{object}	common_errors.ErrorResponse
-//	@Failure		404			{object}	common_errors.ErrorResponse
-//	@Failure		409			{object}	common_errors.ErrorResponse
-//	@Failure		500			{object}	common_errors.ErrorResponse
-//	@Router			/sandboxes/{sandboxId}/backup [post]
-//
-//	@id				CreateBackup
-func CreateBackup(logger *slog.Logger) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		sandboxId := ctx.Param("sandboxId")
-
-		var createBackupDTO dto.CreateBackupDTO
-		err := ctx.ShouldBindJSON(&createBackupDTO)
-		if err != nil {
-			ctx.Error(common_errors.NewInvalidBodyRequestError(err))
-			return
-		}
-
-		runner, err := runner.GetInstance(nil)
-		if err != nil {
-			ctx.Error(err)
-			return
-		}
-
-		err = runner.Boxlite.CreateBackup(ctx.Request.Context(), sandboxId, createBackupDTO)
-		if err != nil {
-			setErr := runner.BackupInfoCache.SetBackupState(ctx.Request.Context(), sandboxId, enums.BackupStateFailed, createBackupDTO.Snapshot, err)
-			if setErr != nil {
-				logger.DebugContext(ctx.Request.Context(), "failed to update backup info", "error", setErr)
-			}
-
-			ctx.Error(err)
-			return
-		}
-
-		ctx.JSON(http.StatusCreated, "Backup started")
-	}
 }
 
 // Resize 			godoc

@@ -15,7 +15,6 @@ import { RunnerArtifactCacheState } from '../enums/runner-artifact-cache-state.e
 import { JobStatus } from '../enums/job-status.enum'
 import { JobType } from '../enums/job-type.enum'
 import { Job } from '../entities/job.entity'
-import { BackupState } from '../enums/backup-state.enum'
 import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
 import { sanitizeSandboxError } from '../utils/sanitize-error.util'
 import { OrganizationUsageService } from '../../organization/services/organization-usage.service'
@@ -77,9 +76,6 @@ export class JobStateHandlerService {
         break
       case JobType.REMOVE_ARTIFACT:
         await this.handleRemoveArtifactJobCompletion(job)
-        break
-      case JobType.CREATE_BACKUP:
-        await this.handleCreateBackupJobCompletion(job)
         break
       case JobType.RECOVER_SANDBOX:
         await this.handleRecoverSandboxJobCompletion(job)
@@ -211,7 +207,6 @@ export class JobStateHandlerService {
         this.logger.debug(`STOP_SANDBOX job ${job.id} completed successfully, marking sandbox ${sandboxId} as STOPPED`)
         updateData.state = SandboxState.STOPPED
         updateData.errorReason = null
-        Object.assign(updateData, Sandbox.getBackupStateUpdate(sandbox, BackupState.NONE))
       } else if (job.status === JobStatus.FAILED) {
         this.logger.error(`STOP_SANDBOX job ${job.id} failed for sandbox ${sandboxId}: ${job.errorMessage}`)
         updateData.state = SandboxState.ERROR
@@ -341,52 +336,6 @@ export class JobStateHandlerService {
       }
     } catch (error) {
       this.logger.error(`Error handling REMOVE_ARTIFACT job completion for artifact ${artifactRef}:`, error)
-    }
-  }
-
-  private async handleCreateBackupJobCompletion(job: Job): Promise<void> {
-    const sandboxId = job.resourceId
-    if (!sandboxId) return
-
-    try {
-      const sandbox = await this.sandboxRepository.findOne({ where: { id: sandboxId } })
-      if (!sandbox) {
-        this.logger.warn(`Sandbox ${sandboxId} not found for CREATE_BACKUP job ${job.id}`)
-        return
-      }
-
-      // Parse the job payload to get the snapshot this job was for.
-      // Old v2 runners may not include snapshot in the payload, so we only
-      // perform stale-snapshot checks when the field is present.
-      const jobSnapshot = job.getPayload<{ snapshot?: string }>()?.snapshot
-
-      // Ignore stale backup results if the job's snapshot doesn't match the current DB snapshot.
-      // Old v2 runners may not include snapshot in the payload — skip this check for them.
-      if (jobSnapshot && jobSnapshot !== sandbox.backupSnapshot) {
-        this.logger.warn(
-          `Ignoring stale backup ${job.status} for sandbox ${sandboxId}: job snapshot ${jobSnapshot} does not match DB snapshot ${sandbox.backupSnapshot}`,
-        )
-        return
-      }
-
-      const updateData: Partial<Sandbox> = {}
-
-      if (job.status === JobStatus.COMPLETED) {
-        this.logger.debug(
-          `CREATE_BACKUP job ${job.id} completed successfully, marking sandbox ${sandboxId} as BACKUP_COMPLETED`,
-        )
-        Object.assign(updateData, Sandbox.getBackupStateUpdate(sandbox, BackupState.COMPLETED))
-      } else if (job.status === JobStatus.FAILED) {
-        this.logger.error(`CREATE_BACKUP job ${job.id} failed for sandbox ${sandboxId}: ${job.errorMessage}`)
-        Object.assign(
-          updateData,
-          Sandbox.getBackupStateUpdate(sandbox, BackupState.ERROR, undefined, undefined, job.errorMessage),
-        )
-      }
-
-      await this.sandboxRepository.update(sandboxId, { updateData, entity: sandbox })
-    } catch (error) {
-      this.logger.error(`Error handling CREATE_BACKUP job completion for sandbox ${sandboxId}:`, error)
     }
   }
 

@@ -8,7 +8,6 @@ import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, OneToOne, Uniqu
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
 import { SandboxClass } from '../enums/sandbox-class.enum'
-import { BackupState } from '../enums/backup-state.enum'
 import { randomUUID } from 'crypto'
 import { SandboxVolume } from '../dto/sandbox.dto'
 import { nanoid } from 'nanoid'
@@ -27,7 +26,6 @@ import { BOX_ID_LENGTH, BOX_ID_REGEX, generateBoxId } from '../utils/box-id.util
 @Index('sandbox_organizationid_boxid_idx', ['organizationId', 'boxId'])
 @Index('sandbox_region_idx', ['region'])
 @Index('sandbox_resources_idx', ['cpu', 'mem', 'disk', 'gpu'])
-@Index('sandbox_backupstate_idx', ['backupState'])
 @Index('sandbox_runner_state_desired_idx', ['runnerId', 'state', 'desiredState'], {
   where: '"pending" = false',
 })
@@ -123,37 +121,6 @@ export class Sandbox {
   @Column('jsonb', { nullable: true })
   labels: { [key: string]: string }
 
-  @Column({ nullable: true })
-  backupRegistryId: string | null
-
-  @Column({ nullable: true })
-  backupSnapshot: string | null
-
-  @Column({ nullable: true, type: 'timestamp with time zone' })
-  lastBackupAt: Date | null
-
-  @Column({
-    type: 'enum',
-    enum: BackupState,
-    default: BackupState.NONE,
-  })
-  backupState = BackupState.NONE
-
-  @Column({
-    type: 'text',
-    nullable: true,
-  })
-  backupErrorReason: string | null
-
-  @Column({
-    type: 'jsonb',
-    default: [],
-  })
-  existingBackupSnapshots: Array<{
-    snapshotName: string
-    createdAt: Date
-  }> = []
-
   @Column({ type: 'int', default: 2 })
   cpu = 2
 
@@ -213,58 +180,12 @@ export class Sandbox {
   }
 
   /**
-   * Helper method that returns the update data needed for a backup state update.
-   */
-  static getBackupStateUpdate(
-    sandbox: Sandbox,
-    backupState: BackupState,
-    backupSnapshot?: string | null,
-    backupRegistryId?: string | null,
-    backupErrorReason?: string | null,
-  ): Partial<Sandbox> {
-    const update: Partial<Sandbox> = {
-      backupState,
-    }
-    switch (backupState) {
-      case BackupState.NONE:
-        update.backupSnapshot = null
-        break
-      case BackupState.COMPLETED: {
-        const now = new Date()
-        update.lastBackupAt = now
-        if (sandbox.backupSnapshot) {
-          update.existingBackupSnapshots = [
-            ...sandbox.existingBackupSnapshots,
-            {
-              snapshotName: sandbox.backupSnapshot,
-              createdAt: now,
-            },
-          ]
-        }
-        update.backupErrorReason = null
-        break
-      }
-    }
-    if (backupSnapshot !== undefined) {
-      update.backupSnapshot = backupSnapshot
-    }
-    if (backupRegistryId !== undefined) {
-      update.backupRegistryId = backupRegistryId
-    }
-    if (backupErrorReason !== undefined) {
-      update.backupErrorReason = backupErrorReason
-    }
-    return update
-  }
-
-  /**
    * Helper method that returns the update data needed for a soft delete operation.
    */
   static getSoftDeleteUpdate(sandbox: Sandbox): Partial<Sandbox> {
     return {
       pending: true,
       desiredState: SandboxDesiredState.DESTROYED,
-      backupState: BackupState.NONE,
       name: 'DESTROYED_' + sandbox.name + '_' + Date.now(),
     }
   }
@@ -359,10 +280,6 @@ export class Sandbox {
 
     if (this.state === SandboxState.DESTROYED || this.state === SandboxState.ARCHIVED) {
       changes.runnerId = null
-    }
-
-    if (this.state === SandboxState.DESTROYED) {
-      changes.backupState = BackupState.NONE
     }
 
     return changes

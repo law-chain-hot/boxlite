@@ -330,33 +330,6 @@ export class WorkspaceController {
     return { labels }
   }
 
-  @Post(':workspaceId/backup')
-  @ApiOperation({
-    summary: '[DEPRECATED] Create workspace backup',
-    operationId: 'createBackupWorkspace_deprecated',
-    deprecated: true,
-  })
-  @ApiParam({
-    name: 'workspaceId',
-    description: 'ID of the workspace',
-    type: 'string',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Workspace backup has been initiated',
-    type: WorkspaceDto,
-  })
-  @RequiredOrganizationResourcePermissions([OrganizationResourcePermission.WRITE_SANDBOXES])
-  @UseGuards(WorkspaceAccessGuard)
-  @Audit({
-    action: AuditAction.CREATE_BACKUP,
-    targetType: AuditTarget.SANDBOX,
-    targetIdFromRequest: (req) => req.params.workspaceId,
-  })
-  async createBackup(@Param('workspaceId') workspaceId: string): Promise<void> {
-    await this.workspaceService.createBackup(workspaceId)
-  }
-
   @Post(':workspaceId/public/:isPublic')
   @ApiOperation({
     summary: '[DEPRECATED] Update public status',

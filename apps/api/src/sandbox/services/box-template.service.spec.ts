@@ -61,7 +61,6 @@ function createService({
   }
 
   const service = new BoxTemplateService(
-    {} as any,
     boxTemplateRepository as any,
     {} as any,
     {} as any,

@@ -116,13 +116,6 @@ func (c *Client) RecoverSandbox(ctx context.Context, sandboxId string, recoverDt
 	return err
 }
 
-// CreateBackup creates a backup/snapshot of a running sandbox.
-// TODO: Implement when BoxLite Go SDK exposes snapshot operations.
-func (c *Client) CreateBackup(ctx context.Context, sandboxId string, backupDto dto.CreateBackupDTO) error {
-	c.logger.Warn("create backup not yet implemented in BoxLite", "sandbox", sandboxId)
-	return errdefs.ErrNotImplemented.WithMessage("backup is not supported by the BoxLite Go SDK")
-}
-
 // GetImageInfo returns metadata about a cached image.
 func (c *Client) GetImageInfo(ctx context.Context, imageName string) (*ImageInfo, error) {
 	img, err := c.GetImageInfoFromCache(ctx, imageName)

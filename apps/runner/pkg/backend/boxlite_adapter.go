@@ -90,10 +90,6 @@ func (a *BoxliteAdapter) InspectImageInRegistry(ctx context.Context, imageName s
 	}, nil
 }
 
-func (a *BoxliteAdapter) CreateBackup(ctx context.Context, sandboxId string, backupDto dto.CreateBackupDTO) error {
-	return a.client.CreateBackup(ctx, sandboxId, backupDto)
-}
-
 func (a *BoxliteAdapter) Ping(ctx context.Context) error {
 	return a.client.Ping(ctx)
 }

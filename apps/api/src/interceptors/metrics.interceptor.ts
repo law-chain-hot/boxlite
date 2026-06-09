@@ -175,9 +175,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
           case '/api/sandbox/:sandboxIdOrName/resize':
             this.captureResizeSandbox(props, request.params.sandboxIdOrName, request.body)
             break
-          case '/api/sandbox/:sandboxIdOrName/backup':
-            this.captureCreateBackup(props, request.params.sandboxIdOrName)
-            break
           case '/api/sandbox/:sandboxIdOrName/public/:isPublic':
           case '/api/workspace/:workspaceId/public/:isPublic':
             this.captureUpdatePublicStatus(
@@ -617,12 +614,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
       cpu: body?.cpu,
       memory: body?.memory,
       disk: body?.disk,
-    })
-  }
-
-  private captureCreateBackup(props: CommonCaptureProps, sandboxId: string) {
-    this.capture('api_sandbox_backup_created', props, 'api_sandbox_backup_creation_failed', {
-      sandbox_id: sandboxId,
     })
   }
 

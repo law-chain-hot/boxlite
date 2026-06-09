@@ -13,7 +13,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, Not, In, Raw, ILike, FindOptionsWhere, Like, LessThan } from 'typeorm'
+import { Repository, Not, In, ILike, FindOptionsWhere, Like, LessThan } from 'typeorm'
 import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
@@ -25,7 +25,6 @@ import { SandboxCreatedEvent } from '../events/sandbox-create.event'
 import { Organization } from '../../organization/entities/organization.entity'
 import { OrganizationService } from '../../organization/services/organization.service'
 import { RunnerArtifactCache } from '../entities/runner-artifact-cache.entity'
-import { SandboxState } from '../enums/sandbox-state.enum'
 import { OrganizationEvents } from '../../organization/constants/organization-events.constant'
 import { OrganizationSuspendedTemplateDeactivatedEvent } from '../../organization/events/organization-suspended-template-deactivated.event'
 import { RunnerArtifactCacheState } from '../enums/runner-artifact-cache-state.enum'
@@ -46,7 +45,6 @@ import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateCreatedEvent } from '../events/box-template-created.event'
 import { RunnerService } from './runner.service'
 import { TypedConfigService } from '../../config/typed-config.service'
-import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
 import { LogExecution } from '../../common/decorators/log-execution.decorator'
 import { WithInstrumentation } from '../../common/decorators/otel.decorator'
@@ -63,7 +61,6 @@ export class BoxTemplateService {
   private readonly logger = new Logger(BoxTemplateService.name)
 
   constructor(
-    private readonly sandboxRepository: SandboxRepository,
     @InjectRepository(BoxTemplate)
     private readonly boxTemplateRepository: Repository<BoxTemplate>,
     @InjectRepository(RunnerArtifactCache)
@@ -661,24 +658,6 @@ export class BoxTemplateService {
     })
 
     if (template) {
-      return false
-    }
-
-    const sandbox = await this.sandboxRepository.findOne({
-      where: [
-        {
-          existingBackupSnapshots: Raw((alias) => `${alias} @> '[{"templateName":"${imageName}"}]'::jsonb`),
-        },
-        {
-          existingBackupSnapshots: Raw((alias) => `${alias} @> '[{"imageName":"${imageName}"}]'::jsonb`),
-        },
-        {
-          backupSnapshot: imageName,
-        },
-      ],
-    })
-
-    if (sandbox && sandbox.state !== SandboxState.DESTROYED) {
       return false
     }
 

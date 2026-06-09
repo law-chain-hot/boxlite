@@ -26,7 +26,6 @@ function createManager() {
     boxTemplateRepository as any,
     {} as any, // runnerArtifactCacheRepository
     {} as any, // runnerRepository
-    {} as any, // sandboxRepository
     {} as any, // runnerService
     {} as any, // dockerRegistryService
     {} as any, // runnerAdapterFactory

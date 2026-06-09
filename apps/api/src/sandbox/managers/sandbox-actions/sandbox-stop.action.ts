@@ -8,7 +8,6 @@ import { Injectable } from '@nestjs/common'
 import { Sandbox } from '../../entities/sandbox.entity'
 import { SandboxState } from '../../enums/sandbox-state.enum'
 import { DONT_SYNC_AGAIN, SandboxAction, SyncState, SYNC_AGAIN } from './sandbox.action'
-import { BackupState } from '../../enums/backup-state.enum'
 import { RunnerState } from '../../enums/runner-state.enum'
 import { RunnerService } from '../../services/runner.service'
 import { RunnerAdapterFactory } from '../../runner-adapter/runnerAdapter'
@@ -52,15 +51,7 @@ export class SandboxStopAction extends SandboxAction {
     const sandboxInfo = await runnerAdapter.sandboxInfo(sandbox.id)
 
     if (sandboxInfo.state === SandboxState.STOPPED) {
-      await this.updateSandboxState(
-        sandbox,
-        SandboxState.STOPPED,
-        lockCode,
-        undefined,
-        undefined,
-        undefined,
-        BackupState.NONE,
-      )
+      await this.updateSandboxState(sandbox, SandboxState.STOPPED, lockCode)
       return DONT_SYNC_AGAIN
     } else if (sandboxInfo.state === SandboxState.ERROR) {
       await this.updateSandboxState(

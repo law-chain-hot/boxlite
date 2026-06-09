@@ -635,37 +635,6 @@ export class SandboxController {
     )
   }
 
-  @Post(':sandboxIdOrName/backup')
-  @ApiOperation({
-    summary: 'Create sandbox backup',
-    operationId: 'createBackup',
-  })
-  @ApiParam({
-    name: 'sandboxIdOrName',
-    description: 'ID or name of the sandbox',
-    type: 'string',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Sandbox backup has been initiated',
-    type: SandboxDto,
-  })
-  @RequiredOrganizationResourcePermissions([OrganizationResourcePermission.WRITE_SANDBOXES])
-  @UseGuards(SandboxAccessGuard)
-  @Audit({
-    action: AuditAction.CREATE_BACKUP,
-    targetType: AuditTarget.SANDBOX,
-    targetIdFromRequest: (req) => req.params.sandboxIdOrName,
-    targetIdFromResult: (result: SandboxDto) => result?.id,
-  })
-  async createBackup(
-    @AuthContext() authContext: OrganizationAuthContext,
-    @Param('sandboxIdOrName') sandboxIdOrName: string,
-  ): Promise<SandboxDto> {
-    const sandbox = await this.sandboxService.createBackup(sandboxIdOrName, authContext.organizationId)
-    return this.sandboxService.toSandboxDto(sandbox)
-  }
-
   @Post(':sandboxIdOrName/public/:isPublic')
   @ApiOperation({
     summary: 'Update public status',

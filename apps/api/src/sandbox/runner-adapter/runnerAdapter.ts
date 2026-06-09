@@ -12,15 +12,11 @@ import { RunnerAdapterV2 } from './runnerAdapter.v2'
 import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { Sandbox } from '../entities/sandbox.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
-import { BackupState } from '../enums/backup-state.enum'
 import { RunnerServiceInfo } from '../common/runner-service-info'
 
 export interface RunnerSandboxInfo {
   state: SandboxState
   daemonVersion?: string
-  backupState?: BackupState
-  backupSnapshot?: string
-  backupErrorReason?: string
 }
 
 export interface RunnerArtifactInfo {
@@ -83,7 +79,6 @@ export interface RunnerAdapter {
   ): Promise<StartSandboxResponse | undefined>
   stopSandbox(sandboxId: string, force?: boolean): Promise<void>
   destroySandbox(sandboxId: string): Promise<void>
-  createBackup(sandbox: Sandbox, backupSnapshotName: string, registry?: DockerRegistry): Promise<void>
 
   removeArtifact(artifactRef: string): Promise<void>
   pullArtifact(

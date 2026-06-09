@@ -27,7 +27,6 @@ import { JobService } from '../services/job.service'
 import { SandboxRepository } from '../repositories/sandbox.repository'
 import {
   CreateSandboxDTO,
-  CreateBackupDTO,
   PullArtifactRequestDTO,
   UpdateNetworkSettingsDTO,
   InspectArtifactInRegistryRequest,
@@ -109,8 +108,6 @@ export class RunnerAdapterV2 implements RunnerAdapter {
 
     return {
       state,
-      backupState: sandbox.backupState,
-      backupErrorReason: sandbox.backupErrorReason,
       daemonVersion,
     }
   }
@@ -239,7 +236,6 @@ export class RunnerAdapterV2 implements RunnerAdapter {
       networkBlockAll: sandbox.networkBlockAll,
       networkAllowList: sandbox.networkAllowList,
       errorReason: sandbox.errorReason,
-      backupErrorReason: sandbox.backupErrorReason,
     }
     await this.jobService.createJob(
       null,
@@ -251,33 +247,6 @@ export class RunnerAdapterV2 implements RunnerAdapter {
     )
 
     this.logger.debug(`Created RECOVER_SANDBOX job for sandbox ${sandbox.id} on runner ${this.runner.id}`)
-  }
-
-  async createBackup(sandbox: Sandbox, backupSnapshotName: string, registry?: DockerRegistry): Promise<void> {
-    const payload: CreateBackupDTO = {
-      snapshot: backupSnapshotName,
-      registry: undefined,
-    }
-
-    if (registry) {
-      payload.registry = {
-        project: registry.project,
-        url: registry.url,
-        username: registry.username,
-        password: registry.password,
-      }
-    }
-
-    await this.jobService.createJob(
-      null,
-      JobType.CREATE_BACKUP,
-      this.runner.id,
-      ResourceType.SANDBOX,
-      sandbox.id,
-      payload,
-    )
-
-    this.logger.debug(`Created CREATE_BACKUP job for sandbox ${sandbox.id} on runner ${this.runner.id}`)
   }
 
   async pullArtifact(
