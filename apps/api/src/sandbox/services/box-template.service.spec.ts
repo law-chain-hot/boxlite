@@ -5,7 +5,6 @@
  */
 
 import { BoxTemplate } from '../entities/box-template.entity'
-import { BoxTemplateRegion } from '../entities/box-template-region.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateService } from './box-template.service'
@@ -17,11 +16,9 @@ jest.mock('uuid', () => ({
 
 function createService({
   templates = [],
-  availableRegionIds = ['us'],
   defaultTemplate = 'boxlite/base',
 }: {
   templates?: BoxTemplate[]
-  availableRegionIds?: string[]
   defaultTemplate?: string
 }) {
   const boxTemplateRepository = {
@@ -36,12 +33,6 @@ function createService({
     findOne: jest.fn(),
     save: jest.fn(async (template: BoxTemplate) => template),
   }
-  const boxTemplateRegionRepository = {
-    save: jest.fn(async (templateRegion) => templateRegion),
-  }
-  const organizationService = {
-    listAvailableRegions: jest.fn().mockResolvedValue(availableRegionIds.map((id) => ({ id }))),
-  }
   const configService = {
     get: jest.fn((key: string) => (key === 'defaultTemplate' ? defaultTemplate : undefined)),
     getOrThrow: jest.fn((key: string) => {
@@ -53,23 +44,15 @@ function createService({
   const eventEmitter = {
     emit: jest.fn(),
   }
-  const dockerRegistryService = {
-    getAvailableInternalRegistry: jest.fn(async () => ({
-      url: 'http://current-registry.local',
-      project: 'boxlite',
-    })),
-  }
 
   const service = new BoxTemplateService(
     boxTemplateRepository as any,
     {} as any,
     {} as any,
-    boxTemplateRegionRepository as any,
-    organizationService as any,
     {} as any,
     {} as any,
     {} as any,
-    dockerRegistryService as any,
+    {} as any,
     eventEmitter as any,
     configService as any,
   )
@@ -77,10 +60,7 @@ function createService({
   return {
     service,
     boxTemplateRepository,
-    boxTemplateRegionRepository,
-    organizationService,
     eventEmitter,
-    dockerRegistryService,
   }
 }
 
@@ -102,29 +82,19 @@ function template(partial: Partial<BoxTemplate>): BoxTemplate {
     entrypoint: partial.entrypoint,
     initialRunnerId: partial.initialRunnerId,
     size: partial.size,
-    templateRegions: partial.templateRegions ?? [templateRegion(id, 'us')],
   } as BoxTemplate
 }
 
-function templateRegion(templateId: string, regionId: string): BoxTemplateRegion {
-  return { templateId, regionId } as BoxTemplateRegion
-}
-
 describe('BoxTemplateService system templates', () => {
-  it('returns only visible active agent-ready templates that are available to the organization', async () => {
+  it('returns only visible active agent-ready templates with a usable artifact ref', async () => {
     const base = template({ id: 'base-id', name: 'boxlite/base' })
-    const node = template({
-      id: 'node-id',
-      name: 'boxlite/node',
-      templateRegions: [templateRegion('alpine-id', 'eu')],
-    })
+    const node = template({ id: 'node-id', name: 'boxlite/node' })
     const rawNode = template({ id: 'raw-node-id', name: 'node:22', imageName: 'node:22' })
     const hiddenPython = template({ id: 'python-id', name: 'boxlite/python', hideFromUsers: true })
     const unusablePython = template({ id: 'unusable-python-id', name: 'boxlite/python', artifactRef: '' })
 
-    const { service, boxTemplateRepository, organizationService } = createService({
+    const { service, boxTemplateRepository } = createService({
       templates: [node, rawNode, hiddenPython, unusablePython, base],
-      availableRegionIds: ['us'],
     })
 
     const templates = await service.getSystemTemplates('org-id')
@@ -135,13 +105,14 @@ describe('BoxTemplateService system templates', () => {
         hideFromUsers: false,
         state: BoxTemplateState.ACTIVE,
       },
-      relations: ['templateRegions'],
       order: {
         name: 'ASC',
       },
     })
-    expect(organizationService.listAvailableRegions).toHaveBeenCalledWith('org-id')
-    expect(templates.map((template) => template.name)).toEqual(['boxlite/base'])
+    // Templates are region-agnostic: rawNode (not in the agent catalog) and the
+    // unusable/hidden python entries are filtered out, but boxlite/node is no
+    // longer dropped for a region mismatch.
+    expect(templates.map((template) => template.name)).toEqual(['boxlite/base', 'boxlite/node'])
   })
 
   it('sorts available templates by configured default first, then agent-ready order', async () => {
@@ -159,16 +130,15 @@ describe('BoxTemplateService system templates', () => {
     expect(templates.map((template) => template.name)).toEqual(['boxlite/python', 'boxlite/base', 'boxlite/node'])
   })
 
-  it('repairs an existing hidden system template and attaches the default region', async () => {
+  it('repairs an existing hidden system template by unhiding it and refreshing its image', async () => {
     const existingTemplate = template({
       id: 'base-id',
       name: 'boxlite/base',
       imageName: 'old/runtime-base:20260601',
       hideFromUsers: true,
-      templateRegions: [],
     })
 
-    const { service, boxTemplateRepository, boxTemplateRegionRepository } = createService({})
+    const { service, boxTemplateRepository } = createService({})
     boxTemplateRepository.findOne.mockResolvedValue(existingTemplate)
 
     await service.ensureSystemTemplate({ id: 'admin-org-id', defaultRegionId: 'us' } as any, {
@@ -185,10 +155,6 @@ describe('BoxTemplateService system templates', () => {
         hideFromUsers: false,
       }),
     )
-    expect(boxTemplateRegionRepository.save).toHaveBeenCalledWith({
-      templateId: 'base-id',
-      regionId: 'us',
-    })
   })
 
   it('creates missing system templates from prebuilt images as general templates', async () => {
@@ -225,7 +191,6 @@ describe('BoxTemplateService system templates', () => {
       state: BoxTemplateState.ACTIVE,
       initialRunnerId: 'runner-id',
       size: 1,
-      templateRegions: [templateRegion('base-id', 'us')],
     })
 
     const { service, boxTemplateRepository } = createService({})
@@ -259,7 +224,6 @@ describe('BoxTemplateService system templates', () => {
       artifactRef: 'registry.internal/boxlite/boxlite-base:boxlite',
       entrypoint: ['sleep', 'infinity'],
       state: BoxTemplateState.ACTIVE,
-      templateRegions: [templateRegion('base-id', 'us')],
     })
 
     const { service, boxTemplateRepository } = createService({})
@@ -321,7 +285,6 @@ describe('BoxTemplateService system templates', () => {
       errorReason: 'Previous pull failed',
       initialRunnerId: 'stale-runner-id',
       size: 1.25,
-      templateRegions: [templateRegion('node-id', 'us')],
     })
 
     const { service, boxTemplateRepository, eventEmitter } = createService({})
@@ -353,7 +316,6 @@ describe('BoxTemplateService system templates', () => {
       name: 'boxlite/python',
       state: BoxTemplateState.PENDING,
       imageName: 'registry.local/boxlite/python:20260605-p0',
-      templateRegions: [templateRegion('python-id', 'us')],
     })
 
     const { service, boxTemplateRepository, eventEmitter } = createService({})
@@ -376,7 +338,6 @@ describe('BoxTemplateService system templates', () => {
       name: 'boxlite/base',
       state: BoxTemplateState.ACTIVE,
       artifactRef: '',
-      templateRegions: [templateRegion('base-id', 'us')],
     })
 
     const { service, boxTemplateRepository, eventEmitter } = createService({})
@@ -407,7 +368,6 @@ describe('BoxTemplateService system templates', () => {
       artifactRef: `old-registry.local/boxlite/boxlite-${'a'.repeat(64)}:boxlite`,
       initialRunnerId: 'old-runner-id',
       size: 1,
-      templateRegions: [templateRegion('ubuntu-id', 'us')],
     })
 
     const { service, boxTemplateRepository, eventEmitter } = createService({})

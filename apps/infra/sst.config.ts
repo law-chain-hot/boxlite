@@ -11,12 +11,11 @@
 // Top of file: constants + helpers + the runner user-data builder.
 // Inside `run()`, resources are created in deploy order:
 //
-//   1. secrets (auto-generated)     7. edge services (Proxy, SshGateway)
-//   2. platform (VPC/DB/Redis/S3)   8. observability (Jaeger, OtelCollector)
-//   3. IAM                          9. admin UIs (PgAdmin/RegistryUI/MailDev)
-//   4. auth (Dex)                  10. CDN (CloudFront)
-//   5. registry (ArtifactRegistry)  11. runner (EC2 + nested KVM)
-//   6. API
+//   1. secrets (auto-generated)     6. API
+//   2. platform (VPC/DB/Redis/S3)   7. edge services (Proxy, SshGateway)
+//   3. IAM                          8. admin UIs (PgAdmin/MailDev)
+//   4. auth (Dex)                   9. CDN (CloudFront)
+//   5. observability               10. runner (EC2 + nested KVM)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const REGION = 'ap-southeast-1'
@@ -27,21 +26,18 @@ const PORTS = {
   PROXY: 4000,
   SSH_GATEWAY: 2222,
   DEX: 5556,
-  ARTIFACT_REGISTRY: 5000,
   RUNNER: 3003,
   JAEGER_UI: 16686,
   OTLP_HTTP: 4318,
   OTEL_HEALTH: 13133,
   MAILDEV_UI: 1080,
   PGADMIN: 80,
-  REGISTRY_UI: 80,
 } as const
 
 // Pinned third-party images
 const IMAGES = {
   jaeger: 'jaegertracing/all-in-one:1.67.0',
   pgadmin: 'dpage/pgadmin4:9.2.0',
-  registryUi: 'joxit/docker-registry-ui:main',
   maildev: 'maildev/maildev:latest',
 } as const
 
@@ -71,14 +67,6 @@ const httpHealth = (path: string, overrides: Partial<{ successCodes: string }> =
   path,
   ...HEALTH_DEFAULTS,
   ...overrides,
-})
-
-// The four env vars the API needs for each registry (transient + internal).
-const registryEnv = (prefix: 'TRANSIENT' | 'INTERNAL', defaultUrl: $util.Output<string>) => ({
-  [`${prefix}_REGISTRY_URL`]: envOr(`${prefix}_REGISTRY_URL`, defaultUrl),
-  [`${prefix}_REGISTRY_ADMIN`]: envOr(`${prefix}_REGISTRY_ADMIN`, 'admin'),
-  [`${prefix}_REGISTRY_PASSWORD`]: envOr(`${prefix}_REGISTRY_PASSWORD`, 'password'),
-  [`${prefix}_REGISTRY_PROJECT_ID`]: envOr(`${prefix}_REGISTRY_PROJECT_ID`, 'boxlite'),
 })
 
 // OIDC issuer URL — must be set (Auth0, Okta, etc.). No default.
@@ -209,29 +197,7 @@ export default $config({
       },
     })
 
-    // ─── 5. ARTIFACT REGISTRY (S3-backed OCI registry) ──────────────────────
-    // Replaces upstream registry:2.8.2 — runtime artifacts persist in S3,
-    // not on an ephemeral container disk.
-    const artifactRegistry = new sst.aws.Service('ArtifactRegistry', {
-      cluster,
-      image: { context: '../..', dockerfile: 'apps/artifact-registry/Dockerfile', cache: false },
-      loadBalancer: {
-        rules: [{ listen: '80/http', forward: `${PORTS.ARTIFACT_REGISTRY}/http` }],
-        health: { [`${PORTS.ARTIFACT_REGISTRY}/http`]: httpHealth('/healthz') },
-      },
-      environment: {
-        ARTIFACT_REGISTRY_STORAGE_DRIVER: 's3',
-        ARTIFACT_REGISTRY_STORAGE_S3_REGION: REGION,
-        ARTIFACT_REGISTRY_STORAGE_S3_BUCKET: storage.name,
-        ARTIFACT_REGISTRY_STORAGE_S3_ACCESSKEY: s3AccessKey.id,
-        ARTIFACT_REGISTRY_STORAGE_S3_SECRETKEY: s3AccessKey.secret,
-        ARTIFACT_REGISTRY_STORAGE_DELETE_ENABLED: 'true',
-        ARTIFACT_REGISTRY_AUTH_TYPE: 'none',
-      },
-    })
-    const registry = artifactRegistry // API uses this URL for both transient + internal registries
-
-    // ─── 6. OBSERVABILITY INGEST ─────────────────────────────────────────────
+    // ─── 5. OBSERVABILITY INGEST ─────────────────────────────────────────────
     // Created before Api so API, runner, host, and box can all emit OTLP to the
     // same Collector. ClickHouse is external/managed only; no in-cluster
     // ClickHouseSpike fallback is part of the target architecture.
@@ -283,7 +249,7 @@ export default $config({
     })
     const otelCollectorOtlpHttpUrl = stripTrailingSlash(otelCollector.url).apply((url) => `${url}:${PORTS.OTLP_HTTP}`)
 
-    // ─── 7. API (NestJS control plane) ───────────────────────────────────────
+    // ─── 6. API (NestJS control plane) ───────────────────────────────────────
     const api = new sst.aws.Service('Api', {
       cluster,
       image: {
@@ -486,10 +452,6 @@ export default $config({
         APP_URL: envOr('APP_URL', ''),
         DASHBOARD_BASE_API_URL: envOr('DASHBOARD_BASE_API_URL', `https://api.${stackDomain}`),
 
-        // Docker registries (both default to the in-cluster ArtifactRegistry)
-        ...registryEnv('TRANSIENT', registry.url),
-        ...registryEnv('INTERNAL', registry.url),
-
         // Default runner — wire via RUNNER_PRIVATE_IP after the first deploy
         DEFAULT_RUNNER_NAME: envOr('DEFAULT_RUNNER_NAME', 'default'),
         DEFAULT_RUNNER_API_KEY: envOr('DEFAULT_RUNNER_API_KEY', defaultRunnerApiKey.result),
@@ -576,7 +538,7 @@ export default $config({
       {},
     )
 
-    // ─── 9. ADMIN UIs ────────────────────────────────────────────────────────
+    // ─── 8. ADMIN UIs ────────────────────────────────────────────────────────
     new sst.aws.Service('PgAdmin', {
       cluster,
       image: IMAGES.pgadmin,
@@ -592,33 +554,17 @@ export default $config({
       },
     })
 
-    new sst.aws.Service('RegistryUI', {
-      cluster,
-      image: IMAGES.registryUi,
-      loadBalancer: { rules: [{ listen: '80/http', forward: `${PORTS.REGISTRY_UI}/http` }] },
-      environment: {
-        SINGLE_REGISTRY: 'true',
-        REGISTRY_TITLE: 'BoxLite Registry',
-        DELETE_IMAGES: 'true',
-        SHOW_CONTENT_DIGEST: 'true',
-        NGINX_PROXY_PASS_URL: artifactRegistry.url,
-        SHOW_CATALOG_NB_TAGS: 'true',
-        REGISTRY_SECURED: 'false',
-        CATALOG_ELEMENTS_LIMIT: '1000',
-      },
-    })
-
     new sst.aws.Service('MailDev', {
       cluster,
       image: IMAGES.maildev,
       loadBalancer: { rules: [{ listen: '80/http', forward: `${PORTS.MAILDEV_UI}/http` }] },
     })
 
-    // ─── 10. CDN ROUTES ──────────────────────────────────────────────────────
+    // ─── 9. CDN ROUTES ───────────────────────────────────────────────────────
     // Router (declared in section 4) fronts the Api with HTTPS.
     router.route('/', api.url)
 
-    // ─── 11. RUNNER (EC2 with nested KVM) ────────────────────────────────────
+    // ─── 10. RUNNER (EC2 with nested KVM) ────────────────────────────────────
     // Pulls runner image from ECR, runs privileged with /dev/kvm mounted.
     const ubuntuAmi = aws.ec2.getAmi({
       mostRecent: true,
@@ -654,13 +600,8 @@ export default $config({
     })
     const runnerInstanceProfile = new aws.iam.InstanceProfile('RunnerProfile', { role: runnerRole.name })
 
-    const runnerUserData = $resolve([
-      api.url,
-      defaultRunnerApiKey.result,
-      registry.url,
-      otelCollectorOtlpHttpUrl,
-    ]).apply(([apiUrl, token, registryUrl, otelEndpoint]) =>
-      buildRunnerUserData({ apiUrl, token, registryUrl, otelEndpoint }),
+    const runnerUserData = $resolve([api.url, defaultRunnerApiKey.result, otelCollectorOtlpHttpUrl]).apply(
+      ([apiUrl, token, otelEndpoint]) => buildRunnerUserData({ apiUrl, token, otelEndpoint }),
     )
 
     // Runner holds load-bearing sandbox state (/var/lib/boxlite + in-memory
@@ -701,12 +642,7 @@ export default $config({
 // ── runner bootstrap ─────────────────────────────────────────────────────────
 // EC2 user-data: downloads prebuilt runner binary from GitHub Releases
 // and runs it directly with BoxLite VM isolation.
-async function buildRunnerUserData(input: {
-  apiUrl: string
-  token: string
-  registryUrl: string
-  otelEndpoint: string
-}): Promise<string> {
+async function buildRunnerUserData(input: { apiUrl: string; token: string; otelEndpoint: string }): Promise<string> {
   const { readFileSync } = await import('fs')
   const { resolve } = await import('path')
 
@@ -714,8 +650,6 @@ async function buildRunnerUserData(input: {
   const RUNNER_VERSION = readFileSync(resolve(process.cwd(), '../../Cargo.toml'), 'utf-8').match(
     /^version\s*=\s*"(.+?)"/m,
   )![1]
-
-  const registryHost = input.registryUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
   const script = `#!/bin/bash
 exec > /var/log/runner-setup.log 2>&1
@@ -762,7 +696,6 @@ Environment=API_VERSION=2
 Environment=API_PORT=${PORTS.RUNNER}
 Environment=RUNNER_DOMAIN=\$HOST_IP
 Environment=BOXLITE_HOME_DIR=/var/lib/boxlite
-Environment=INSECURE_REGISTRIES=${registryHost}
 Environment=AWS_REGION=${REGION}
 Environment=OTEL_LOGGING_ENABLED=true
 Environment=OTEL_TRACING_ENABLED=true

@@ -15,7 +15,6 @@ import { RunnerService } from './services/runner.service'
 import { Runner } from './entities/runner.entity'
 import { RunnerController } from './controllers/runner.controller'
 import { ToolboxService } from './services/toolbox.deprecated.service'
-import { DockerRegistryModule } from '../docker-registry/docker-registry.module'
 import { SandboxManager } from './managers/sandbox.manager'
 import { ToolboxController } from './controllers/toolbox.deprecated.controller'
 import { BoxTemplate } from './entities/box-template.entity'
@@ -23,7 +22,6 @@ import { BoxTemplateController } from './controllers/box-template.controller'
 import { BoxTemplateService } from './services/box-template.service'
 import { RuntimeArtifactManager } from './managers/runtime-artifact.manager'
 import { RunnerArtifactCache } from './entities/runner-artifact-cache.entity'
-import { DockerRegistry } from '../docker-registry/entities/docker-registry.entity'
 import { RedisLockProvider } from './common/redis-lock.provider'
 import { OrganizationModule } from '../organization/organization.module'
 import { SandboxWarmPoolService } from './services/sandbox-warm-pool.service'
@@ -45,7 +43,6 @@ import { SshAccess } from './entities/ssh-access.entity'
 import { SandboxRepository } from './repositories/sandbox.repository'
 import { RegionModule } from '../region/region.module'
 import { Region } from '../region/entities/region.entity'
-import { BoxTemplateRegion } from './entities/box-template-region.entity'
 import { JobController } from './controllers/job.controller'
 import { JobService } from './services/job.service'
 import { JobStateHandlerService } from './services/job-state-handler.service'
@@ -65,7 +62,6 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
 @Module({
   imports: [
     UserModule,
-    DockerRegistryModule,
     OrganizationModule,
     RegionModule,
     TypeOrmModule.forFeature([
@@ -73,8 +69,6 @@ import { SandboxStateWaiterService } from './services/sandbox-state-waiter.servi
       Runner,
       BoxTemplate,
       RunnerArtifactCache,
-      BoxTemplateRegion,
-      DockerRegistry,
       WarmPool,
       Volume,
       SshAccess,

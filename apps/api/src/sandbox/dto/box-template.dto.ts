@@ -26,7 +26,6 @@ type BoxTemplatePresentation = Pick<
   | 'updatedAt'
   | 'lastUsedAt'
   | 'initialRunnerId'
-  | 'templateRegions'
 > & {
   displayName?: string
   description?: string
@@ -102,12 +101,6 @@ export class BoxTemplateDto {
   })
   initialRunnerId?: string
 
-  @ApiPropertyOptional({
-    description: 'IDs of regions where the template is available to this organization',
-    type: [String],
-  })
-  regionIds?: string[]
-
   static fromBoxTemplate(template: BoxTemplatePresentation): BoxTemplateDto {
     const systemTemplate = getSystemTemplateDefinition(template.name)
 
@@ -132,7 +125,6 @@ export class BoxTemplateDto {
       updatedAt: template.updatedAt,
       lastUsedAt: template.lastUsedAt,
       initialRunnerId: template.initialRunnerId,
-      regionIds: template.templateRegions?.map((region) => region.regionId) ?? undefined,
     }
   }
 
@@ -155,7 +147,6 @@ export class BoxTemplateDto {
       mem: template.mem,
       disk: template.disk,
       initialRunnerId: template.initialRunnerId,
-      templateRegions: template.templateRegions,
       createdAt: template.createdAt,
       updatedAt: template.updatedAt,
       lastUsedAt: template.lastUsedAt,

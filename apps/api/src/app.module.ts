@@ -16,7 +16,6 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import { ApiKeyModule } from './api-key/api-key.module'
 import { seconds, ThrottlerModule } from '@nestjs/throttler'
-import { DockerRegistryModule } from './docker-registry/docker-registry.module'
 import { RedisModule, getRedisConnectionToken } from '@nestjs-modules/ioredis'
 import { ScheduleModule } from '@nestjs/schedule'
 import { EventEmitterModule } from '@nestjs/event-emitter'
@@ -169,7 +168,6 @@ import { BoxliteRestModule } from './boxlite-rest/boxlite-rest.module'
     AuthModule,
     UserModule,
     SandboxModule,
-    DockerRegistryModule,
     ScheduleModule.forRoot(),
     UsageModule,
     AnalyticsModule,

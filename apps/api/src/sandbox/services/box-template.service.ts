@@ -33,13 +33,11 @@ import { OrganizationUsageService } from '../../organization/services/organizati
 import { RedisLockProvider } from '../common/redis-lock.provider'
 import { BoxTemplateSortDirection, BoxTemplateSortField } from '../dto/list-box-templates-query.dto'
 import { PER_SANDBOX_LIMIT_MESSAGE } from '../../common/constants/error-messages'
-import { DockerRegistryService } from '../../docker-registry/services/docker-registry.service'
 import { Region } from '../../region/entities/region.entity'
 import { RunnerState } from '../enums/runner-state.enum'
 import { OnAsyncEvent } from '../../common/decorators/on-async-event.decorator'
 import { RunnerEvents } from '../constants/runner-events'
 import { RunnerDeletedEvent } from '../events/runner-deleted.event'
-import { BoxTemplateRegion } from '../entities/box-template-region.entity'
 import { RegionType } from '../../region/enums/region-type.enum'
 import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateCreatedEvent } from '../events/box-template-created.event'
@@ -67,13 +65,10 @@ export class BoxTemplateService {
     private readonly runnerArtifactCacheRepository: Repository<RunnerArtifactCache>,
     @InjectRepository(Region)
     private readonly regionRepository: Repository<Region>,
-    @InjectRepository(BoxTemplateRegion)
-    private readonly boxTemplateRegionRepository: Repository<BoxTemplateRegion>,
     private readonly organizationService: OrganizationService,
     private readonly organizationUsageService: OrganizationUsageService,
     private readonly redisLockProvider: RedisLockProvider,
     private readonly runnerService: RunnerService,
-    private readonly dockerRegistryService: DockerRegistryService,
     private readonly eventEmitter: EventEmitter2,
     private readonly configService: TypedConfigService,
   ) {}
@@ -136,7 +131,8 @@ export class BoxTemplateService {
   }
 
   async createFromPull(organization: Organization, createBoxTemplateDto: CreateBoxTemplateDto, general = false) {
-    const regionId = await this.getValidatedOrDefaultRegionId(organization, createBoxTemplateDto.regionId)
+    // Templates are region-agnostic, but a requested region must still be one the org can use.
+    await this.getValidatedOrDefaultRegionId(organization, createBoxTemplateDto.regionId)
 
     let pendingTemplateCountIncrement: number | undefined
 
@@ -189,7 +185,6 @@ export class BoxTemplateService {
           state,
           artifactRef,
           general,
-          templateRegions: [{ templateId, regionId }],
         })
 
         const savedTemplate = await this.boxTemplateRepository.save(template)
@@ -216,10 +211,8 @@ export class BoxTemplateService {
     organization: Organization,
     templateDefinition: SystemTemplateDefinition,
   ): Promise<BoxTemplate> {
-    const regionId = await this.getValidatedOrDefaultRegionId(organization)
     const existingTemplate = await this.boxTemplateRepository.findOne({
       where: { name: templateDefinition.name, general: true },
-      relations: ['templateRegions'],
     })
 
     if (!existingTemplate) {
@@ -280,17 +273,6 @@ export class BoxTemplateService {
         existingTemplate.initialRunnerId = null
         existingTemplate.size = null
       }
-    }
-
-    const hasDefaultRegion = existingTemplate.templateRegions?.some(
-      (templateRegion) => templateRegion.regionId === regionId,
-    )
-
-    if (!hasDefaultRegion) {
-      await this.boxTemplateRegionRepository.save({
-        templateId: existingTemplate.id,
-        regionId,
-      })
     }
 
     const savedTemplate = shouldSaveTemplate
@@ -375,7 +357,6 @@ export class BoxTemplateService {
 
     const [items, total] = await this.boxTemplateRepository.findAndCount({
       where,
-      relations: ['templateRegions'],
       order: {
         general: 'ASC', // Sort general templates last
         [sortField]: {
@@ -388,16 +369,6 @@ export class BoxTemplateService {
       take: limitNum,
     })
 
-    // Filter out template regions that are not available to the organization
-    const availableRegions = await this.organizationService.listAvailableRegions(organizationId)
-    const availableRegionIds = new Set(availableRegions.map((r) => r.id))
-
-    for (const template of items) {
-      if (template.templateRegions) {
-        template.templateRegions = template.templateRegions.filter((sr) => availableRegionIds.has(sr.regionId))
-      }
-    }
-
     return {
       items,
       total,
@@ -406,32 +377,24 @@ export class BoxTemplateService {
     }
   }
 
-  async getSystemTemplates(organizationId: string): Promise<BoxTemplate[]> {
+  async getSystemTemplates(_organizationId: string): Promise<BoxTemplate[]> {
     const templates = await this.boxTemplateRepository.find({
       where: {
         general: true,
         hideFromUsers: false,
         state: BoxTemplateState.ACTIVE,
       },
-      relations: ['templateRegions'],
       order: {
         name: 'ASC',
       },
     })
 
-    const availableRegions = await this.organizationService.listAvailableRegions(organizationId)
-    const availableRegionIds = new Set(availableRegions.map((r) => r.id))
     const defaultTemplate = this.configService.get('defaultTemplate')
     const systemTemplateNames = new Set(SYSTEM_TEMPLATES.map((template) => template.name))
 
     const availableTemplates = templates
       .filter((template) => systemTemplateNames.has(template.name))
       .filter((template) => Boolean(template.artifactRef?.trim()))
-      .map((template) => {
-        template.templateRegions = template.templateRegions?.filter((sr) => availableRegionIds.has(sr.regionId)) ?? []
-        return template
-      })
-      .filter((template) => template.templateRegions.length > 0)
 
     return availableTemplates.sort((a, b) => {
       if (defaultTemplate) {
@@ -471,18 +434,11 @@ export class BoxTemplateService {
 
     const template = await this.boxTemplateRepository.findOne({
       where,
-      relations: ['templateRegions'],
       order: { general: 'ASC' },
     })
 
     if (!template) {
       throw new NotFoundException(`BoxTemplate ${templateIdOrName} not found`)
-    }
-
-    const availableRegions = await this.organizationService.listAvailableRegions(organizationId)
-    const availableRegionIds = new Set(availableRegions.map((r) => r.id))
-    if (template.templateRegions) {
-      template.templateRegions = template.templateRegions.filter((sr) => availableRegionIds.has(sr.regionId))
     }
 
     return template
@@ -743,27 +699,16 @@ export class BoxTemplateService {
   }
 
   /**
-   * @param templateId
-   * @returns The regions where the template is configured to be propagated to.
-   */
-  async getBoxTemplateRegions(templateId: string): Promise<Region[]> {
-    return await this.regionRepository
-      .createQueryBuilder('r')
-      .innerJoin('box_template_region', 'sr', 'sr."regionId" = r.id')
-      .where('sr."templateId" = :templateId', { templateId })
-      .getMany()
-  }
-
-  /**
+   * Templates are region-agnostic: any existing template is usable from every region.
+   * The region argument is retained for the region-proxy/ssh-gateway guard call sites.
+   *
    * @param templateId - The ID of the template.
-   * @param regionId - The ID of the region.
-   * @returns true if the template is available in the region, false otherwise.
+   * @returns true if the template exists, false otherwise.
    */
-  async isAvailableInRegion(templateId: string, regionId: string): Promise<boolean> {
-    return await this.boxTemplateRegionRepository.exists({
+  async isAvailableInRegion(templateId: string, _regionId: string): Promise<boolean> {
+    return await this.boxTemplateRepository.exists({
       where: {
-        templateId,
-        regionId,
+        id: templateId,
       },
     })
   }

@@ -32,7 +32,6 @@ import {
   RecoverSandboxDTO,
 } from '@boxlite-ai/runner-api-client'
 import { Sandbox } from '../entities/sandbox.entity'
-import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { RunnerApiError } from '../errors/runner-api-error'
 
@@ -164,7 +163,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
   async createSandbox(
     sandbox: Sandbox,
     artifactRef: string,
-    registry?: DockerRegistry,
     entrypoint?: string[],
     metadata?: { [key: string]: string },
     otelEndpoint?: string,
@@ -181,14 +179,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
       memoryQuota: sandbox.mem,
       storageQuota: sandbox.disk,
       env: sandbox.env,
-      registry: registry
-        ? {
-            project: registry.project,
-            url: registry.url,
-            username: registry.username,
-            password: registry.password,
-          }
-        : undefined,
       entrypoint: entrypoint,
       volumes: sandbox.volumes?.map((volume) => ({
         volumeId: volume.volumeId,
@@ -244,34 +234,10 @@ export class RunnerAdapterV0 implements RunnerAdapter {
     await this.artifactApiClient.removeArtifact(artifactRef)
   }
 
-  async pullArtifact(
-    artifactRef: string,
-    registry?: DockerRegistry,
-    destinationRegistry?: DockerRegistry,
-    destinationRef?: string,
-    newTag?: string,
-  ): Promise<void> {
+  async pullArtifact(artifactRef: string, destinationRef?: string, newTag?: string): Promise<void> {
     const request: PullArtifactRequestDTO = {
       artifactRef,
       newTag,
-    }
-
-    if (registry) {
-      request.registry = {
-        project: registry.project,
-        url: registry.url,
-        username: registry.username,
-        password: registry.password,
-      }
-    }
-
-    if (destinationRegistry) {
-      request.destinationRegistry = {
-        project: destinationRegistry.project,
-        url: destinationRegistry.url,
-        username: destinationRegistry.username,
-        password: destinationRegistry.password,
-      }
     }
 
     if (destinationRef) {
@@ -305,17 +271,9 @@ export class RunnerAdapterV0 implements RunnerAdapter {
     }
   }
 
-  async inspectArtifactInRegistry(artifactRef: string, registry?: DockerRegistry): Promise<ArtifactDigestResponse> {
+  async inspectArtifactInRegistry(artifactRef: string): Promise<ArtifactDigestResponse> {
     const request: InspectArtifactInRegistryRequest = {
       artifactRef,
-      registry: registry
-        ? {
-            project: registry.project,
-            url: registry.url,
-            username: registry.username,
-            password: registry.password,
-          }
-        : undefined,
     }
 
     const response = await this.artifactApiClient.inspectArtifactInRegistry(request)

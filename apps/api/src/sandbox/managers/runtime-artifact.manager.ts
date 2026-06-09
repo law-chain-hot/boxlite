@@ -8,12 +8,10 @@ import { Injectable, Logger, NotFoundException, OnApplicationShutdown } from '@n
 import { InjectRepository } from '@nestjs/typeorm'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { In, Not, Repository } from 'typeorm'
-import { DockerRegistryService } from '../../docker-registry/services/docker-registry.service'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { RunnerArtifactCache } from '../entities/runner-artifact-cache.entity'
 import { Runner } from '../entities/runner.entity'
-import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { RunnerState } from '../enums/runner-state.enum'
 import { RunnerArtifactCacheState } from '../enums/runner-artifact-cache-state.enum'
 import { v4 as uuidv4 } from 'uuid'
@@ -33,7 +31,6 @@ import { RunnerAdapterFactory, RunnerArtifactInfo, ArtifactDigestResponse } from
 import { RuntimeArtifactStateError } from '../errors/runtime-artifact-state-error'
 import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateCreatedEvent } from '../events/box-template-created.event'
-import { BoxTemplateService } from '../services/box-template.service'
 import { OnAsyncEvent } from '../../common/decorators/on-async-event.decorator'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
 import { getSystemTemplateDefinition } from '../constants/system-templates'
@@ -61,11 +58,9 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     @InjectRepository(Runner)
     private readonly runnerRepository: Repository<Runner>,
     private readonly runnerService: RunnerService,
-    private readonly dockerRegistryService: DockerRegistryService,
     private readonly runnerAdapterFactory: RunnerAdapterFactory,
     private readonly redisLockProvider: RedisLockProvider,
     private readonly organizationService: OrganizationService,
-    private readonly boxTemplateService: BoxTemplateService,
   ) {}
 
   async onApplicationShutdown() {
@@ -109,7 +104,9 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
     const results = await Promise.allSettled(
       templates.map(async (template) => {
-        const regions = await this.boxTemplateService.getBoxTemplateRegions(template.id)
+        // Templates are region-agnostic: propagate to runners in every region the
+        // owning organization can use (shared + org-scoped), not a per-template list.
+        const regions = await this.organizationService.listAvailableRegions(template.organizationId)
 
         const sharedRegionIds = regions.filter((r) => r.organizationId === null).map((r) => r.id)
         const organizationRegionIds = regions
@@ -291,8 +288,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
                 RunnerArtifactCacheState.PULLING_ARTIFACT,
               )
               runnerArtifactCache = await this.runnerService.getRunnerArtifactCache(runner.id, template.artifactRef)
-              // Runner pulls the ghcr ref directly with its runtime-scoped ghcr auth.
-              await this.pullRunnerArtifactCache(runner, template.artifactRef, undefined)
+              await this.pullRunnerArtifactCache(runner, template.artifactRef)
             } else if (runnerArtifactCache.state === RunnerArtifactCacheState.PULLING_ARTIFACT) {
               await this.handleRunnerArtifactCacheStatePullingArtifact(runnerArtifactCache, runner)
             }
@@ -328,16 +324,11 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     }
   }
 
-  async pullRunnerArtifactCache(
-    runner: Runner,
-    artifactRef: string,
-    registry?: DockerRegistry,
-    destinationRegistry?: DockerRegistry,
-    destinationRef?: string,
-  ) {
+  async pullRunnerArtifactCache(runner: Runner, artifactRef: string) {
     const runnerAdapter = await this.runnerAdapterFactory.create(runner)
-    // Runner returns immediately; polling for completion is handled by syncRunnerBoxTemplateStates cron
-    await runnerAdapter.pullArtifact(artifactRef, registry, destinationRegistry, destinationRef)
+    // Runner returns immediately; polling for completion is handled by syncRunnerBoxTemplateStates cron.
+    // The runner pulls the ghcr ref directly using its runtime-scoped ghcr auth.
+    await runnerAdapter.pullArtifact(artifactRef)
   }
 
   async handleRunnerArtifactCacheStatePullingArtifact(runnerArtifactCache: RunnerArtifactCache, runner: Runner) {
@@ -368,8 +359,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     const retryTimeoutMinutes = 10
     const retryTimeoutMs = retryTimeoutMinutes * 60 * 1000
     if (Date.now() - runnerArtifactCache.createdAt.getTime() > retryTimeoutMs) {
-      // Runner re-pulls the ghcr ref directly with its runtime-scoped ghcr auth.
-      await this.pullRunnerArtifactCache(runner, runnerArtifactCache.artifactRef, undefined)
+      await this.pullRunnerArtifactCache(runner, runnerArtifactCache.artifactRef)
       return
     }
   }
@@ -601,7 +591,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     let inspectedArtifactDigest: ArtifactDigestResponse | undefined
     try {
       // Runner inspects the ghcr ref directly using its runtime-scoped ghcr auth.
-      inspectedArtifactDigest = await runnerAdapter.inspectArtifactInRegistry(template.artifactRef, undefined)
+      inspectedArtifactDigest = await runnerAdapter.inspectArtifactInRegistry(template.artifactRef)
     } catch (error) {
       this.logger.error(`Failed to inspect artifact ${template.artifactRef} in registry: ${error}`)
       return DONT_SYNC_AGAIN
@@ -649,23 +639,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
       )
     }
     await this.updateBoxTemplateState(template.id, BoxTemplateState.ACTIVE)
-
-    // Best effort removal of old source image from transient registry
-    const transientRegistry = await this.dockerRegistryService.findTransientRegistryByTemplateImageName(
-      template.imageName,
-      runner.region,
-    )
-    if (transientRegistry) {
-      try {
-        await this.dockerRegistryService.removeImage(template.imageName, transientRegistry.id)
-      } catch (error) {
-        if (error.statusCode === 404) {
-          //  image not found, just return
-          return DONT_SYNC_AGAIN
-        }
-        this.logger.error('Failed to remove transient image:', fromAxiosError(error))
-      }
-    }
 
     return DONT_SYNC_AGAIN
   }

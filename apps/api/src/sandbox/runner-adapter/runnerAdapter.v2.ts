@@ -18,7 +18,6 @@ import {
 import { Runner } from '../entities/runner.entity'
 import { Sandbox } from '../entities/sandbox.entity'
 import { Job } from '../entities/job.entity'
-import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { JobType } from '../enums/job-type.enum'
 import { JobStatus } from '../enums/job-status.enum'
@@ -132,7 +131,6 @@ export class RunnerAdapterV2 implements RunnerAdapter {
   async createSandbox(
     sandbox: Sandbox,
     artifactRef: string,
-    registry?: DockerRegistry,
     entrypoint?: string[],
     metadata?: { [key: string]: string },
     otelEndpoint?: string,
@@ -149,14 +147,6 @@ export class RunnerAdapterV2 implements RunnerAdapter {
       memoryQuota: sandbox.mem,
       storageQuota: sandbox.disk,
       env: sandbox.env,
-      registry: registry
-        ? {
-            project: registry.project,
-            url: registry.url,
-            username: registry.username,
-            password: registry.password,
-          }
-        : undefined,
       entrypoint: entrypoint,
       volumes: sandbox.volumes?.map((volume) => ({
         volumeId: volume.volumeId,
@@ -249,34 +239,10 @@ export class RunnerAdapterV2 implements RunnerAdapter {
     this.logger.debug(`Created RECOVER_SANDBOX job for sandbox ${sandbox.id} on runner ${this.runner.id}`)
   }
 
-  async pullArtifact(
-    artifactRef: string,
-    registry?: DockerRegistry,
-    destinationRegistry?: DockerRegistry,
-    destinationRef?: string,
-    newTag?: string,
-  ): Promise<void> {
+  async pullArtifact(artifactRef: string, destinationRef?: string, newTag?: string): Promise<void> {
     const payload: PullArtifactRequestDTO = {
       artifactRef,
       newTag,
-    }
-
-    if (registry) {
-      payload.registry = {
-        project: registry.project,
-        url: registry.url,
-        username: registry.username,
-        password: registry.password,
-      }
-    }
-
-    if (destinationRegistry) {
-      payload.destinationRegistry = {
-        project: destinationRegistry.project,
-        url: destinationRegistry.url,
-        username: destinationRegistry.username,
-        password: destinationRegistry.password,
-      }
     }
 
     if (destinationRef) {
@@ -379,17 +345,9 @@ export class RunnerAdapterV2 implements RunnerAdapter {
     }
   }
 
-  async inspectArtifactInRegistry(artifactRef: string, registry?: DockerRegistry): Promise<ArtifactDigestResponse> {
+  async inspectArtifactInRegistry(artifactRef: string): Promise<ArtifactDigestResponse> {
     const payload: InspectArtifactInRegistryRequest = {
       artifactRef,
-      registry: registry
-        ? {
-            project: registry.project,
-            url: registry.url,
-            username: registry.username,
-            password: registry.password,
-          }
-        : undefined,
     }
 
     const job = await this.jobService.createJob(

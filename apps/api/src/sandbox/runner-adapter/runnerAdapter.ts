@@ -9,7 +9,6 @@ import { Runner } from '../entities/runner.entity'
 import { ModuleRef } from '@nestjs/core'
 import { RunnerAdapterV0 } from './runnerAdapter.v0'
 import { RunnerAdapterV2 } from './runnerAdapter.v2'
-import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { Sandbox } from '../entities/sandbox.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { RunnerServiceInfo } from '../common/runner-service-info'
@@ -65,7 +64,6 @@ export interface RunnerAdapter {
   createSandbox(
     sandbox: Sandbox,
     artifactRef: string,
-    registry?: DockerRegistry,
     entrypoint?: string[],
     metadata?: { [key: string]: string },
     otelEndpoint?: string,
@@ -81,16 +79,10 @@ export interface RunnerAdapter {
   destroySandbox(sandboxId: string): Promise<void>
 
   removeArtifact(artifactRef: string): Promise<void>
-  pullArtifact(
-    artifactRef: string,
-    registry?: DockerRegistry,
-    destinationRegistry?: DockerRegistry,
-    destinationRef?: string,
-    newTag?: string,
-  ): Promise<void>
+  pullArtifact(artifactRef: string, destinationRef?: string, newTag?: string): Promise<void>
   artifactExists(artifactRef: string): Promise<boolean>
   getArtifactInfo(artifactRef: string): Promise<RunnerArtifactInfo>
-  inspectArtifactInRegistry(artifactRef: string, registry?: DockerRegistry): Promise<ArtifactDigestResponse>
+  inspectArtifactInRegistry(artifactRef: string): Promise<ArtifactDigestResponse>
 
   updateNetworkSettings(
     sandboxId: string,

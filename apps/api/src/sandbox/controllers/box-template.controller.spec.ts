@@ -109,7 +109,6 @@ function createTemplate() {
     mem: 1,
     disk: 3,
     initialRunnerId: undefined,
-    templateRegions: [],
     createdAt: now,
     updatedAt: now,
     lastUsedAt: undefined,

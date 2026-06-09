@@ -16,7 +16,6 @@ import {
 } from 'typeorm'
 import { RunnerArtifactCache } from './runner-artifact-cache.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
-import { BoxTemplateRegion } from './box-template-region.entity'
 
 @Entity()
 @Unique(['organizationId', 'name'])
@@ -97,10 +96,4 @@ export class BoxTemplate {
 
   @Column({ nullable: true })
   initialRunnerId?: string
-
-  @OneToMany(() => BoxTemplateRegion, (templateRegion) => templateRegion.template, {
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
-  templateRegions: BoxTemplateRegion[]
 }

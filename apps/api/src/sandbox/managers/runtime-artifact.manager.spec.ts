@@ -27,11 +27,9 @@ function createManager() {
     {} as any, // runnerArtifactCacheRepository
     {} as any, // runnerRepository
     {} as any, // runnerService
-    {} as any, // dockerRegistryService
     {} as any, // runnerAdapterFactory
     {} as any, // redisLockProvider
     {} as any, // organizationService
-    {} as any, // boxTemplateService
   )
 
   return { manager, boxTemplateRepository }

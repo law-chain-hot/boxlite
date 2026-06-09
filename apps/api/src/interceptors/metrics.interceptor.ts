@@ -16,7 +16,6 @@ import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 import { PostHog } from 'posthog-node'
 import { SandboxDto } from '../sandbox/dto/sandbox.dto'
-import { DockerRegistryDto } from '../docker-registry/dto/docker-registry.dto'
 import { CreateSandboxDto } from '../sandbox/dto/create-sandbox.dto'
 import { Request } from 'express'
 import { CreateBoxTemplateDto } from '../sandbox/dto/create-box-template.dto'
@@ -143,9 +142,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
             break
           case '/api/templates/:id/deactivate':
             this.captureDeactivateTemplate(props, request.params.id)
-            break
-          case '/api/docker-registry':
-            this.captureCreateDockerRegistry(props, response)
             break
           case '/api/sandbox':
             this.captureCreateSandbox(props, request.body, response)
@@ -467,13 +463,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
 
   private captureCreateApiKey(props: CommonCaptureProps) {
     this.capture('api_api_key_created', props, 'api_api_key_creation_failed')
-  }
-
-  private captureCreateDockerRegistry(props: CommonCaptureProps, response: DockerRegistryDto) {
-    this.capture('api_docker_registry_created', props, 'api_docker_registry_creation_failed', {
-      registry_name: response.name,
-      registry_url: response.url,
-    })
   }
 
   private captureCreateTemplate(props: CommonCaptureProps, request: CreateBoxTemplateDto, response: BoxTemplateDto) {

@@ -145,7 +145,7 @@ export class SandboxStartAction extends SandboxAction {
 
     // Fire the pull request (runner returns 202 immediately).
     // The runner pulls the ghcr ref directly using its runtime-scoped ghcr auth.
-    await runnerAdapter.pullArtifact(template.artifactRef, undefined)
+    await runnerAdapter.pullArtifact(template.artifactRef)
 
     const pollTimeoutMs = 60 * 60 * 1_000 // 1 hour
     const pollIntervalMs = 5 * 1_000 // 5 seconds
@@ -191,7 +191,6 @@ export class SandboxStartAction extends SandboxAction {
     const result = await runnerAdapter.createSandbox(
       sandbox,
       artifactRef,
-      undefined,
       entrypoint,
       metadata,
       this.configService.get('sandboxOtel.endpointUrl'),

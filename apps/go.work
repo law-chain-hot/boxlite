@@ -10,6 +10,5 @@ use (
 	./otel-collector/exporter
 	./proxy
 	./runner
-	./artifact-registry
 	./ssh-gateway
 )

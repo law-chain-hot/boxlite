@@ -32,7 +32,6 @@ describe('BoxTemplateDto', () => {
       lastUsedAt,
       hideFromUsers: false,
       runners: [],
-      templateRegions: [{ regionId: 'us' }, { regionId: 'eu' }],
     } as unknown as BoxTemplate
 
     expect(BoxTemplateDto.fromBoxTemplate(template)).toEqual({
@@ -56,7 +55,6 @@ describe('BoxTemplateDto', () => {
       updatedAt,
       lastUsedAt,
       initialRunnerId: undefined,
-      regionIds: ['us', 'eu'],
     })
   })
 })

@@ -10,96 +10,8 @@ jest.mock('./sandbox/runner-adapter/runnerAdapter', () => ({
 
 const { AppService } = require('./app.service') as typeof import('./app.service')
 
-describe('AppService registry bootstrap', () => {
-  function createService(values: Record<string, unknown> = {}) {
-    const dockerRegistryService = {
-      getAvailableTransientRegistry: jest.fn().mockResolvedValue(null),
-      getAvailableInternalRegistry: jest.fn().mockResolvedValue(null),
-      getAvailableBackupRegistry: jest.fn().mockResolvedValue(null),
-      findSourceRegistryByTemplateImageName: jest.fn().mockResolvedValue(null),
-      create: jest.fn(),
-      update: jest.fn(),
-    }
-    const configService = {
-      get: jest.fn((key: string) => values[key]),
-      getOrThrow: jest.fn((key: string) => {
-        const value = values[key]
-        if (value === undefined) {
-          throw new Error(`Configuration key "${key}" is undefined`)
-        }
-        return value
-      }),
-    }
-
-    return {
-      dockerRegistryService,
-      service: new AppService(
-        dockerRegistryService as never,
-        configService as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-      ) as unknown as {
-        initializeTransientRegistry: () => Promise<void>
-        initializeInternalRegistry: () => Promise<void>
-        initializeBackupRegistry: () => Promise<void>
-        initializeSystemSourceRegistry: () => Promise<void>
-      },
-    }
-  }
-
-  it('skips transient registry initialization when config is absent', async () => {
-    const { dockerRegistryService, service } = createService({
-      'defaultRegion.id': 'us',
-    })
-
-    await expect(service.initializeTransientRegistry()).resolves.toBeUndefined()
-
-    expect(dockerRegistryService.create).not.toHaveBeenCalled()
-    expect(dockerRegistryService.update).not.toHaveBeenCalled()
-  })
-
-  it('creates a non-default system source registry when credentials are configured', async () => {
-    const { dockerRegistryService, service } = createService({
-      'defaultRegion.id': 'us',
-      'systemSourceRegistry.name': 'System GHCR',
-      'systemSourceRegistry.url': 'ghcr.io',
-      'systemSourceRegistry.username': 'boxlite-ci',
-      'systemSourceRegistry.password': 'token-test',
-      'systemSourceRegistry.projectId': '',
-    })
-
-    await expect(service.initializeSystemSourceRegistry()).resolves.toBeUndefined()
-
-    expect(dockerRegistryService.findSourceRegistryByTemplateImageName).toHaveBeenCalledWith('ghcr.io', 'us', undefined)
-    expect(dockerRegistryService.create).toHaveBeenCalledWith({
-      name: 'System GHCR',
-      url: 'ghcr.io',
-      username: 'boxlite-ci',
-      password: 'token-test',
-      project: '',
-      registryType: 'internal',
-      isDefault: false,
-    })
-    expect(dockerRegistryService.update).not.toHaveBeenCalled()
-  })
-})
-
 describe('AppService admin bootstrap', () => {
   it('syncs existing admin organization quota from config', async () => {
-    const dockerRegistryService = {
-      getAvailableTransientRegistry: jest.fn().mockResolvedValue(null),
-      getAvailableInternalRegistry: jest.fn().mockResolvedValue(null),
-      getAvailableBackupRegistry: jest.fn().mockResolvedValue(null),
-      create: jest.fn(),
-      update: jest.fn(),
-    }
     const configValues: Record<string, unknown> = {
       'admin.totalCpuQuota': 10,
       'admin.totalMemoryQuota': 40,
@@ -136,7 +48,6 @@ describe('AppService admin bootstrap', () => {
     }
 
     const service = new AppService(
-      dockerRegistryService as never,
       configService as never,
       userService as never,
       organizationService as never,
