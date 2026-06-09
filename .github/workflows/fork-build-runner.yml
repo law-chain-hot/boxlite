@@ -1,0 +1,228 @@
+# Fork-only, from-source build of the boxlite-runner binary (linux-amd64).
+#
+# WHY THIS EXISTS
+# ---------------
+# The normal pipeline (build-c.yml -> build-runner-binary.yml) DOWNLOADS the
+# released C SDK (libboxlite.a) from a GitHub Release and links the runner
+# against it. This branch adds a new FFI symbol
+# (`boxlite_rest_options_set_path_prefix`) that does NOT exist in the released
+# v0.9.5 C SDK, so the released libboxlite.a is ABI-incompatible and the runner
+# link step fails with an undefined symbol.
+#
+# This workflow works around that by building EVERYTHING from THIS branch's
+# source in a single job:
+#   1. Build libboxlite.a from source (steps copied from build-c.yml).
+#   2. Build the runner against THAT freshly-built libboxlite.a
+#      (steps copied from build-runner-binary.yml).
+#
+# It is meant to run on a FORK (e.g. law-chain-hot/boxlite) where the user has
+# NO release/admin access, so it:
+#   - Does NOT depend on any pre-existing GitHub Release.
+#   - Is PUSH-triggered (a push-triggered workflow runs from the pushed ref
+#     without needing default-branch registration; `workflow_dispatch` alone
+#     would 404 on a fork until the workflow lands on the default branch).
+#   - Does NOT publish/release anything — it only uploads artifacts.
+#
+# Outputs (downloadable artifacts):
+#   - boxlite-runner-linux-amd64 : the runner tarball
+#   - libboxlite-linux-x64       : the freshly-built static lib, for reuse
+name: Fork Build Runner
+
+on:
+  push:
+    branches: [fork-build-runner-tmp]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: '0'
+  # Inlined from .github/workflows/config.yml so this workflow is fully
+  # self-contained (no reusable-workflow dependency on a fork).
+  RUST_TOOLCHAIN: 'stable'
+  GO_VERSION: '1.24'
+  ARTIFACT_RETENTION_DAYS: '7'
+
+jobs:
+  build:
+    name: Build C SDK + Runner (linux-amd64)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # --- C SDK build setup (from build-c.yml) ---------------------------
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # sccache caches individual compilation units via GHA cache API.
+      # Works on host and inside Docker containers. Optional: continue-on-error
+      # plus an in-container fallback means the build proceeds without it.
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+        continue-on-error: true
+
+      - name: Export GHA cache env vars
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+            core.exportVariable('ACTIONS_CACHE_SERVICE_V2', process.env.ACTIONS_CACHE_SERVICE_V2 || '');
+
+      # Build guest on host BEFORE manylinux container because:
+      # - manylinux (AlmaLinux/RHEL) doesn't have musl packages in repos
+      # - Building musl-cross-make from source takes ~15 minutes
+      # - Ubuntu host has musl-tools via apt (~30 seconds)
+      # - Guest is static musl binary, doesn't need manylinux glibc compatibility
+      # - Shim/libkrun must be built IN container (needs glibc 2.28 for manylinux)
+      - name: Build guest binary (host)
+        run: |
+          make setup:build guest
+
+          # Cache only the final binary (11MB), not entire target dir (2.3GB)
+          GUEST_TARGET=$(scripts/util.sh --target)
+          mkdir -p ".cache/$GUEST_TARGET/release"
+          cp "target/$GUEST_TARGET/release/boxlite-guest" ".cache/$GUEST_TARGET/release/"
+
+          # Clean up to save disk space (sccache stores compilation cache separately)
+          rm -rf target ~/.rustup ~/.cargo
+          mkdir -p target
+
+      - name: Build C SDK (manylinux container)
+        run: |
+          cat > "$RUNNER_TEMP/build.sh" << 'CONTAINER_SCRIPT'
+          set -ex
+          git config --global --add safe.directory /work
+
+          # sccache fallback: if not available, disable wrapper for normal compilation
+          if [ -n "${RUSTC_WRAPPER:-}" ] && ! command -v "$RUSTC_WRAPPER" &>/dev/null; then
+            echo "::warning::sccache not available in container, falling back to normal compilation"
+            unset RUSTC_WRAPPER
+          fi
+
+          GUEST_TARGET=$(scripts/util.sh --target)
+          if [ -d ".cache/$GUEST_TARGET" ]; then
+            echo "Restoring guest from .cache/$GUEST_TARGET"
+            mkdir -p target
+            cp -a ".cache/$GUEST_TARGET" "target/$GUEST_TARGET"
+          fi
+
+          export SKIP_GUEST_BUILD=1
+          export PATH="/usr/local/go/bin:$CARGO_HOME/bin:$PATH"
+          make setup:build runtime
+
+          # Build the C FFI library (static + shared)
+          cargo build --release -p boxlite-c
+
+          # Fix Go runtime symbol conflicts in the static library
+          bash scripts/build/fix-go-symbols.sh target/release/libboxlite.a
+
+          command -v sccache &>/dev/null && sccache --show-stats || true
+          CONTAINER_SCRIPT
+
+          # Conditionally mount sccache binary and pass env vars into Docker.
+          SCCACHE_DOCKER_ARGS=""
+          if command -v sccache &>/dev/null; then
+            SCCACHE_DOCKER_ARGS="-v $(which sccache):/usr/local/bin/sccache:ro -e SCCACHE_GHA_ENABLED=true -e RUSTC_WRAPPER=sccache -e ACTIONS_CACHE_SERVICE_V2 -e ACTIONS_RESULTS_URL -e ACTIONS_RUNTIME_TOKEN"
+          fi
+
+          docker run --rm \
+            -v "${{ github.workspace }}":/work \
+            -v "$RUNNER_TEMP/build.sh:/tmp/build.sh:ro" \
+            $SCCACHE_DOCKER_ARGS \
+            -w /work \
+            -e CARGO_HOME=/work/.cargo-manylinux \
+            quay.io/pypa/manylinux_2_28_x86_64 \
+            bash /tmp/build.sh
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # Stash the freshly-built static lib as an artifact for reuse, and stage
+      # it for the runner link step below.
+      - name: Stage libboxlite.a
+        run: |
+          mkdir -p artifacts/libboxlite-linux-x64
+          cp target/release/libboxlite.a artifacts/libboxlite-linux-x64/libboxlite.a
+
+      - name: Upload libboxlite.a artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libboxlite-linux-x64
+          path: artifacts/libboxlite-linux-x64/libboxlite.a
+          if-no-files-found: error
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
+      # --- Runner build (from build-runner-binary.yml) --------------------
+      # NOTE: instead of downloading the released C SDK, we link against the
+      # libboxlite.a built from source above.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxtst-dev libxinerama-dev
+
+      - name: Use freshly-built libboxlite.a
+        run: cp target/release/libboxlite.a sdks/go/libboxlite.a
+
+      - name: Rewrite go.work for minimal modules
+        run: |
+          printf 'go 1.25.4\n\nuse (\n\t./runner\n\t./daemon\n\t./common-go\n\t./api-client-go\n\t./libs/computer-use\n\t../sdks/go\n)\n' > apps/go.work
+
+      - name: Download Go dependencies
+        run: |
+          go -C apps/runner mod download
+          go -C apps/daemon mod download
+          go -C apps/common-go mod download
+          go -C apps/api-client-go mod download
+          go -C apps/libs/computer-use mod download
+
+      - name: Build daemon
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -C apps \
+            -ldflags "-X 'github.com/boxlite-ai/daemon/internal.Version=${VERSION}'" \
+            -o runner/pkg/daemon/static/daemon-amd64 \
+            ./daemon/cmd/daemon/
+
+      - name: Build computer-use
+        run: |
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -C apps \
+            -o runner/pkg/daemon/static/boxlite-computer-use \
+            ./libs/computer-use/
+
+      - name: Build runner
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -C apps \
+            -ldflags "-X 'github.com/boxlite-ai/runner/internal.Version=${VERSION}'" \
+            -o /tmp/boxlite-runner \
+            ./runner/cmd/runner/
+
+      - name: Package runner binary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          tar czf "boxlite-runner-v${VERSION}-linux-amd64.tar.gz" -C /tmp boxlite-runner
+
+      - name: Upload runner artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boxlite-runner-linux-amd64
+          path: boxlite-runner-v*-linux-amd64.tar.gz
+          if-no-files-found: error
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
