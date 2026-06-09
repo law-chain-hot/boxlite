@@ -13,34 +13,6 @@ import (
 	"github.com/boxlite-ai/runner/pkg/api/dto"
 )
 
-func (e *Executor) buildArtifact(ctx context.Context, job *apiclient.Job) (any, error) {
-	var request dto.BuildArtifactRequestDTO
-	err := e.parsePayload(job.Payload, &request)
-	if err != nil {
-		return nil, err
-	}
-
-	err = e.backend.BuildArtifact(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := e.backend.GetImageInfo(ctx, request.ArtifactRef)
-	if err != nil {
-		return nil, err
-	}
-
-	infoResponse := dto.ArtifactInfoResponse{
-		Name:       request.ArtifactRef,
-		SizeGB:     float64(info.Size) / (1024 * 1024 * 1024), // Convert bytes to GB
-		Entrypoint: info.Entrypoint,
-		Cmd:        info.Cmd,
-		Hash:       dto.HashWithoutPrefix(info.Hash),
-	}
-
-	return infoResponse, nil
-}
-
 func (e *Executor) pullArtifact(ctx context.Context, job *apiclient.Job) (any, error) {
 	var request dto.PullArtifactRequestDTO
 	err := e.parsePayload(job.Payload, &request)

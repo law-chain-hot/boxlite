@@ -571,12 +571,7 @@ export class SandboxManager implements TrackableJobExecutions, OnApplicationShut
         .select(['sandbox.id'])
         .leftJoin('sandbox_last_activity', 'activity', 'activity."sandboxId" = sandbox.id')
         .where('sandbox.state NOT IN (:...excludedStates)', {
-          excludedStates: [
-            SandboxState.DESTROYED,
-            SandboxState.ERROR,
-            SandboxState.BUILD_FAILED,
-            SandboxState.RESIZING,
-          ],
+          excludedStates: [SandboxState.DESTROYED, SandboxState.ERROR, SandboxState.RESIZING],
         })
         .andWhere('sandbox."desiredState"::text != sandbox.state::text')
         .andWhere('sandbox."desiredState"::text IN (:...supportedDesiredStates)', {
@@ -671,7 +666,7 @@ export class SandboxManager implements TrackableJobExecutions, OnApplicationShut
 
       while (new Date().getTime() - startedAt.getTime() <= 10000) {
         if (
-          [SandboxState.DESTROYED, SandboxState.BUILD_FAILED, SandboxState.RESIZING].includes(sandbox.state) ||
+          [SandboxState.DESTROYED, SandboxState.RESIZING].includes(sandbox.state) ||
           sandbox.state === SandboxState.ERROR
         ) {
           // Break sync loop if sandbox reaches a terminal state.

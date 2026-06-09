@@ -32,7 +32,7 @@ export class SandboxDestroyAction extends SandboxAction {
       return DONT_SYNC_AGAIN
     }
 
-    if (sandbox.state === SandboxState.ARCHIVED || sandbox.state === SandboxState.PENDING_BUILD) {
+    if (sandbox.state === SandboxState.ARCHIVED) {
       await this.updateSandboxState(sandbox, SandboxState.DESTROYED, lockCode)
       return DONT_SYNC_AGAIN
     }

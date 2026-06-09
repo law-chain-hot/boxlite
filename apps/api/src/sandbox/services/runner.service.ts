@@ -775,8 +775,8 @@ export class RunnerService {
         artifactRef,
       },
       order: {
-        state: 'ASC', // Sorts state BUILDING_ARTIFACT before ERROR
-        createdAt: 'ASC', // Sorts first runner to start building artifact on top
+        state: 'ASC', // Sorts state PULLING_ARTIFACT before ERROR
+        createdAt: 'ASC', // Sorts first runner to start pulling artifact on top
       },
     })
   }
@@ -808,21 +808,6 @@ export class RunnerService {
       }
       throw error // Re-throw any other errors
     }
-  }
-
-  // TODO: combine getRunnersWithMultipleArtifactsBuilding and getRunnersWithMultipleArtifactsPulling?
-
-  async getRunnersWithMultipleArtifactsBuilding(maxArtifactCount = 6): Promise<string[]> {
-    const runners = await this.sandboxRepository
-      .createQueryBuilder('sandbox')
-      .select('sandbox.runnerId', 'runnerId')
-      .where('sandbox.state = :state', { state: SandboxState.BUILDING_ARTIFACT })
-      .andWhere('sandbox.buildInfoArtifactRef IS NOT NULL')
-      .groupBy('sandbox.runnerId')
-      .having('COUNT(DISTINCT sandbox.buildInfoArtifactRef) > :maxArtifactCount', { maxArtifactCount })
-      .getRawMany()
-
-    return runners.map((item) => item.runnerId)
   }
 
   async getRunnersWithMultipleArtifactsPulling(maxArtifactCount = 6): Promise<string[]> {

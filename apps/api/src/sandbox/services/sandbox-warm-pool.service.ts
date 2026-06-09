@@ -196,7 +196,7 @@ export class SandboxWarmPoolService {
             mem: warmPoolItem.mem,
             disk: warmPoolItem.disk,
             desiredState: SandboxDesiredState.STARTED,
-            state: Not(In([SandboxState.ERROR, SandboxState.BUILD_FAILED])),
+            state: Not(In([SandboxState.ERROR])),
           },
         })
 
@@ -256,7 +256,7 @@ export class SandboxWarmPoolService {
         mem: warmPoolItem.mem,
         disk: warmPoolItem.disk,
         desiredState: SandboxDesiredState.STARTED,
-        state: Not(In([SandboxState.ERROR, SandboxState.BUILD_FAILED])),
+        state: Not(In([SandboxState.ERROR])),
       },
     })
 

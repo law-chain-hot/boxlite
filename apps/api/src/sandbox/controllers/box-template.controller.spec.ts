@@ -37,7 +37,7 @@ describe('BoxTemplateController', () => {
       getSystemTemplates: jest.fn().mockResolvedValue([template]),
       getAllBoxTemplates: jest.fn(),
     }
-    const controller = new BoxTemplateController(boxTemplateService as any, {} as any)
+    const controller = new BoxTemplateController(boxTemplateService as any)
 
     const result = await controller.listBoxTemplates(
       { organizationId: 'org-id' } as any,
@@ -62,7 +62,7 @@ describe('BoxTemplateController', () => {
         totalPages: 1,
       }),
     }
-    const controller = new BoxTemplateController(boxTemplateService as any, {} as any)
+    const controller = new BoxTemplateController(boxTemplateService as any)
 
     const result = await controller.listBoxTemplates(
       { organizationId: 'org-id' } as any,
@@ -108,7 +108,6 @@ function createTemplate() {
     gpu: 0,
     mem: 1,
     disk: 3,
-    buildInfo: undefined,
     initialRunnerId: undefined,
     templateRegions: [],
     createdAt: now,

@@ -13,12 +13,11 @@ import {
   Logger,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, Not, In, Raw, ILike, IsNull, FindOptionsWhere, Like, LessThan } from 'typeorm'
+import { Repository, Not, In, Raw, ILike, FindOptionsWhere, Like, LessThan } from 'typeorm'
 import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { CreateBoxTemplateDto } from '../dto/create-box-template.dto'
-import { BuildInfo, generateBuildInfoHash as generateBuildArtifactRef } from '../entities/build-info.entity'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter'
 import { SandboxEvents } from '../constants/sandbox-events.constants'
@@ -46,7 +45,6 @@ import { RegionType } from '../../region/enums/region-type.enum'
 import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateCreatedEvent } from '../events/box-template-created.event'
 import { RunnerService } from './runner.service'
-import { RegionService } from '../../region/services/region.service'
 import { TypedConfigService } from '../../config/typed-config.service'
 import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
@@ -69,8 +67,6 @@ export class BoxTemplateService {
     private readonly sandboxRepository: SandboxRepository,
     @InjectRepository(BoxTemplate)
     private readonly boxTemplateRepository: Repository<BoxTemplate>,
-    @InjectRepository(BuildInfo)
-    private readonly buildInfoRepository: Repository<BuildInfo>,
     @InjectRepository(RunnerArtifactCache)
     private readonly runnerArtifactCacheRepository: Repository<RunnerArtifactCache>,
     @InjectRepository(Region)
@@ -81,7 +77,6 @@ export class BoxTemplateService {
     private readonly organizationUsageService: OrganizationUsageService,
     private readonly redisLockProvider: RedisLockProvider,
     private readonly runnerService: RunnerService,
-    private readonly regionService: RegionService,
     private readonly dockerRegistryService: DockerRegistryService,
     private readonly eventEmitter: EventEmitter2,
     private readonly configService: TypedConfigService,
@@ -241,11 +236,9 @@ export class BoxTemplateService {
     }
 
     let shouldSaveTemplate = false
-    const shouldReactivateSystemTemplate = [
-      BoxTemplateState.INACTIVE,
-      BoxTemplateState.ERROR,
-      BoxTemplateState.BUILD_FAILED,
-    ].includes(existingTemplate.state)
+    const shouldReactivateSystemTemplate = [BoxTemplateState.INACTIVE, BoxTemplateState.ERROR].includes(
+      existingTemplate.state,
+    )
     const activeSystemTemplateMissingRef =
       existingTemplate.state === BoxTemplateState.ACTIVE && !existingTemplate.artifactRef?.trim()
     const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(regionId)
@@ -254,12 +247,10 @@ export class BoxTemplateService {
       this.isPinnedToDifferentInternalRegistry(existingTemplate.artifactRef, internalRegistry?.url)
 
     const desiredImageName = templateDefinition.imageName
-    const switchedFromBuildInfo = Boolean(existingTemplate.buildInfo)
     const imageNameChanged = existingTemplate.imageName !== desiredImageName
 
-    if (imageNameChanged || switchedFromBuildInfo) {
+    if (imageNameChanged) {
       existingTemplate.imageName = desiredImageName
-      existingTemplate.buildInfo = null
       existingTemplate.artifactRef = null
       existingTemplate.entrypoint = null
       existingTemplate.state = BoxTemplateState.PENDING
@@ -310,11 +301,9 @@ export class BoxTemplateService {
       ? await this.boxTemplateRepository.save(existingTemplate)
       : existingTemplate
 
-    const shouldProcessSystemTemplate = [
-      BoxTemplateState.PENDING,
-      BoxTemplateState.PULLING,
-      BoxTemplateState.BUILDING,
-    ].includes(savedTemplate.state)
+    const shouldProcessSystemTemplate = [BoxTemplateState.PENDING, BoxTemplateState.PULLING].includes(
+      savedTemplate.state,
+    )
 
     if (shouldProcessSystemTemplate) {
       this.eventEmitter.emit(BoxTemplateEvents.ACTIVATED, new BoxTemplateActivatedEvent(savedTemplate))
@@ -350,121 +339,6 @@ export class BoxTemplateService {
 
     const currentRegistryPrefix = `${internalRegistryUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')}/`
     return !artifactRef.startsWith(currentRegistryPrefix)
-  }
-
-  async createFromBuildInfo(organization: Organization, createBoxTemplateDto: CreateBoxTemplateDto, general = false) {
-    const regionId = await this.getValidatedOrDefaultRegionId(organization, createBoxTemplateDto.regionId)
-
-    let pendingTemplateCountIncrement: number | undefined
-    let entrypoint: string[] | undefined = undefined
-
-    try {
-      const nameValidationError = this.validateBoxTemplateName(createBoxTemplateDto.name)
-      if (nameValidationError) {
-        throw new BadRequestException(nameValidationError)
-      }
-
-      this.organizationService.assertOrganizationIsNotSuspended(organization)
-
-      const newTemplateCount = 1
-
-      const { pendingTemplateCountIncremented } = await this.validateOrganizationQuotas(
-        organization,
-        newTemplateCount,
-        createBoxTemplateDto.cpu,
-        createBoxTemplateDto.memory,
-        createBoxTemplateDto.disk,
-      )
-
-      if (pendingTemplateCountIncremented) {
-        pendingTemplateCountIncrement = newTemplateCount
-      }
-
-      entrypoint = this.getEntrypointFromDockerfile(createBoxTemplateDto.buildInfo.dockerfileContent)
-
-      const templateId = uuidv4()
-
-      const template = this.boxTemplateRepository.create({
-        id: templateId,
-        organizationId: organization.id,
-        ...createBoxTemplateDto,
-        entrypoint: this.processEntrypoint(entrypoint),
-        mem: createBoxTemplateDto.memory, // Map memory to mem
-        state: BoxTemplateState.PENDING,
-        general,
-        templateRegions: [{ templateId, regionId }],
-      })
-
-      const buildArtifactRef = generateBuildArtifactRef(
-        createBoxTemplateDto.buildInfo.dockerfileContent,
-        createBoxTemplateDto.buildInfo.contextHashes,
-      )
-
-      // Check if buildInfo with the same artifactRef already exists
-      const existingBuildInfo = await this.buildInfoRepository.findOne({
-        where: { artifactRef: buildArtifactRef },
-      })
-
-      if (existingBuildInfo) {
-        template.buildInfo = existingBuildInfo
-        // Update lastUsed once per minute at most
-        if (await this.redisLockProvider.lock(`build-info:${existingBuildInfo.artifactRef}:update`, 60)) {
-          existingBuildInfo.lastUsedAt = new Date()
-          await this.buildInfoRepository.save(existingBuildInfo)
-        }
-      } else {
-        const buildInfoEntity = this.buildInfoRepository.create({
-          ...createBoxTemplateDto.buildInfo,
-        })
-        await this.buildInfoRepository.save(buildInfoEntity)
-        template.buildInfo = buildInfoEntity
-      }
-
-      const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(regionId)
-      if (!internalRegistry) {
-        throw new Error('No internal registry found for template')
-      }
-      template.artifactRef = `${internalRegistry.url.replace(/^(https?:\/\/)/, '')}/${internalRegistry.project || 'boxlite'}/${buildArtifactRef}`
-
-      const exists = await this.readyRunnerArtifactCacheExists(template.artifactRef, regionId)
-
-      if (exists) {
-        const existingTemplate = await this.boxTemplateRepository.findOne({
-          where: { artifactRef: template.artifactRef, size: Not(IsNull()) },
-          select: ['id', 'size'],
-        })
-
-        if (existingTemplate?.size != null) {
-          if (existingTemplate.size > organization.maxTemplateSize) {
-            throw new BadRequestException(
-              `BoxTemplate size (${existingTemplate.size.toFixed(2)}GB) exceeds maximum allowed size of ${organization.maxTemplateSize}GB`,
-            )
-          }
-          template.size = existingTemplate.size
-          template.state = BoxTemplateState.ACTIVE
-          template.lastUsedAt = new Date()
-        }
-      }
-
-      try {
-        const savedTemplate = await this.boxTemplateRepository.save(template)
-
-        this.eventEmitter.emit(BoxTemplateEvents.CREATED, new BoxTemplateCreatedEvent(savedTemplate))
-
-        return savedTemplate
-      } catch (error) {
-        if (error.code === '23505') {
-          // PostgreSQL unique violation error code
-          throw new ConflictException(
-            `BoxTemplate with name "${createBoxTemplateDto.name}" already exists for this organization`,
-          )
-        }
-        throw error
-      }
-    } catch (error) {
-      await this.rollbackPendingUsage(organization.id, pendingTemplateCountIncrement)
-      throw error
-    }
   }
 
   async removeBoxTemplate(templateId: string) {
@@ -660,25 +534,6 @@ export class BoxTemplateService {
     return await this.boxTemplateRepository.save(template)
   }
 
-  async getBuildLogsUrl(template: BoxTemplate): Promise<string> {
-    if (!template.initialRunnerId) {
-      throw new NotFoundException(`BoxTemplate ${template.id} has no initial runner`)
-    }
-
-    const runner = await this.runnerService.findOneOrFail(template.initialRunnerId)
-    const region = await this.regionService.findOne(runner.region, true)
-
-    if (!region) {
-      throw new NotFoundException(`Region for initial runner for template ${template.id} not found`)
-    }
-
-    if (!region.proxyUrl) {
-      return `${this.configService.getOrThrow('proxy.protocol')}://${this.configService.getOrThrow('proxy.domain')}/templates/${template.id}/build-logs`
-    }
-
-    return region.proxyUrl + '/templates/' + template.id + '/build-logs'
-  }
-
   private async validateOrganizationQuotas(
     organization: Organization,
     addedTemplateCount: number,
@@ -810,7 +665,7 @@ export class BoxTemplateService {
   async canCleanupImage(imageName: string): Promise<boolean> {
     const template = await this.boxTemplateRepository.findOne({
       where: {
-        state: Not(In([BoxTemplateState.ERROR, BoxTemplateState.BUILD_FAILED])),
+        state: Not(BoxTemplateState.ERROR),
         artifactRef: imageName,
       },
     })
@@ -880,28 +735,6 @@ export class BoxTemplateService {
         error,
       )
     }
-  }
-
-  // TODO: revise/cleanup
-  getEntrypointFromDockerfile(dockerfileContent: string): string[] {
-    // Match ENTRYPOINT with either a string or JSON array
-    const matches = [...dockerfileContent.matchAll(/ENTRYPOINT\s+(.*)/g)]
-    const entrypointMatch = matches.length ? matches[matches.length - 1] : null
-    if (entrypointMatch) {
-      const rawEntrypoint = entrypointMatch[1].trim()
-      try {
-        // Try parsing as JSON array
-        const parsed = JSON.parse(rawEntrypoint)
-        if (Array.isArray(parsed)) {
-          return parsed
-        }
-      } catch {
-        // Fallback: it's probably a plain string
-        return [rawEntrypoint.replace(/["']/g, '')]
-      }
-    }
-
-    return ['sleep', 'infinity']
   }
 
   /**

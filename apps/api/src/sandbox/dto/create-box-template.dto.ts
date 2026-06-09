@@ -5,8 +5,7 @@
  */
 
 import { ApiProperty, ApiPropertyOptional, ApiSchema } from '@nestjs/swagger'
-import { IsArray, IsObject, IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator'
-import { CreateBuildInfoDto } from './create-build-info.dto'
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator'
 
 @ApiSchema({ name: 'CreateBoxTemplate' })
 export class CreateBoxTemplateDto {
@@ -78,14 +77,6 @@ export class CreateBoxTemplateDto {
   @IsOptional()
   @IsNumber()
   disk?: number
-
-  @ApiPropertyOptional({
-    description: 'Build information for the template artifact',
-    type: CreateBuildInfoDto,
-  })
-  @IsOptional()
-  @IsObject()
-  buildInfo?: CreateBuildInfoDto
 
   @ApiPropertyOptional({
     description:

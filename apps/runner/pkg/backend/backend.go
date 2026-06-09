@@ -43,7 +43,6 @@ type SandboxBackend interface {
 
 	// Runtime artifact operations
 	PullArtifact(ctx context.Context, req dto.PullArtifactRequestDTO) error
-	BuildArtifact(ctx context.Context, req dto.BuildArtifactRequestDTO) error
 	RemoveImage(ctx context.Context, imageName string, force bool) error
 	GetImageInfo(ctx context.Context, imageName string) (*ImageMeta, error)
 	InspectImageInRegistry(ctx context.Context, imageName string, registry *dto.RegistryDTO) (*RegistryDigest, error)

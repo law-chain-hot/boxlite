@@ -123,13 +123,6 @@ func (c *Client) CreateBackup(ctx context.Context, sandboxId string, backupDto d
 	return errdefs.ErrNotImplemented.WithMessage("backup is not supported by the BoxLite Go SDK")
 }
 
-// BuildArtifact builds a runtime artifact from a Dockerfile.
-// TODO: Implement OCI builder integration.
-func (c *Client) BuildArtifact(ctx context.Context, req dto.BuildArtifactRequestDTO) error {
-	c.logger.Warn("build artifact not yet implemented in BoxLite", "artifactRef", req.ArtifactRef)
-	return errdefs.ErrNotImplemented.WithMessage("artifact build is not supported by the BoxLite Go SDK")
-}
-
 // GetImageInfo returns metadata about a cached image.
 func (c *Client) GetImageInfo(ctx context.Context, imageName string) (*ImageInfo, error) {
 	img, err := c.GetImageInfoFromCache(ctx, imageName)

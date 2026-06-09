@@ -18,7 +18,6 @@ import {
 import { Runner } from '../entities/runner.entity'
 import { Sandbox } from '../entities/sandbox.entity'
 import { Job } from '../entities/job.entity'
-import { BuildInfo } from '../entities/build-info.entity'
 import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { JobType } from '../enums/job-type.enum'
@@ -29,7 +28,6 @@ import { SandboxRepository } from '../repositories/sandbox.repository'
 import {
   CreateSandboxDTO,
   CreateBackupDTO,
-  BuildArtifactRequestDTO,
   PullArtifactRequestDTO,
   UpdateNetworkSettingsDTO,
   InspectArtifactInRegistryRequest,
@@ -282,51 +280,6 @@ export class RunnerAdapterV2 implements RunnerAdapter {
     this.logger.debug(`Created CREATE_BACKUP job for sandbox ${sandbox.id} on runner ${this.runner.id}`)
   }
 
-  async buildArtifact(
-    buildInfo: BuildInfo,
-    organizationId?: string,
-    sourceRegistries?: DockerRegistry[],
-    registry?: DockerRegistry,
-    pushToInternalRegistry?: boolean,
-  ): Promise<void> {
-    const payload: BuildArtifactRequestDTO = {
-      artifactRef: buildInfo.artifactRef,
-      dockerfile: buildInfo.dockerfileContent,
-      organizationId: organizationId,
-      context: buildInfo.contextHashes,
-      pushToInternalRegistry: pushToInternalRegistry,
-    }
-
-    if (sourceRegistries) {
-      payload.sourceRegistries = sourceRegistries.map((sourceRegistry) => ({
-        project: sourceRegistry.project,
-        url: sourceRegistry.url,
-        username: sourceRegistry.username,
-        password: sourceRegistry.password,
-      }))
-    }
-
-    if (registry) {
-      payload.registry = {
-        project: registry.project,
-        url: registry.url,
-        username: registry.username,
-        password: registry.password,
-      }
-    }
-
-    await this.jobService.createJob(
-      null,
-      JobType.BUILD_ARTIFACT,
-      this.runner.id,
-      ResourceType.ARTIFACT,
-      buildInfo.artifactRef,
-      payload,
-    )
-
-    this.logger.debug(`Created BUILD_ARTIFACT job for ${buildInfo.artifactRef} on runner ${this.runner.id}`)
-  }
-
   async pullArtifact(
     artifactRef: string,
     registry?: DockerRegistry,
@@ -404,8 +357,8 @@ export class RunnerAdapterV2 implements RunnerAdapter {
       return false
     }
 
-    // If the latest job is PULL_ARTIFACT or BUILD_ARTIFACT, check if it completed successfully
-    if (latestJob.type === JobType.PULL_ARTIFACT || latestJob.type === JobType.BUILD_ARTIFACT) {
+    // If the latest job is PULL_ARTIFACT, check if it completed successfully
+    if (latestJob.type === JobType.PULL_ARTIFACT) {
       return latestJob.status === JobStatus.COMPLETED
     }
 
@@ -434,7 +387,7 @@ export class RunnerAdapterV2 implements RunnerAdapter {
 
     switch (latestJob.status) {
       case JobStatus.COMPLETED:
-        if (latestJob.type === JobType.PULL_ARTIFACT || latestJob.type === JobType.BUILD_ARTIFACT) {
+        if (latestJob.type === JobType.PULL_ARTIFACT) {
           return {
             name: latestJob.resourceId,
             sizeGB: metadata?.sizeGB,

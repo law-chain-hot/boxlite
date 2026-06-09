@@ -27,7 +27,6 @@ const DEFAULT_STALE_TIMEOUT_MINUTES = 10
  * Jobs not listed here use DEFAULT_STALE_TIMEOUT_MINUTES.
  */
 const JOB_STALE_TIMEOUT_MINUTES: Partial<Record<JobType, number>> = {
-  [JobType.BUILD_ARTIFACT]: 120,
   [JobType.PULL_ARTIFACT]: 120,
 }
 

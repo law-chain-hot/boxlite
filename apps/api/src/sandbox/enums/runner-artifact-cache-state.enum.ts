@@ -6,7 +6,6 @@
 
 export enum RunnerArtifactCacheState {
   PULLING_ARTIFACT = 'pulling_artifact',
-  BUILDING_ARTIFACT = 'building_artifact',
   READY = 'ready',
   ERROR = 'error',
   REMOVING = 'removing',

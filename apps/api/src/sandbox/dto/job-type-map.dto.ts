@@ -31,9 +31,6 @@ export interface JobTypeMap {
   [JobType.CREATE_BACKUP]: {
     resourceType: [ResourceType.SANDBOX]
   }
-  [JobType.BUILD_ARTIFACT]: {
-    resourceType: [ResourceType.SANDBOX, ResourceType.ARTIFACT]
-  }
   [JobType.PULL_ARTIFACT]: {
     resourceType: [ResourceType.ARTIFACT]
   }

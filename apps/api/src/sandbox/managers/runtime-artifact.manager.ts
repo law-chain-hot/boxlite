@@ -20,7 +20,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { RunnerNotReadyError } from '../errors/runner-not-ready.error'
 import { RedisLockProvider } from '../common/redis-lock.provider'
 import { OrganizationService } from '../../organization/services/organization.service'
-import { BuildInfo } from '../entities/build-info.entity'
 import { fromAxiosError } from '../../common/utils/from-axios-error'
 import { InjectRedis } from '@nestjs-modules/ioredis'
 import { Redis } from 'ioredis'
@@ -43,7 +42,6 @@ import { BackupState } from '../enums/backup-state.enum'
 import { BadRequestError } from '../../exceptions/bad-request.exception'
 import { SandboxRepository } from '../repositories/sandbox.repository'
 import { BoxTemplateActivatedEvent } from '../events/box-template-activated.event'
-import { TypedConfigService } from '../../config/typed-config.service'
 import { createBoxLiteInternalArtifactRef } from '../utils/artifact-ref.util'
 import { getSystemTemplateDefinition } from '../constants/system-templates'
 
@@ -70,15 +68,12 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     @InjectRepository(Runner)
     private readonly runnerRepository: Repository<Runner>,
     private readonly sandboxRepository: SandboxRepository,
-    @InjectRepository(BuildInfo)
-    private readonly buildInfoRepository: Repository<BuildInfo>,
     private readonly runnerService: RunnerService,
     private readonly dockerRegistryService: DockerRegistryService,
     private readonly runnerAdapterFactory: RunnerAdapterFactory,
     private readonly redisLockProvider: RedisLockProvider,
     private readonly organizationService: OrganizationService,
     private readonly boxTemplateService: BoxTemplateService,
-    private readonly configService: TypedConfigService,
   ) {}
 
   async onApplicationShutdown() {
@@ -160,11 +155,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     const runnerArtifactCaches = await this.runnerArtifactCacheRepository
       .createQueryBuilder('runnerArtifactCache')
       .where({
-        state: In([
-          RunnerArtifactCacheState.PULLING_ARTIFACT,
-          RunnerArtifactCacheState.BUILDING_ARTIFACT,
-          RunnerArtifactCacheState.REMOVING,
-        ]),
+        state: In([RunnerArtifactCacheState.PULLING_ARTIFACT, RunnerArtifactCacheState.REMOVING]),
       })
       .orderBy('RANDOM()')
       .take(100)
@@ -218,9 +209,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     switch (runnerArtifactCache.state) {
       case RunnerArtifactCacheState.PULLING_ARTIFACT:
         await this.handleRunnerArtifactCacheStatePullingArtifact(runnerArtifactCache, runner)
-        break
-      case RunnerArtifactCacheState.BUILDING_ARTIFACT:
-        await this.handleRunnerArtifactCacheStateBuildingArtifact(runnerArtifactCache, runner)
         break
       case RunnerArtifactCacheState.REMOVING:
         await this.handleRunnerArtifactCacheStateRemoving(runnerArtifactCache, runner)
@@ -421,23 +409,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     }
   }
 
-  async handleRunnerArtifactCacheStateBuildingArtifact(runnerArtifactCache: RunnerArtifactCache, runner: Runner) {
-    const runnerAdapter = await this.runnerAdapterFactory.create(runner)
-    try {
-      await runnerAdapter.getArtifactInfo(runnerArtifactCache.artifactRef)
-      runnerArtifactCache.state = RunnerArtifactCacheState.READY
-      await this.runnerArtifactCacheRepository.save(runnerArtifactCache)
-      return
-    } catch (err) {
-      if (err instanceof RuntimeArtifactStateError) {
-        runnerArtifactCache.state = RunnerArtifactCacheState.ERROR
-        runnerArtifactCache.errorReason = err.errorReason
-        await this.runnerArtifactCacheRepository.save(runnerArtifactCache)
-        return
-      }
-    }
-  }
-
   // Pulls stopped sandboxes' backup snapshots to another runner to prepare for reassignment during draining
   @Cron(CronExpression.EVERY_10_SECONDS, { name: 'migrate-draining-runner-backup-snapshots', waitForCompletion: true })
   @TrackJobExecution()
@@ -620,14 +591,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
     const templates = await this.boxTemplateRepository.find({
       where: {
-        state: Not(
-          In([
-            BoxTemplateState.ACTIVE,
-            BoxTemplateState.ERROR,
-            BoxTemplateState.BUILD_FAILED,
-            BoxTemplateState.INACTIVE,
-          ]),
-        ),
+        state: Not(In([BoxTemplateState.ACTIVE, BoxTemplateState.ERROR, BoxTemplateState.INACTIVE])),
       },
     })
 
@@ -650,12 +614,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
     if (
       !template ||
-      [
-        BoxTemplateState.ACTIVE,
-        BoxTemplateState.ERROR,
-        BoxTemplateState.BUILD_FAILED,
-        BoxTemplateState.INACTIVE,
-      ].includes(template.state)
+      [BoxTemplateState.ACTIVE, BoxTemplateState.ERROR, BoxTemplateState.INACTIVE].includes(template.state)
     ) {
       await this.redisLockProvider.unlock(lockKey)
       return
@@ -669,7 +628,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
           syncState = await this.handleBoxTemplateStatePending(template)
           break
         case BoxTemplateState.PULLING:
-        case BoxTemplateState.BUILDING:
           syncState = await this.handleCheckInitialRunnerTemplateArtifact(template)
           break
         case BoxTemplateState.REMOVING:
@@ -779,7 +737,7 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     const runner = await this.runnerService.findOneOrFail(template.initialRunnerId)
     const runnerAdapter = await this.runnerAdapterFactory.create(runner)
 
-    const initialImageRefOnRunner = template.buildInfo ? template.buildInfo.artifactRef : template.artifactRef
+    const initialImageRefOnRunner = template.artifactRef
 
     let artifactInfoResponse: RunnerArtifactInfo
     try {
@@ -833,23 +791,21 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
       this.logger.error(`Failed to remove transient source artifact ${template.imageName}: ${fromAxiosError(error)}`)
     }
 
-    // For pull templates, best effort cleanup the original image now that we've computed the ref from it.
+    // Best effort cleanup the original image now that we've computed the ref from it.
     // Only cleanup if there's no other template in processing state using the same image.
-    if (!template.buildInfo) {
-      try {
-        const anotherTemplate = await this.boxTemplateRepository.findOne({
-          where: {
-            imageName: template.imageName,
-            id: Not(template.id),
-            state: Not(In([BoxTemplateState.ACTIVE, BoxTemplateState.INACTIVE])),
-          },
-        })
-        if (!anotherTemplate) {
-          await runnerAdapter.removeArtifact(template.imageName)
-        }
-      } catch (err) {
-        this.logger.error(`Failed to cleanup original image ${template.imageName}: ${fromAxiosError(err)}`)
+    try {
+      const anotherTemplate = await this.boxTemplateRepository.findOne({
+        where: {
+          imageName: template.imageName,
+          id: Not(template.id),
+          state: Not(In([BoxTemplateState.ACTIVE, BoxTemplateState.INACTIVE])),
+        },
+      })
+      if (!anotherTemplate) {
+        await runnerAdapter.removeArtifact(template.imageName)
       }
+    } catch (err) {
+      this.logger.error(`Failed to cleanup original image ${template.imageName}: ${fromAxiosError(err)}`)
     }
 
     if (runnerArtifactCache) {
@@ -924,40 +880,11 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
     }
   }
 
-  async processBuildOnRunner(template: BoxTemplate, runner: Runner) {
-    try {
-      const registry = await this.dockerRegistryService.getAvailableInternalRegistry(runner.region)
-
-      const sourceRegistries = await this.dockerRegistryService.getSourceRegistriesForDockerfile(
-        template.buildInfo.dockerfileContent,
-        template.organizationId,
-      )
-
-      const runnerAdapter = await this.runnerAdapterFactory.create(runner)
-
-      registry.url = registry.url.replace(/^(https?:\/\/)/, '')
-      // Runner returns immediately; polling for completion is handled by handleCheckInitialRunnerTemplateArtifact
-      await runnerAdapter.buildArtifact(
-        template.buildInfo,
-        template.organizationId,
-        sourceRegistries.length > 0 ? sourceRegistries : undefined,
-        registry ?? undefined,
-        true,
-      )
-    } catch (err) {
-      this.logger.error(`Error building template ${template.name}: ${fromAxiosError(err)}`)
-      await this.updateBoxTemplateState(template.id, BoxTemplateState.BUILD_FAILED, fromAxiosError(err).message)
-    }
-  }
-
   async handleBoxTemplateStatePending(template: BoxTemplate): Promise<SyncState> {
     let initialRunner: Runner | undefined = undefined
 
     if (!template.initialRunnerId) {
-      // TODO: get only runners where the base artifact is available (extract from buildInfo)
-      const excludedRunnerIds = template.buildInfo
-        ? await this.runnerService.getRunnersWithMultipleArtifactsBuilding()
-        : await this.runnerService.getRunnersWithMultipleArtifactsPulling()
+      const excludedRunnerIds = await this.runnerService.getRunnersWithMultipleArtifactsPulling()
 
       try {
         const regions = await this.boxTemplateService.getBoxTemplateRegions(template.id)
@@ -984,57 +911,47 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
       initialRunner = await this.runnerService.findOneOrFail(template.initialRunnerId)
     }
 
-    if (template.buildInfo) {
-      await this.updateBoxTemplateState(template.id, BoxTemplateState.BUILDING)
-      await this.runnerService.createRunnerArtifactCacheEntry(
-        initialRunner.id,
-        template.buildInfo.artifactRef,
-        RunnerArtifactCacheState.BUILDING_ARTIFACT,
+    if (!template.artifactRef) {
+      const runnerAdapter = await this.runnerAdapterFactory.create(initialRunner)
+      const registry = await this.dockerRegistryService.findRegistryByImageName(
+        template.imageName,
+        initialRunner.region,
+        template.organizationId,
       )
-      await this.processBuildOnRunner(template, initialRunner)
-    } else {
-      if (!template.artifactRef) {
-        const runnerAdapter = await this.runnerAdapterFactory.create(initialRunner)
-        const registry = await this.dockerRegistryService.findRegistryByImageName(
-          template.imageName,
-          initialRunner.region,
-          template.organizationId,
-        )
 
-        const image = parseDockerImage(template.imageName)
-        if (registry && !image.registry) {
-          image.registry = registry.url.replace(/^(https?:\/\/)/, '')
-        }
-        const imageName = image.getFullName()
+      const image = parseDockerImage(template.imageName)
+      if (registry && !image.registry) {
+        image.registry = registry.url.replace(/^(https?:\/\/)/, '')
+      }
+      const imageName = image.getFullName()
 
-        const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(initialRunner.region)
-        if (!internalRegistry) {
-          throw new Error('No internal registry found for template artifact')
-        }
-
-        const artifactDigestResponse = await runnerAdapter.inspectArtifactInRegistry(imageName, registry)
-        const digestSyncState = await this.processTemplateArtifactDigest(
-          template,
-          internalRegistry,
-          artifactDigestResponse.hash,
-          artifactDigestResponse.sizeGB,
-        )
-
-        if (digestSyncState === DONT_SYNC_AGAIN) {
-          return DONT_SYNC_AGAIN
-        }
-
-        await this.boxTemplateRepository.save(template)
+      const internalRegistry = await this.dockerRegistryService.getAvailableInternalRegistry(initialRunner.region)
+      if (!internalRegistry) {
+        throw new Error('No internal registry found for template artifact')
       }
 
-      await this.updateBoxTemplateState(template.id, BoxTemplateState.PULLING)
-      await this.runnerService.createRunnerArtifactCacheEntry(
-        initialRunner.id,
-        template.artifactRef,
-        RunnerArtifactCacheState.PULLING_ARTIFACT,
+      const artifactDigestResponse = await runnerAdapter.inspectArtifactInRegistry(imageName, registry)
+      const digestSyncState = await this.processTemplateArtifactDigest(
+        template,
+        internalRegistry,
+        artifactDigestResponse.hash,
+        artifactDigestResponse.sizeGB,
       )
-      await this.processPullOnInitialRunner(template, initialRunner)
+
+      if (digestSyncState === DONT_SYNC_AGAIN) {
+        return DONT_SYNC_AGAIN
+      }
+
+      await this.boxTemplateRepository.save(template)
     }
+
+    await this.updateBoxTemplateState(template.id, BoxTemplateState.PULLING)
+    await this.runnerService.createRunnerArtifactCacheEntry(
+      initialRunner.id,
+      template.artifactRef,
+      RunnerArtifactCacheState.PULLING_ARTIFACT,
+    )
+    await this.processPullOnInitialRunner(template, initialRunner)
 
     return SYNC_AGAIN
   }
@@ -1070,52 +987,6 @@ export class RuntimeArtifactManager implements TrackableJobExecutions, OnApplica
 
     if (!result.affected) {
       throw new NotFoundException(`BoxTemplate with ID ${templateId} not found`)
-    }
-  }
-
-  @Cron(CronExpression.EVERY_MINUTE, { name: 'cleanup-old-buildinfo-runner-artifact-caches' })
-  @TrackJobExecution()
-  @LogExecution('cleanup-old-buildinfo-runner-artifact-caches')
-  @WithInstrumentation()
-  async cleanupOldBuildInfoRunnerArtifactCaches() {
-    const lockKey = 'cleanup-old-buildinfo-runner-artifact-caches-lock'
-    if (!(await this.redisLockProvider.lock(lockKey, 300))) {
-      return
-    }
-
-    try {
-      const staleEntries = await this.runnerArtifactCacheRepository
-        .createQueryBuilder('sr')
-        .select('sr.id')
-        .innerJoin(BuildInfo, 'bi', 'sr."artifactRef" = bi."artifactRef"')
-        .where('sr.state = :readyState', { readyState: RunnerArtifactCacheState.READY })
-        .andWhere(
-          `bi.lastUsedAt < now() - interval '${this.configService.getOrThrow('buildInfoRunnerArtifactCacheStalenessDays')} days'`,
-        )
-        .andWhere(
-          `sr.updatedAt < now() - interval '${this.configService.getOrThrow('buildInfoRunnerArtifactCacheStalenessDays')} days'`,
-        )
-        .andWhere("sr.artifactRef LIKE 'boxlite-%'")
-        .limit(500)
-        .getMany()
-
-      if (staleEntries.length === 0) {
-        return
-      }
-
-      const ids = staleEntries.map((sr) => sr.id)
-      const result = await this.runnerArtifactCacheRepository.update(
-        { id: In(ids) },
-        { state: RunnerArtifactCacheState.REMOVING },
-      )
-
-      if (result.affected > 0) {
-        this.logger.debug(`Marked ${result.affected} RunnerArtifactCaches for removal due to unused BuildInfo`)
-      }
-    } catch (error) {
-      this.logger.error(`Failed to mark old BuildInfo RunnerArtifactCaches for removal: ${fromAxiosError(error)}`)
-    } finally {
-      await this.redisLockProvider.unlock(lockKey)
     }
   }
 

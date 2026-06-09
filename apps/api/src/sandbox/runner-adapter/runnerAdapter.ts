@@ -9,7 +9,6 @@ import { Runner } from '../entities/runner.entity'
 import { ModuleRef } from '@nestjs/core'
 import { RunnerAdapterV0 } from './runnerAdapter.v0'
 import { RunnerAdapterV2 } from './runnerAdapter.v2'
-import { BuildInfo } from '../entities/build-info.entity'
 import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { Sandbox } from '../entities/sandbox.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
@@ -87,13 +86,6 @@ export interface RunnerAdapter {
   createBackup(sandbox: Sandbox, backupSnapshotName: string, registry?: DockerRegistry): Promise<void>
 
   removeArtifact(artifactRef: string): Promise<void>
-  buildArtifact(
-    buildInfo: BuildInfo,
-    organizationId?: string,
-    sourceRegistries?: DockerRegistry[],
-    registry?: DockerRegistry,
-    pushToInternalRegistry?: boolean,
-  ): Promise<void>
   pullArtifact(
     artifactRef: string,
     registry?: DockerRegistry,

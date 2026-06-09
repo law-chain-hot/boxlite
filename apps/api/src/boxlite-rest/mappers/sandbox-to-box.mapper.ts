@@ -53,15 +53,12 @@ function mapState(state: string | SandboxState | undefined): string {
     case SandboxState.STARTING:
     case SandboxState.RESTORING:
     case SandboxState.PULLING_ARTIFACT:
-    case SandboxState.BUILDING_ARTIFACT:
-    case SandboxState.PENDING_BUILD:
       return 'configured'
     case SandboxState.STOPPING:
     case SandboxState.DESTROYING:
     case SandboxState.ARCHIVING:
       return 'stopping'
     case SandboxState.ERROR:
-    case SandboxState.BUILD_FAILED:
     case SandboxState.UNKNOWN:
     default:
       return 'unknown'

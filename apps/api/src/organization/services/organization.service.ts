@@ -670,7 +670,7 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
           .createQueryBuilder('sandbox')
           .select('1')
           .where(
-            `"sandbox"."organizationId" = "organization"."id" AND "sandbox"."desiredState" = '${SandboxDesiredState.STARTED}' and "sandbox"."state" NOT IN ('${SandboxState.ERROR}', '${SandboxState.BUILD_FAILED}')`,
+            `"sandbox"."organizationId" = "organization"."id" AND "sandbox"."desiredState" = '${SandboxDesiredState.STARTED}' and "sandbox"."state" NOT IN ('${SandboxState.ERROR}')`,
           ),
       )
       .take(100)
@@ -688,7 +688,7 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
       where: {
         organizationId: In(suspendedOrganizationIds),
         desiredState: SandboxDesiredState.STARTED,
-        state: Not(In([SandboxState.ERROR, SandboxState.BUILD_FAILED])),
+        state: Not(In([SandboxState.ERROR])),
       },
     })
 

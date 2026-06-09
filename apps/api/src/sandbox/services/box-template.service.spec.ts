@@ -6,7 +6,6 @@
 
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateRegion } from '../entities/box-template-region.entity'
-import { generateBuildInfoHash } from '../entities/build-info.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
 import { BoxTemplateEvents } from '../constants/box-template-events'
 import { BoxTemplateService } from './box-template.service'
@@ -40,14 +39,6 @@ function createService({
   const boxTemplateRegionRepository = {
     save: jest.fn(async (templateRegion) => templateRegion),
   }
-  const buildInfoRepository = {
-    findOne: jest.fn(async () => null),
-    create: jest.fn((buildInfo) => ({
-      ...buildInfo,
-      artifactRef: generateBuildInfoHash(buildInfo.dockerfileContent, buildInfo.contextHashes),
-    })),
-    save: jest.fn(async (buildInfo) => buildInfo),
-  }
   const organizationService = {
     listAvailableRegions: jest.fn().mockResolvedValue(availableRegionIds.map((id) => ({ id }))),
   }
@@ -72,12 +63,10 @@ function createService({
   const service = new BoxTemplateService(
     {} as any,
     boxTemplateRepository as any,
-    buildInfoRepository as any,
     {} as any,
     {} as any,
     boxTemplateRegionRepository as any,
     organizationService as any,
-    {} as any,
     {} as any,
     {} as any,
     {} as any,
@@ -89,7 +78,6 @@ function createService({
   return {
     service,
     boxTemplateRepository,
-    buildInfoRepository,
     boxTemplateRegionRepository,
     organizationService,
     eventEmitter,
@@ -113,7 +101,6 @@ function template(partial: Partial<BoxTemplate>): BoxTemplate {
     disk: partial.disk ?? 3,
     artifactRef: partial.artifactRef ?? partial.imageName ?? partial.name ?? 'boxlite/base',
     entrypoint: partial.entrypoint,
-    buildInfo: partial.buildInfo,
     initialRunnerId: partial.initialRunnerId,
     size: partial.size,
     templateRegions: partial.templateRegions ?? [templateRegion(id, 'us')],
@@ -229,12 +216,11 @@ describe('BoxTemplateService system templates', () => {
     )
   })
 
-  it('migrates existing system templates away from runner buildInfo to prebuilt image refs', async () => {
+  it('migrates existing system templates with a stale image name to a pending prebuilt image ref', async () => {
     const existingTemplate = template({
       id: 'base-id',
       name: 'boxlite/base',
       imageName: '',
-      buildInfo: { artifactRef: 'boxlite-old-build', dockerfileContent: 'FROM debian:bookworm-slim' } as any,
       artifactRef: 'registry.internal/boxlite/boxlite-old-build:boxlite',
       entrypoint: ['sleep', 'infinity'],
       state: BoxTemplateState.ACTIVE,
@@ -257,7 +243,6 @@ describe('BoxTemplateService system templates', () => {
     expect(boxTemplateRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         imageName: 'registry.local/boxlite/base:20260605-p0',
-        buildInfo: null,
         artifactRef: null,
         entrypoint: null,
         state: BoxTemplateState.PENDING,

@@ -111,7 +111,7 @@ export class SandboxStateWaiterService implements OnModuleDestroy {
   }
 
   private assertNotFailed(state: SandboxState, errorReason?: string | null) {
-    if (state === SandboxState.ERROR || state === SandboxState.BUILD_FAILED) {
+    if (state === SandboxState.ERROR) {
       throw new BadRequestError(`Sandbox failed to start: ${errorReason || 'Unknown error'}`)
     }
   }

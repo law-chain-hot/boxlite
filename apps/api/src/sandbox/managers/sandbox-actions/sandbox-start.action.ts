@@ -10,11 +10,9 @@ import { RECOVERY_ERROR_SUBSTRINGS } from '../../constants/errors-for-recovery'
 import { Sandbox } from '../../entities/sandbox.entity'
 import { SandboxState } from '../../enums/sandbox-state.enum'
 import { DONT_SYNC_AGAIN, SandboxAction, SYNC_AGAIN, SyncState } from './sandbox.action'
-import { SANDBOX_BUILD_INFO_CACHE_TTL_MS } from '../../utils/sandbox-lookup-cache.util'
 import { RunnerArtifactCacheState } from '../../enums/runner-artifact-cache-state.enum'
 import { BackupState } from '../../enums/backup-state.enum'
 import { RunnerState } from '../../enums/runner-state.enum'
-import { BuildInfo } from '../../entities/build-info.entity'
 import { BoxTemplateService } from '../../services/box-template.service'
 import { DockerRegistryService } from '../../../docker-registry/services/docker-registry.service'
 import { DockerRegistry } from '../../../docker-registry/entities/docker-registry.entity'
@@ -52,15 +50,6 @@ export class SandboxStartAction extends SandboxAction {
 
   @WithSpan()
   async run(sandbox: Sandbox, lockCode: LockCode): Promise<SyncState> {
-    // Load buildInfo only for states that need it — avoids a JOIN+DISTINCT in the
-    // shared syncInstanceState query that stop/destroy paths never use.
-    if (
-      sandbox.template === null &&
-      [SandboxState.PENDING_BUILD, SandboxState.BUILDING_ARTIFACT, SandboxState.UNKNOWN].includes(sandbox.state)
-    ) {
-      await this.loadBuildInfo(sandbox)
-    }
-
     switch (sandbox.state) {
       case SandboxState.PULLING_ARTIFACT: {
         if (!sandbox.runnerId) {
@@ -69,12 +58,6 @@ export class SandboxStartAction extends SandboxAction {
         } else {
           return this.handleRunnerSandboxStartedStateCheck(sandbox, lockCode)
         }
-      }
-      case SandboxState.PENDING_BUILD: {
-        return this.handleUnassignedRunnerSandbox(sandbox, lockCode, true)
-      }
-      case SandboxState.BUILDING_ARTIFACT: {
-        return this.handleRunnerSandboxBuildingBoxTemplateStateOnDesiredStateStart(sandbox, lockCode)
       }
       case SandboxState.UNKNOWN: {
         return this.handleRunnerSandboxUnknownStateOnDesiredStateStart(sandbox, lockCode)
@@ -96,89 +79,9 @@ export class SandboxStartAction extends SandboxAction {
     return DONT_SYNC_AGAIN
   }
 
-  /**
-   * Loads the buildInfo relation for a sandbox.
-   * Uses QueryBuilder with getMany() to avoid the SELECT DISTINCT subquery
-   * that TypeORM generates when combining relations with findOne/LIMIT.
-   * Since sandbox.id is a PK and BuildInfo is @ManyToOne, at most one row is returned.
-   */
-  private async loadBuildInfo(sandbox: Sandbox): Promise<void> {
-    const [result] = await this.sandboxRepository
-      .createQueryBuilder('sandbox')
-      .leftJoinAndSelect('sandbox.buildInfo', 'buildInfo')
-      .where('sandbox.id = :id', { id: sandbox.id })
-      .cache(`sandbox:buildInfo:${sandbox.id}`, SANDBOX_BUILD_INFO_CACHE_TTL_MS)
-      .getMany()
-    sandbox.buildInfo = result?.buildInfo ?? null
-  }
-
-  private async handleRunnerSandboxBuildingBoxTemplateStateOnDesiredStateStart(
-    sandbox: Sandbox,
-    lockCode: LockCode,
-  ): Promise<SyncState> {
-    // Check for timeout - allow up to 60 minutes since the last sandbox update
-    const timeoutMinutes = 60
-    const timeoutMs = timeoutMinutes * 60 * 1000
-
-    if (sandbox.updatedAt && Date.now() - sandbox.updatedAt.getTime() > timeoutMs) {
-      await this.updateSandboxState(
-        sandbox,
-        SandboxState.BUILD_FAILED,
-        lockCode,
-        undefined,
-        'Timeout while building artifact on runner',
-      )
-      return DONT_SYNC_AGAIN
-    }
-
-    const runnerArtifactCache = await this.runnerService.getRunnerArtifactCache(
-      sandbox.runnerId,
-      sandbox.buildInfo.artifactRef,
-    )
-    if (runnerArtifactCache) {
-      switch (runnerArtifactCache.state) {
-        case RunnerArtifactCacheState.READY: {
-          // TODO: "UNKNOWN" should probably be changed to something else
-          await this.updateSandboxState(sandbox, SandboxState.UNKNOWN, lockCode)
-          return SYNC_AGAIN
-        }
-        case RunnerArtifactCacheState.ERROR: {
-          await this.updateSandboxState(
-            sandbox,
-            SandboxState.BUILD_FAILED,
-            lockCode,
-            undefined,
-            runnerArtifactCache.errorReason,
-          )
-          return DONT_SYNC_AGAIN
-        }
-      }
-    }
-    if (!runnerArtifactCache || runnerArtifactCache.state === RunnerArtifactCacheState.BUILDING_ARTIFACT) {
-      // Sleep for a second and go back to syncing instance state
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      return SYNC_AGAIN
-    }
-
-    return DONT_SYNC_AGAIN
-  }
-
-  private async handleUnassignedRunnerSandbox(
-    sandbox: Sandbox,
-    lockCode: LockCode,
-    isBuild = false,
-  ): Promise<SyncState> {
-    // Get artifact reference based on whether it's a pull or build operation
-    let artifactRef: string
-
-    if (isBuild) {
-      artifactRef = sandbox.buildInfo.artifactRef
-    } else {
-      const template = await this.boxTemplateService.getBoxTemplateByName(sandbox.template, sandbox.organizationId)
-      artifactRef = template.artifactRef
-    }
-
-    const declarativeBuildScoreThreshold = this.configService.get('runnerScore.thresholds.declarativeBuild')
+  private async handleUnassignedRunnerSandbox(sandbox: Sandbox, lockCode: LockCode): Promise<SyncState> {
+    const template = await this.boxTemplateService.getBoxTemplateByName(sandbox.template, sandbox.organizationId)
+    const artifactRef = template.artifactRef
 
     // Try to assign an available runner with the artifact already available
     try {
@@ -186,10 +89,6 @@ export class SandboxStartAction extends SandboxAction {
         regions: [sandbox.region],
         sandboxClass: sandbox.class,
         artifactRef: artifactRef,
-        ...(isBuild &&
-          declarativeBuildScoreThreshold !== undefined && {
-            availabilityScoreThreshold: declarativeBuildScoreThreshold,
-          }),
       })
       if (runner) {
         await this.updateSandboxState(sandbox, SandboxState.UNKNOWN, lockCode, runner.id)
@@ -201,16 +100,13 @@ export class SandboxStartAction extends SandboxAction {
 
     // Try to assign an available runner that is currently processing the artifact
     const runnerArtifactCaches = await this.runnerService.getRunnerArtifactCaches(artifactRef)
-    const targetState = isBuild ? RunnerArtifactCacheState.BUILDING_ARTIFACT : RunnerArtifactCacheState.PULLING_ARTIFACT
-    const targetSandboxState = isBuild ? SandboxState.BUILDING_ARTIFACT : SandboxState.PULLING_ARTIFACT
-    const errorSandboxState = isBuild ? SandboxState.BUILD_FAILED : SandboxState.ERROR
 
     for (const runnerArtifactCache of runnerArtifactCaches) {
       // Consider removing the runner usage rate check or improving it
       const runner = await this.runnerService.findOneOrFail(runnerArtifactCache.runnerId)
 
       if (runnerArtifactCache.state === RunnerArtifactCacheState.ERROR) {
-        await this.updateSandboxState(sandbox, errorSandboxState, lockCode, runner.id, runnerArtifactCache.errorReason)
+        await this.updateSandboxState(sandbox, SandboxState.ERROR, lockCode, runner.id, runnerArtifactCache.errorReason)
         return DONT_SYNC_AGAIN
       }
 
@@ -218,18 +114,13 @@ export class SandboxStartAction extends SandboxAction {
         continue
       }
 
-      if (declarativeBuildScoreThreshold === undefined || runner.availabilityScore >= declarativeBuildScoreThreshold) {
-        if (runnerArtifactCache.state === targetState) {
-          await this.updateSandboxState(sandbox, targetSandboxState, lockCode, runner.id)
-          return SYNC_AGAIN
-        }
+      if (runnerArtifactCache.state === RunnerArtifactCacheState.PULLING_ARTIFACT) {
+        await this.updateSandboxState(sandbox, SandboxState.PULLING_ARTIFACT, lockCode, runner.id)
+        return SYNC_AGAIN
       }
     }
 
-    // Get excluded runner IDs based on operation type
-    const excludedRunnerIds = await (isBuild
-      ? this.runnerService.getRunnersWithMultipleArtifactsBuilding()
-      : this.runnerService.getRunnersWithMultipleArtifactsPulling())
+    const excludedRunnerIds = await this.runnerService.getRunnersWithMultipleArtifactsPulling()
 
     // Try to assign an available runner to start processing the artifact
     let runner: Runner
@@ -239,10 +130,6 @@ export class SandboxStartAction extends SandboxAction {
         regions: [sandbox.region],
         sandboxClass: sandbox.class,
         excludedRunnerIds: excludedRunnerIds,
-        ...(isBuild &&
-          declarativeBuildScoreThreshold !== undefined && {
-            availabilityScoreThreshold: declarativeBuildScoreThreshold,
-          }),
       })
     } catch {
       // TODO: reconsider the timeout here
@@ -251,19 +138,13 @@ export class SandboxStartAction extends SandboxAction {
       return SYNC_AGAIN
     }
 
-    if (isBuild) {
-      this.buildOnRunner(sandbox.buildInfo, runner, sandbox.organizationId)
-      await this.updateSandboxState(sandbox, SandboxState.BUILDING_ARTIFACT, lockCode, runner.id)
-    } else {
-      const template = await this.boxTemplateService.getBoxTemplateByName(sandbox.template, sandbox.organizationId)
-      await this.runnerService.createRunnerArtifactCacheEntry(
-        runner.id,
-        template.artifactRef,
-        RunnerArtifactCacheState.PULLING_ARTIFACT,
-      )
-      this.pullTemplateArtifactToRunner(template, runner)
-      await this.updateSandboxState(sandbox, SandboxState.PULLING_ARTIFACT, lockCode, runner.id)
-    }
+    await this.runnerService.createRunnerArtifactCacheEntry(
+      runner.id,
+      template.artifactRef,
+      RunnerArtifactCacheState.PULLING_ARTIFACT,
+    )
+    this.pullTemplateArtifactToRunner(template, runner)
+    await this.updateSandboxState(sandbox, SandboxState.PULLING_ARTIFACT, lockCode, runner.id)
 
     return SYNC_AGAIN
   }
@@ -299,63 +180,6 @@ export class SandboxStartAction extends SandboxAction {
     }
   }
 
-  // Initiates the artifact build on the runner and creates a RunnerArtifactCache depending on the result
-  async buildOnRunner(buildInfo: BuildInfo, runner: Runner, organizationId: string) {
-    const runnerAdapter = await this.runnerAdapterFactory.create(runner)
-
-    const sourceRegistries = await this.dockerRegistryService.getSourceRegistriesForDockerfile(
-      buildInfo.dockerfileContent,
-      organizationId,
-    )
-
-    // Fire build request (runner returns 202 immediately)
-    await runnerAdapter.buildArtifact(
-      buildInfo,
-      organizationId,
-      sourceRegistries.length > 0 ? sourceRegistries : undefined,
-    )
-
-    const pollTimeoutMs = 60 * 60 * 1_000 // 1 hour
-    const pollIntervalMs = 5 * 1_000 // 5 seconds
-    const startTime = Date.now()
-
-    while (Date.now() - startTime < pollTimeoutMs) {
-      try {
-        await runnerAdapter.getArtifactInfo(buildInfo.artifactRef)
-        break
-      } catch (err) {
-        if (err instanceof RuntimeArtifactStateError) {
-          await this.runnerService.createRunnerArtifactCacheEntry(
-            runner.id,
-            buildInfo.artifactRef,
-            RunnerArtifactCacheState.ERROR,
-            err.message,
-          )
-          return
-        }
-        await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
-      }
-    }
-
-    if (Date.now() - startTime >= pollTimeoutMs) {
-      await this.runnerService.createRunnerArtifactCacheEntry(
-        runner.id,
-        buildInfo.artifactRef,
-        RunnerArtifactCacheState.ERROR,
-        'Timeout while building',
-      )
-      return
-    }
-
-    const exists = await runnerAdapter.artifactExists(buildInfo.artifactRef)
-    let state = RunnerArtifactCacheState.BUILDING_ARTIFACT
-    if (exists) {
-      state = RunnerArtifactCacheState.READY
-    }
-
-    await this.runnerService.createRunnerArtifactCacheEntry(runner.id, buildInfo.artifactRef, state)
-  }
-
   private async handleRunnerSandboxUnknownStateOnDesiredStateStart(
     sandbox: Sandbox,
     lockCode: LockCode,
@@ -369,23 +193,18 @@ export class SandboxStartAction extends SandboxAction {
 
     const runnerAdapter = await this.runnerAdapterFactory.create(runner)
 
-    let internalRegistry: DockerRegistry
-    let entrypoint: string[]
-    let artifactRef: string
-    if (!sandbox.buildInfo) {
-      const template = await this.boxTemplateService.getBoxTemplateByName(sandbox.template, sandbox.organizationId)
-      artifactRef = template.artifactRef
+    const template = await this.boxTemplateService.getBoxTemplateByName(sandbox.template, sandbox.organizationId)
+    const artifactRef = template.artifactRef
 
-      internalRegistry = await this.dockerRegistryService.findInternalRegistryByArtifactRef(artifactRef, runner.region)
-      if (!internalRegistry) {
-        throw new Error('No registry found for artifact')
-      }
-
-      entrypoint = template.entrypoint
-    } else {
-      artifactRef = sandbox.buildInfo.artifactRef
-      entrypoint = this.boxTemplateService.getEntrypointFromDockerfile(sandbox.buildInfo.dockerfileContent)
+    const internalRegistry = await this.dockerRegistryService.findInternalRegistryByArtifactRef(
+      artifactRef,
+      runner.region,
+    )
+    if (!internalRegistry) {
+      throw new Error('No registry found for artifact')
     }
+
+    const entrypoint = template.entrypoint
 
     const metadata = {
       ...organization?.sandboxMetadata,

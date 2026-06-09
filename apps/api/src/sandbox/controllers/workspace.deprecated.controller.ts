@@ -18,12 +18,6 @@ import {
   UseInterceptors,
   Put,
   NotFoundException,
-  ForbiddenException,
-  Res,
-  Request,
-  RawBodyRequest,
-  Next,
-  ParseBoolPipe,
 } from '@nestjs/common'
 import Redis from 'ioredis'
 import { CombinedAuthGuard } from '../../auth/combined-auth.guard'
@@ -52,9 +46,6 @@ import { RequiredOrganizationResourcePermissions } from '../../organization/deco
 import { OrganizationResourcePermission } from '../../organization/enums/organization-resource-permission.enum'
 import { OrganizationResourceActionGuard } from '../../organization/guards/organization-resource-action.guard'
 import { WorkspacePortPreviewUrlDto } from '../dto/workspace-port-preview-url.deprecated.dto'
-import { IncomingMessage, ServerResponse } from 'http'
-import { NextFunction } from 'http-proxy-middleware/dist/types'
-import { LogProxy } from '../proxy/log-proxy'
 import { CreateWorkspaceDto } from '../dto/create-workspace.deprecated.dto'
 import { TypedConfigService } from '../../config/typed-config.service'
 import { BadRequestError } from '../../exceptions/bad-request.exception'
@@ -152,7 +143,6 @@ export class WorkspaceController {
         disk: req.body?.disk,
         autoStopInterval: req.body?.autoStopInterval,
         volumes: req.body?.volumes,
-        buildInfo: req.body?.buildInfo,
       }),
     },
   })
@@ -160,10 +150,6 @@ export class WorkspaceController {
     @AuthContext() authContext: OrganizationAuthContext,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ): Promise<WorkspaceDto> {
-    if (createWorkspaceDto.buildInfo) {
-      throw new ForbiddenException('Build info is not supported in this deprecated API - please upgrade your client')
-    }
-
     const organization = authContext.organization
 
     const workspace = WorkspaceDto.fromSandboxDto(
@@ -488,62 +474,6 @@ export class WorkspaceController {
     }
   }
 
-  @Get(':workspaceId/build-logs')
-  @ApiOperation({
-    summary: '[DEPRECATED] Get build logs',
-    operationId: 'getBuildLogsWorkspace_deprecated',
-    deprecated: true,
-  })
-  @ApiParam({
-    name: 'workspaceId',
-    description: 'ID of the workspace',
-    type: 'string',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Build logs stream',
-  })
-  @ApiQuery({
-    name: 'follow',
-    required: false,
-    type: Boolean,
-    description: 'Whether to follow the logs stream',
-  })
-  @UseGuards(WorkspaceAccessGuard)
-  async getBuildLogs(
-    @Request() req: RawBodyRequest<IncomingMessage>,
-    @Res() res: ServerResponse<IncomingMessage>,
-    @Next() next: NextFunction,
-    @Param('workspaceId') workspaceId: string,
-    @Query('follow', new ParseBoolPipe({ optional: true })) follow?: boolean,
-  ): Promise<void> {
-    const workspace = await this.workspaceService.findOne(workspaceId)
-    if (!workspace || !workspace.runnerId) {
-      throw new NotFoundException(`Workspace with ID ${workspaceId} not found or has no runner assigned`)
-    }
-
-    if (!workspace.buildInfo) {
-      throw new NotFoundException(`Workspace with ID ${workspaceId} has no build info`)
-    }
-
-    const runner = await this.runnerService.findOneOrFail(workspace.runnerId)
-
-    if (!runner.apiUrl) {
-      throw new NotFoundException(`Runner for workspace ${workspaceId} has no API URL`)
-    }
-
-    const logProxy = new LogProxy(
-      runner.apiUrl,
-      workspace.buildInfo.artifactRef.split(':')[0],
-      runner.apiKey,
-      follow === true,
-      req,
-      res,
-      next,
-    )
-    return logProxy.create()
-  }
-
   private async waitForWorkspaceState(
     workspaceId: string,
     desiredState: WorkspaceState,
@@ -555,11 +485,7 @@ export class WorkspaceController {
     while (Date.now() - startTime < timeout) {
       const workspace = await this.workspaceService.findOne(workspaceId)
       workspaceState = workspace.state
-      if (
-        workspaceState === desiredState ||
-        workspaceState === WorkspaceState.ERROR ||
-        workspaceState === WorkspaceState.BUILD_FAILED
-      ) {
+      if (workspaceState === desiredState || workspaceState === WorkspaceState.ERROR) {
         return workspaceState
       }
       await new Promise((resolve) => setTimeout(resolve, 100)) // Wait 100 ms before checking again

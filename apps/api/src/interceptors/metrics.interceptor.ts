@@ -489,8 +489,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
       template_gpu: request.gpu,
       template_memory: request.memory,
       template_disk: request.disk,
-      template_is_build: request.buildInfo ? true : false,
-      template_build_info_context_hashes_length: request.buildInfo?.contextHashes?.length,
     })
   }
 
@@ -550,11 +548,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
       sandbox_network_allow_list_set: !!response.networkAllowList,
     }
 
-    if (request.buildInfo) {
-      records['sandbox_is_dynamic_build'] = true
-      records['sandbox_build_info_context_hashes_length'] = request.buildInfo.contextHashes?.length
-    }
-
     this.capture('api_sandbox_created', props, 'api_sandbox_creation_failed', records)
   }
 
@@ -590,11 +583,6 @@ export class MetricsInterceptor implements NestInterceptor, OnApplicationShutdow
       sandbox_env_vars_length_request: envVarsLength,
       sandbox_volumes_length_request: request.volumes?.length,
       sandbox_daemon_version: response.daemonVersion,
-    }
-
-    if (request.buildInfo) {
-      records['sandbox_is_dynamic_build'] = true
-      records['sandbox_build_info_context_hashes_length'] = request.buildInfo.contextHashes?.length
     }
 
     this.capture('api_sandbox_created', props, 'api_sandbox_creation_failed', records)

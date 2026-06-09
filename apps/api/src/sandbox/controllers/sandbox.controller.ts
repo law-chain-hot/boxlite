@@ -17,11 +17,6 @@ import {
   HttpCode,
   UseInterceptors,
   Put,
-  NotFoundException,
-  Res,
-  Request,
-  RawBodyRequest,
-  Next,
   ParseBoolPipe,
 } from '@nestjs/common'
 import { CombinedAuthGuard } from '../../auth/combined-auth.guard'
@@ -56,9 +51,6 @@ import { RequiredOrganizationResourcePermissions } from '../../organization/deco
 import { OrganizationResourcePermission } from '../../organization/enums/organization-resource-permission.enum'
 import { OrganizationResourceActionGuard } from '../../organization/guards/organization-resource-action.guard'
 import { PortPreviewUrlDto, SignedPortPreviewUrlDto } from '../dto/port-preview-url.dto'
-import { IncomingMessage, ServerResponse } from 'http'
-import { NextFunction } from 'http-proxy-middleware/dist/types'
-import { LogProxy } from '../proxy/log-proxy'
 import { BadRequestError } from '../../exceptions/bad-request.exception'
 import { SandboxStateUpdatedEvent } from '../events/sandbox-state-updated.event'
 import { Audit, MASKED_AUDIT_VALUE, TypedRequest } from '../../audit/decorators/audit.decorator'
@@ -74,14 +66,12 @@ import { SkipThrottle } from '@nestjs/throttler'
 import { ThrottlerScope } from '../../common/decorators/throttler-scope.decorator'
 import { SshGatewayGuard } from '../guards/ssh-gateway.guard'
 import { ToolboxProxyUrlDto } from '../dto/toolbox-proxy-url.dto'
-import { UrlDto } from '../../common/dto/url.dto'
 import { InjectRedis } from '@nestjs-modules/ioredis'
 import { Redis } from 'ioredis'
 import { SANDBOX_EVENT_CHANNEL } from '../../common/constants/constants'
 import { RequireFlagsEnabled } from '@openfeature/nestjs-sdk'
 import { FeatureFlags } from '../../common/constants/feature-flags'
 import { RegionSandboxAccessGuard } from '../guards/region-sandbox-access.guard'
-import { SystemRole } from '../../user/enums/system-role.enum'
 
 @ApiTags('sandbox')
 @Controller('sandbox')
@@ -269,7 +259,6 @@ export class SandboxController {
         autoStopInterval: req.body?.autoStopInterval,
         autoDeleteInterval: req.body?.autoDeleteInterval,
         volumes: req.body?.volumes,
-        buildInfo: req.body?.buildInfo,
         networkBlockAll: req.body?.networkBlockAll,
         networkAllowList: req.body?.networkAllowList,
       }),
@@ -281,34 +270,17 @@ export class SandboxController {
   ): Promise<SandboxDto> {
     const organization = authContext.organization
     let sandbox: SandboxDto
-    const canUseBuildInfoSource = authContext.role === SystemRole.ADMIN
 
-    if (createSandboxDto.templateId) {
-      if (createSandboxDto.buildInfo) {
-        throw new BadRequestError('Cannot specify build info when using a template')
-      }
-      if (createSandboxDto.gpu !== undefined) {
-        throw new BadRequestError('Cannot specify GPU resources when using a template')
-      }
-      sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
-      if (sandbox.state === SandboxState.STARTED) {
-        return sandbox
-      }
-
-      await this.waitForSandboxStarted(sandbox, 30)
-    } else if (createSandboxDto.buildInfo) {
-      if (!canUseBuildInfoSource) {
-        throw new BadRequestError('Choose one of the approved templates to create a box')
-      }
-      sandbox = await this.sandboxService.createFromBuildInfo(createSandboxDto, organization)
-    } else {
-      sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
-      if (sandbox.state === SandboxState.STARTED) {
-        return sandbox
-      }
-
-      await this.waitForSandboxStarted(sandbox, 30)
+    if (createSandboxDto.templateId && createSandboxDto.gpu !== undefined) {
+      throw new BadRequestError('Cannot specify GPU resources when using a template')
     }
+
+    sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
+    if (sandbox.state === SandboxState.STARTED) {
+      return sandbox
+    }
+
+    await this.waitForSandboxStarted(sandbox, 30)
 
     return sandbox
   }
@@ -992,89 +964,6 @@ export class SandboxController {
     await this.sandboxService.expireSignedPreviewUrlToken(sandboxIdOrName, authContext.organizationId, token, port)
   }
 
-  @Get(':sandboxIdOrName/build-logs')
-  @ApiOperation({
-    summary: 'Get build logs',
-    operationId: 'getBuildLogs',
-    deprecated: true,
-    description: 'This endpoint is deprecated. Use `getBuildLogsUrl` instead.',
-  })
-  @ApiParam({
-    name: 'sandboxIdOrName',
-    description: 'ID or name of the sandbox',
-    type: 'string',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Build logs stream',
-  })
-  @ApiQuery({
-    name: 'follow',
-    required: false,
-    type: Boolean,
-    description: 'Whether to follow the logs stream',
-  })
-  @UseGuards(SandboxAccessGuard)
-  async getBuildLogs(
-    @Request() req: RawBodyRequest<IncomingMessage>,
-    @Res() res: ServerResponse<IncomingMessage>,
-    @Next() next: NextFunction,
-    @AuthContext() authContext: OrganizationAuthContext,
-    @Param('sandboxIdOrName') sandboxIdOrName: string,
-    @Query('follow', new ParseBoolPipe({ optional: true })) follow?: boolean,
-  ): Promise<void> {
-    const sandbox = await this.sandboxService.findOneByIdOrName(sandboxIdOrName, authContext.organizationId)
-    if (!sandbox.runnerId) {
-      throw new NotFoundException(`Sandbox with ID or name ${sandboxIdOrName} has no runner assigned`)
-    }
-
-    if (!sandbox.buildInfo) {
-      throw new NotFoundException(`Sandbox with ID or name ${sandboxIdOrName} has no build info`)
-    }
-
-    const runner = await this.runnerService.findOneOrFail(sandbox.runnerId)
-
-    if (!runner.apiUrl) {
-      throw new NotFoundException(`Runner for sandbox ${sandboxIdOrName} has no API URL`)
-    }
-
-    const logProxy = new LogProxy(
-      runner.apiUrl,
-      sandbox.buildInfo.artifactRef.split(':')[0],
-      runner.apiKey,
-      follow === true,
-      req,
-      res,
-      next,
-    )
-    return logProxy.create()
-  }
-
-  @Get(':sandboxIdOrName/build-logs-url')
-  @ApiOperation({
-    summary: 'Get build logs URL',
-    operationId: 'getBuildLogsUrl',
-  })
-  @ApiParam({
-    name: 'sandboxIdOrName',
-    description: 'ID or name of the sandbox',
-    type: 'string',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Build logs URL',
-    type: UrlDto,
-  })
-  @UseGuards(SandboxAccessGuard)
-  async getBuildLogsUrl(
-    @AuthContext() authContext: OrganizationAuthContext,
-    @Param('sandboxIdOrName') sandboxIdOrName: string,
-  ): Promise<UrlDto> {
-    const buildLogsUrl = await this.sandboxService.getBuildLogsUrl(sandboxIdOrName, authContext.organizationId)
-
-    return new UrlDto(buildLogsUrl)
-  }
-
   @Post(':sandboxIdOrName/ssh-access')
   @HttpCode(200)
   @ApiOperation({
@@ -1219,7 +1108,7 @@ export class SandboxController {
           clearTimeout(timeout)
           resolve(this.sandboxService.toSandboxDto(event.sandbox))
         }
-        if (event.sandbox.state === SandboxState.ERROR || event.sandbox.state === SandboxState.BUILD_FAILED) {
+        if (event.sandbox.state === SandboxState.ERROR) {
           this.sandboxCallbacks.delete(sandbox.id)
           clearTimeout(timeout)
           reject(new BadRequestError(`Sandbox failed to start: ${event.sandbox.errorReason}`))

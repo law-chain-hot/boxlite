@@ -60,7 +60,6 @@ export class UsageService implements TrackableJobExecutions, OnApplicationShutdo
           await this.createUsagePeriod(event, true)
           break
         case SandboxState.ERROR:
-        case SandboxState.BUILD_FAILED:
         case SandboxState.ARCHIVED:
         case SandboxState.DESTROYED: {
           await this.closeUsagePeriod(event.sandbox.id)

@@ -374,10 +374,6 @@ const configuration = {
     process.env.FAILED_RUNNER_ARTIFACT_CACHE_RETENTION_HOURS || '3',
     10,
   ),
-  buildInfoRunnerArtifactCacheStalenessDays: parseInt(
-    process.env.BUILDINFO_RUNNER_ARTIFACT_CACHE_STALENESS_DAYS || '7',
-    10,
-  ),
 }
 
 export { configuration }

@@ -8,7 +8,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { getSystemTemplateDefinition } from '../constants/system-templates'
 import { BoxTemplate } from '../entities/box-template.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
-import { BuildInfoDto } from './build-info.dto'
 
 type BoxTemplatePresentation = Pick<
   BoxTemplate,
@@ -26,7 +25,6 @@ type BoxTemplatePresentation = Pick<
   | 'createdAt'
   | 'updatedAt'
   | 'lastUsedAt'
-  | 'buildInfo'
   | 'initialRunnerId'
   | 'templateRegions'
 > & {
@@ -99,12 +97,6 @@ export class BoxTemplateDto {
   lastUsedAt?: Date
 
   @ApiPropertyOptional({
-    description: 'Build information for this template',
-    type: BuildInfoDto,
-  })
-  buildInfo?: BuildInfoDto
-
-  @ApiPropertyOptional({
     description: 'The initial runner ID of the template',
     example: 'runner123',
   })
@@ -139,15 +131,6 @@ export class BoxTemplateDto {
       createdAt: template.createdAt,
       updatedAt: template.updatedAt,
       lastUsedAt: template.lastUsedAt,
-      buildInfo: template.buildInfo
-        ? {
-            dockerfileContent: template.buildInfo.dockerfileContent,
-            contextHashes: template.buildInfo.contextHashes,
-            createdAt: template.buildInfo.createdAt,
-            updatedAt: template.buildInfo.updatedAt,
-            artifactRef: template.buildInfo.artifactRef,
-          }
-        : undefined,
       initialRunnerId: template.initialRunnerId,
       regionIds: template.templateRegions?.map((region) => region.regionId) ?? undefined,
     }
@@ -171,7 +154,6 @@ export class BoxTemplateDto {
       gpu: template.gpu,
       mem: template.mem,
       disk: template.disk,
-      buildInfo: template.buildInfo,
       initialRunnerId: template.initialRunnerId,
       templateRegions: template.templateRegions,
       createdAt: template.createdAt,

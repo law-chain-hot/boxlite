@@ -151,7 +151,6 @@ func (a *ApiServer) Start(ctx context.Context) error {
 	artifactController := protected.Group("/artifacts")
 	{
 		artifactController.POST("/pull", controllers.PullArtifact(ctx, artifactControllerLogger))
-		artifactController.POST("/build", controllers.BuildArtifact(ctx, artifactControllerLogger))
 		artifactController.POST("/tag", controllers.TagImage)
 		artifactController.GET("/exists", controllers.ArtifactExists)
 		artifactController.GET("/info", controllers.GetArtifactInfo)

@@ -75,9 +75,6 @@ export class JobStateHandlerService {
       case JobType.PULL_ARTIFACT:
         await this.handlePullArtifactJobCompletion(job)
         break
-      case JobType.BUILD_ARTIFACT:
-        await this.handleBuildArtifactJobCompletion(job)
-        break
       case JobType.REMOVE_ARTIFACT:
         await this.handleRemoveArtifactJobCompletion(job)
         break
@@ -291,7 +288,7 @@ export class JobStateHandlerService {
         const template = await this.boxTemplateRepository.findOne({
           where: { initialRunnerId: runnerId, artifactRef: artifactRef },
         })
-        if (template && (template.state === BoxTemplateState.PULLING || template.state === BoxTemplateState.BUILDING)) {
+        if (template && template.state === BoxTemplateState.PULLING) {
           this.logger.debug(`Marking template ${template.id} as ACTIVE after initial pull completed`)
           template.state = BoxTemplateState.ACTIVE
           template.errorReason = null
@@ -318,61 +315,6 @@ export class JobStateHandlerService {
       await this.runnerArtifactCacheRepository.save(runnerArtifactCache)
     } catch (error) {
       this.logger.error(`Error handling PULL_ARTIFACT job completion for artifact ${artifactRef}:`, error)
-    }
-  }
-
-  private async handleBuildArtifactJobCompletion(job: Job): Promise<void> {
-    const artifactRef = job.resourceId
-    const runnerId = job.runnerId
-    if (!artifactRef || !runnerId) return
-
-    try {
-      // For BUILD_ARTIFACT, find the template by buildInfo.artifactRef.
-      const template = await this.boxTemplateRepository
-        .createQueryBuilder('template')
-        .leftJoinAndSelect('template.buildInfo', 'buildInfo')
-        .where('template.initialRunnerId = :runnerId', { runnerId })
-        .andWhere('buildInfo.artifactRef = :artifactRef', { artifactRef })
-        .getOne()
-
-      // Update RunnerArtifactCache state
-      const runnerArtifactCache = await this.runnerArtifactCacheRepository.findOne({
-        where: { artifactRef, runnerId },
-      })
-
-      if (job.status === JobStatus.COMPLETED) {
-        this.logger.debug(`BUILD_ARTIFACT job ${job.id} completed successfully for artifact ref ${artifactRef}`)
-
-        if (template?.state === BoxTemplateState.BUILDING) {
-          template.state = BoxTemplateState.ACTIVE
-          template.errorReason = null
-          template.lastUsedAt = new Date()
-          await this.boxTemplateRepository.save(template)
-          this.logger.debug(`Marked template ${template.id} as ACTIVE after build completed`)
-        }
-
-        if (runnerArtifactCache) {
-          runnerArtifactCache.state = RunnerArtifactCacheState.READY
-          runnerArtifactCache.errorReason = null
-          await this.runnerArtifactCacheRepository.save(runnerArtifactCache)
-        }
-      } else if (job.status === JobStatus.FAILED) {
-        this.logger.error(`BUILD_ARTIFACT job ${job.id} failed for artifact ref ${artifactRef}: ${job.errorMessage}`)
-
-        if (template?.state === BoxTemplateState.BUILDING) {
-          template.state = BoxTemplateState.ERROR
-          template.errorReason = job.errorMessage || 'Failed to build artifact'
-          await this.boxTemplateRepository.save(template)
-        }
-
-        if (runnerArtifactCache) {
-          runnerArtifactCache.state = RunnerArtifactCacheState.ERROR
-          runnerArtifactCache.errorReason = job.errorMessage || 'Failed to build artifact'
-          await this.runnerArtifactCacheRepository.save(runnerArtifactCache)
-        }
-      }
-    } catch (error) {
-      this.logger.error(`Error handling BUILD_ARTIFACT job completion for artifact ref ${artifactRef}:`, error)
     }
   }
 

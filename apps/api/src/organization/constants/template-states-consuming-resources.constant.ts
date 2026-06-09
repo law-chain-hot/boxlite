@@ -7,7 +7,6 @@
 import { BoxTemplateState } from '../../sandbox/enums/box-template-state.enum'
 
 export const TEMPLATE_STATES_CONSUMING_RESOURCES: BoxTemplateState[] = [
-  BoxTemplateState.BUILDING,
   BoxTemplateState.PENDING,
   BoxTemplateState.PULLING,
   BoxTemplateState.ACTIVE,

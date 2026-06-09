@@ -56,11 +56,10 @@ describe('system-templates', () => {
     ).toEqual(['boxlite/base', 'boxlite/python', 'boxlite/node'])
   })
 
-  it('pins official catalog entries to prebuilt runtime images instead of runner-side buildInfo', () => {
+  it('pins official catalog entries to prebuilt runtime images', () => {
     for (const template of SYSTEM_TEMPLATES) {
       expect(template.imageName).toMatch(/:.+|@sha256:[a-f0-9]{64}$/)
       expect(template.imageName).not.toContain(':latest')
-      expect((template as { buildInfo?: unknown }).buildInfo).toBeUndefined()
       expect(getSystemTemplateDefinition(template.imageName)?.name).toBe(template.name)
     }
   })

@@ -9,8 +9,6 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
@@ -18,7 +16,6 @@ import {
 } from 'typeorm'
 import { RunnerArtifactCache } from './runner-artifact-cache.entity'
 import { BoxTemplateState } from '../enums/box-template-state.enum'
-import { BuildInfo } from './build-info.entity'
 import { BoxTemplateRegion } from './box-template-region.entity'
 
 @Entity()
@@ -97,13 +94,6 @@ export class BoxTemplate {
 
   @Column({ nullable: true })
   lastUsedAt?: Date
-
-  @ManyToOne(() => BuildInfo, (buildInfo) => buildInfo.templates, {
-    nullable: true,
-    eager: true,
-  })
-  @JoinColumn()
-  buildInfo?: BuildInfo | null
 
   @Column({ nullable: true })
   initialRunnerId?: string

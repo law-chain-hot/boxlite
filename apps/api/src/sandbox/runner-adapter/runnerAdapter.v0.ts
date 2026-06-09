@@ -27,7 +27,6 @@ import {
   EnumsBackupState,
   DefaultApi,
   CreateSandboxDTO,
-  BuildArtifactRequestDTO,
   CreateBackupDTO,
   PullArtifactRequestDTO,
   UpdateNetworkSettingsDTO,
@@ -35,7 +34,6 @@ import {
   RecoverSandboxDTO,
 } from '@boxlite-ai/runner-api-client'
 import { Sandbox } from '../entities/sandbox.entity'
-import { BuildInfo } from '../entities/build-info.entity'
 import { DockerRegistry } from '../../docker-registry/entities/docker-registry.entity'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { BackupState } from '../enums/backup-state.enum'
@@ -279,42 +277,6 @@ export class RunnerAdapterV0 implements RunnerAdapter {
     }
 
     await this.sandboxApiClient.createBackup(sandbox.id, request)
-  }
-
-  async buildArtifact(
-    buildInfo: BuildInfo,
-    organizationId?: string,
-    sourceRegistries?: DockerRegistry[],
-    registry?: DockerRegistry,
-    pushToInternalRegistry?: boolean,
-  ): Promise<void> {
-    const request: BuildArtifactRequestDTO = {
-      artifactRef: buildInfo.artifactRef,
-      dockerfile: buildInfo.dockerfileContent,
-      organizationId: organizationId,
-      context: buildInfo.contextHashes,
-      pushToInternalRegistry: pushToInternalRegistry,
-    }
-
-    if (sourceRegistries) {
-      request.sourceRegistries = sourceRegistries.map((sourceRegistry) => ({
-        project: sourceRegistry.project,
-        url: sourceRegistry.url,
-        username: sourceRegistry.username,
-        password: sourceRegistry.password,
-      }))
-    }
-
-    if (registry) {
-      request.registry = {
-        project: registry.project,
-        url: registry.url,
-        username: registry.username,
-        password: registry.password,
-      }
-    }
-
-    await this.artifactApiClient.buildArtifact(request)
   }
 
   async removeArtifact(artifactRef: string): Promise<void> {

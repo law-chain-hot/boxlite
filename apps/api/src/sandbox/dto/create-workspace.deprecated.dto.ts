@@ -8,7 +8,6 @@ import { IsEnum, IsObject, IsOptional, IsString, IsNumber, IsBoolean } from 'cla
 import { ApiPropertyOptional, ApiSchema } from '@nestjs/swagger'
 import { SandboxClass } from '../enums/sandbox-class.enum'
 import { SandboxVolume } from './sandbox.dto'
-import { CreateBuildInfoDto } from './create-build-info.dto'
 
 enum RunnerRegion {
   EU = 'eu',
@@ -131,12 +130,4 @@ export class CreateWorkspaceDto {
   })
   @IsOptional()
   volumes?: SandboxVolume[]
-
-  @ApiPropertyOptional({
-    description: 'Build information for the workspace',
-    type: CreateBuildInfoDto,
-  })
-  @IsOptional()
-  @IsObject()
-  buildInfo?: CreateBuildInfoDto
 }

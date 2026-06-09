@@ -8,7 +8,6 @@ import { IsEnum, IsObject, IsOptional, IsString, IsNumber, IsBoolean, IsArray } 
 import { ApiPropertyOptional, ApiSchema } from '@nestjs/swagger'
 import { SandboxClass } from '../enums/sandbox-class.enum'
 import { SandboxVolume } from './sandbox.dto'
-import { CreateBuildInfoDto } from './create-build-info.dto'
 
 @ApiSchema({ name: 'CreateSandbox' })
 export class CreateSandboxDto {
@@ -160,12 +159,4 @@ export class CreateSandboxDto {
   @IsOptional()
   @IsArray()
   volumes?: SandboxVolume[]
-
-  @ApiPropertyOptional({
-    description: 'Build information for the sandbox',
-    type: CreateBuildInfoDto,
-  })
-  @IsOptional()
-  @IsObject()
-  buildInfo?: CreateBuildInfoDto
 }

@@ -55,7 +55,6 @@ describe('BoxTemplateDto', () => {
       createdAt,
       updatedAt,
       lastUsedAt,
-      buildInfo: undefined,
       initialRunnerId: undefined,
       regionIds: ['us', 'eu'],
     })

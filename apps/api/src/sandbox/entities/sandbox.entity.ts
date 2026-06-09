@@ -4,25 +4,13 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-  OneToOne,
-  Unique,
-  UpdateDateColumn,
-} from 'typeorm'
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, OneToOne, Unique, UpdateDateColumn } from 'typeorm'
 import { SandboxState } from '../enums/sandbox-state.enum'
 import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
 import { SandboxClass } from '../enums/sandbox-class.enum'
 import { BackupState } from '../enums/backup-state.enum'
 import { randomUUID } from 'crypto'
 import { SandboxVolume } from '../dto/sandbox.dto'
-import { BuildInfo } from './build-info.entity'
 import { nanoid } from 'nanoid'
 import { SandboxLastActivity } from './sandbox-last-activity.entity'
 import { BOX_ID_LENGTH, BOX_ID_REGEX, generateBoxId } from '../utils/box-id.util'
@@ -214,12 +202,6 @@ export class Sandbox {
   @Column({ type: 'character varying' })
   authToken = nanoid(32).toLowerCase()
 
-  @ManyToOne(() => BuildInfo, (buildInfo) => buildInfo.sandboxes, {
-    nullable: true,
-  })
-  @JoinColumn()
-  buildInfo?: BuildInfo
-
   @Column({ nullable: true })
   daemonVersion?: string
 
@@ -312,11 +294,8 @@ export class Sandbox {
             SandboxState.CREATING,
             SandboxState.UNKNOWN,
             SandboxState.RESTORING,
-            SandboxState.PENDING_BUILD,
-            SandboxState.BUILDING_ARTIFACT,
             SandboxState.PULLING_ARTIFACT,
             SandboxState.ERROR,
-            SandboxState.BUILD_FAILED,
             SandboxState.RESIZING,
           ].includes(this.state)
         ) {
@@ -330,7 +309,6 @@ export class Sandbox {
             SandboxState.STOPPING,
             SandboxState.STOPPED,
             SandboxState.ERROR,
-            SandboxState.BUILD_FAILED,
             SandboxState.RESIZING,
           ].includes(this.state)
         ) {
@@ -346,9 +324,7 @@ export class Sandbox {
             SandboxState.STARTED,
             SandboxState.ARCHIVED,
             SandboxState.ERROR,
-            SandboxState.BUILD_FAILED,
             SandboxState.ARCHIVING,
-            SandboxState.PENDING_BUILD,
           ].includes(this.state)
         ) {
           break
@@ -377,7 +353,7 @@ export class Sandbox {
     if (this.pending && String(this.state) === String(this.desiredState)) {
       changes.pending = false
     }
-    if (this.state === SandboxState.ERROR || this.state === SandboxState.BUILD_FAILED) {
+    if (this.state === SandboxState.ERROR) {
       changes.pending = false
     }
 

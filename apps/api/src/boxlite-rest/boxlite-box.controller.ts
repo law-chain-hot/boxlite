@@ -217,8 +217,6 @@ export class BoxliteBoxController {
         SandboxState.STARTING,
         SandboxState.RESTORING,
         SandboxState.PULLING_ARTIFACT,
-        SandboxState.BUILDING_ARTIFACT,
-        SandboxState.PENDING_BUILD,
       ].includes(sandbox.state)
     )
   }

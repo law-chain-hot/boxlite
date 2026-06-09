@@ -10,7 +10,6 @@ import { IsEnum, IsOptional } from 'class-validator'
 import { BackupState } from '../enums/backup-state.enum'
 import { Sandbox } from '../entities/sandbox.entity'
 import { SandboxDesiredState } from '../enums/sandbox-desired-state.enum'
-import { BuildInfoDto } from './build-info.dto'
 import { SandboxClass } from '../enums/sandbox-class.enum'
 
 @ApiSchema({ name: 'SandboxVolume' })
@@ -219,14 +218,6 @@ export class SandboxDto {
   volumes?: SandboxVolume[]
 
   @ApiPropertyOptional({
-    description: 'Build information for the sandbox',
-    type: BuildInfoDto,
-    required: false,
-  })
-  @IsOptional()
-  buildInfo?: BuildInfoDto
-
-  @ApiPropertyOptional({
     description: 'The creation timestamp of the sandbox',
     example: '2024-10-01T12:00:00Z',
     required: false,
@@ -305,15 +296,6 @@ export class SandboxDto {
       class: sandbox.class,
       createdAt: sandbox.createdAt ? new Date(sandbox.createdAt).toISOString() : undefined,
       updatedAt: sandbox.updatedAt ? new Date(sandbox.updatedAt).toISOString() : undefined,
-      buildInfo: sandbox.buildInfo
-        ? {
-            dockerfileContent: sandbox.buildInfo.dockerfileContent,
-            contextHashes: sandbox.buildInfo.contextHashes,
-            createdAt: sandbox.buildInfo.createdAt,
-            updatedAt: sandbox.buildInfo.updatedAt,
-            artifactRef: sandbox.buildInfo.artifactRef,
-          }
-        : undefined,
       daemonVersion: sandbox.daemonVersion,
       runnerId: sandbox.runnerId,
       toolboxProxyUrl,

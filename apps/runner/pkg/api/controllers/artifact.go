@@ -140,67 +140,6 @@ func PullArtifact(generalCtx context.Context, logger *slog.Logger) func(ctx *gin
 	}
 }
 
-// BuildArtifact godoc
-//
-//	@Tags			artifacts
-//	@Summary		Build an artifact
-//	@Description	Build an artifact from a Dockerfile and context hashes. The operation runs asynchronously and returns 202 immediately.
-//	@Param			request	body		dto.BuildArtifactRequestDTO	true	"Build artifact request"
-//	@Success		202		{string}	string						"Artifact build started"
-//	@Failure		400		{object}	common_errors.ErrorResponse
-//	@Failure		401		{object}	common_errors.ErrorResponse
-//	@Failure		404		{object}	common_errors.ErrorResponse
-//	@Failure		409		{object}	common_errors.ErrorResponse
-//	@Failure		500		{object}	common_errors.ErrorResponse
-//
-//	@Router			/artifacts/build [post]
-//
-//	@id				BuildArtifact
-func BuildArtifact(generalCtx context.Context, logger *slog.Logger) func(ctx *gin.Context) {
-	return func(ctx *gin.Context) {
-		var request dto.BuildArtifactRequestDTO
-		err := ctx.ShouldBindJSON(&request)
-		if err != nil {
-			ctx.Error(common_errors.NewInvalidBodyRequestError(err))
-			return
-		}
-
-		if !strings.Contains(request.ArtifactRef, ":") || strings.HasSuffix(request.ArtifactRef, ":") {
-			ctx.Error(common_errors.NewBadRequestError(errors.New("artifact ref must include a valid tag")))
-			return
-		}
-
-		runner, err := runner.GetInstance(nil)
-		if err != nil {
-			ctx.Error(err)
-			return
-		}
-
-		err = runner.ArtifactErrorCache.RemoveError(generalCtx, request.ArtifactRef)
-		if err != nil {
-			logger.ErrorContext(generalCtx, "Failed to remove artifact error cache entry", "cacheKey", request.ArtifactRef, "error", err)
-		}
-
-		go func() {
-			err := runner.Boxlite.BuildArtifact(generalCtx, request)
-			if err != nil {
-				logger.DebugContext(generalCtx, "Build artifact failed", "cacheKey", request.ArtifactRef, "error", err)
-				err = runner.ArtifactErrorCache.SetError(generalCtx, request.ArtifactRef, err.Error())
-				if err != nil {
-					logger.ErrorContext(generalCtx, "Failed to set artifact error cache entry", "cacheKey", request.ArtifactRef, "error", err)
-				}
-			} else {
-				err = runner.ArtifactErrorCache.RemoveError(generalCtx, request.ArtifactRef)
-				if err != nil {
-					logger.ErrorContext(generalCtx, "Failed to remove artifact error cache entry", "cacheKey", request.ArtifactRef, "error", err)
-				}
-			}
-		}()
-
-		ctx.JSON(http.StatusAccepted, "Artifact build started")
-	}
-}
-
 // ArtifactExists godoc
 //
 //	@Tags			artifacts

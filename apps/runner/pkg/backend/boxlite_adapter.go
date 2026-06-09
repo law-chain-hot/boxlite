@@ -62,10 +62,6 @@ func (a *BoxliteAdapter) PullArtifact(ctx context.Context, req dto.PullArtifactR
 	return a.client.PullArtifact(ctx, req)
 }
 
-func (a *BoxliteAdapter) BuildArtifact(ctx context.Context, req dto.BuildArtifactRequestDTO) error {
-	return a.client.BuildArtifact(ctx, req)
-}
-
 func (a *BoxliteAdapter) RemoveImage(ctx context.Context, imageName string, force bool) error {
 	return a.client.RemoveImage(ctx, imageName, force)
 }

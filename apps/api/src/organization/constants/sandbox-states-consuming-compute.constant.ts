@@ -12,8 +12,6 @@ export const SANDBOX_STATES_CONSUMING_COMPUTE: SandboxState[] = [
   SandboxState.STARTED,
   SandboxState.STARTING,
   SandboxState.STOPPING,
-  SandboxState.PENDING_BUILD,
-  SandboxState.BUILDING_ARTIFACT,
   SandboxState.UNKNOWN,
   SandboxState.PULLING_ARTIFACT,
 ]
