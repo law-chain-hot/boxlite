@@ -626,8 +626,43 @@ export default $config({
     })
     const runnerInstanceProfile = new aws.iam.InstanceProfile('RunnerProfile', { role: runnerRole.name })
 
-    const runnerUserData = $resolve([api.url, defaultRunnerApiKey.result, otelCollectorOtlpHttpUrl]).apply(
-      ([apiUrl, token, otelEndpoint]) => buildRunnerUserData({ apiUrl, token, otelEndpoint }),
+    // ── Runner ghcr pull credential (private image access) ────────────────────
+    // Runners pull box images straight from private ghcr.io (the self-hosted
+    // registry was removed). The pull TOKEN is stored in Secrets Manager and
+    // fetched by each runner at boot via its instance-role — NOT baked into
+    // user-data/IMDS — so scaled-out runners pick it up automatically and a
+    // rotated token only needs a secret update + a runner restart. The username
+    // (a non-secret bot account) is baked directly. Env-gated: set GHCR_TOKEN
+    // (+ GHCR_USERNAME) in apps/infra/.env to enable; unset = no ghcr auth wired.
+    const ghcrUsername = process.env.GHCR_USERNAME?.trim() || ''
+    const ghcrToken = process.env.GHCR_TOKEN?.trim() || ''
+    const ghcrSecret =
+      ghcrUsername && ghcrToken
+        ? new aws.secretsmanager.Secret('GhcrPullToken', { recoveryWindowInDays: 0 })
+        : undefined
+    if (ghcrSecret) {
+      new aws.secretsmanager.SecretVersion('GhcrPullTokenValue', {
+        secretId: ghcrSecret.id,
+        secretString: $util.secret(ghcrToken),
+      })
+      new aws.iam.RolePolicy('RunnerGhcrSecretPolicy', {
+        role: runnerRole.name,
+        policy: ghcrSecret.arn.apply((arn) =>
+          JSON.stringify({
+            Version: '2012-10-17',
+            Statement: [{ Effect: 'Allow', Action: ['secretsmanager:GetSecretValue'], Resource: arn }],
+          }),
+        ),
+      })
+    }
+
+    const runnerUserData = $resolve([
+      api.url,
+      defaultRunnerApiKey.result,
+      otelCollectorOtlpHttpUrl,
+      ghcrSecret ? ghcrSecret.arn : '',
+    ]).apply(([apiUrl, token, otelEndpoint, ghcrSecretArn]) =>
+      buildRunnerUserData({ apiUrl, token, otelEndpoint, ghcrSecretArn: ghcrSecretArn || undefined, ghcrUsername }),
     )
 
     // Runner holds load-bearing sandbox state (/var/lib/boxlite + in-memory
@@ -690,8 +725,9 @@ export default $config({
           iamInstanceProfile: runnerInstanceProfile.name,
           cpuOptions: { nestedVirtualization: 'enabled' },
           associatePublicIpAddress: true,
-          userDataBase64: $resolve([api.url, apiKey.result, otelCollectorOtlpHttpUrl]).apply(
-            ([apiUrl, token, otelEndpoint]) => buildRunnerUserData({ apiUrl, token, otelEndpoint }),
+          userDataBase64: $resolve([api.url, apiKey.result, otelCollectorOtlpHttpUrl, ghcrSecret ? ghcrSecret.arn : '']).apply(
+            ([apiUrl, token, otelEndpoint, ghcrSecretArn]) =>
+              buildRunnerUserData({ apiUrl, token, otelEndpoint, ghcrSecretArn: ghcrSecretArn || undefined, ghcrUsername }),
           ),
           rootBlockDevice: { volumeSize: RUNNER.rootDiskGB },
           tags: { Name: `boxlite-runner-${name}` },
@@ -733,7 +769,13 @@ export default $config({
 // ── runner bootstrap ─────────────────────────────────────────────────────────
 // EC2 user-data: downloads prebuilt runner binary from GitHub Releases
 // and runs it directly with BoxLite VM isolation.
-async function buildRunnerUserData(input: { apiUrl: string; token: string; otelEndpoint: string }): Promise<string> {
+async function buildRunnerUserData(input: {
+  apiUrl: string
+  token: string
+  otelEndpoint: string
+  ghcrSecretArn?: string
+  ghcrUsername?: string
+}): Promise<string> {
   const { readFileSync } = await import('fs')
   const { resolve } = await import('path')
 
@@ -741,6 +783,46 @@ async function buildRunnerUserData(input: { apiUrl: string; token: string; otelE
   const RUNNER_VERSION = readFileSync(resolve(process.cwd(), '../../Cargo.toml'), 'utf-8').match(
     /^version\s*=\s*"(.+?)"/m,
   )![1]
+
+  // ghcr pull credential delivery (option B, rotation-capable): install AWS CLI v2
+  // and write a start-wrapper that re-fetches the TOKEN from Secrets Manager on
+  // EVERY service start — so `systemctl restart` picks up a rotated token — and is
+  // fail-CLOSED (refuses to run with anonymous pulls) with a bounded retry for
+  // instance-profile IAM propagation at first boot. The wrapper is exec'd as
+  // ExecStart; username + secret ARN + region come from the unit's Environment=.
+  // Only emitted when a ghcr secret is wired; the TOKEN is never baked into user-data.
+  const ghcrBlock = input.ghcrSecretArn
+    ? `
+# ── ghcr pull credential setup: AWS CLI v2 + fail-closed start-wrapper ────────
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+apt-get install -y unzip
+unzip -q /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install --update
+rm -rf /tmp/awscliv2.zip /tmp/aws
+cat > /usr/local/bin/boxlite-runner-start.sh << 'STARTWRAP'
+#!/bin/bash
+# Re-fetch the ghcr pull token on every start (rotation), fail-closed (no anonymous
+# pulls), bounded retry for instance-profile IAM propagation. GHCR_USERNAME /
+# GHCR_SECRET_ARN / AWS_REGION come from the systemd Environment.
+set -o pipefail
+if [ -n "\${GHCR_SECRET_ARN:-}" ]; then
+  for i in 1 2 3 4 5; do
+    GHCR_TOKEN=\$(aws secretsmanager get-secret-value --region "\$AWS_REGION" --secret-id "\$GHCR_SECRET_ARN" --query SecretString --output text 2>/dev/null)
+    { [ -n "\$GHCR_TOKEN" ] && [ "\$GHCR_TOKEN" != "None" ]; } && break
+    echo "ghcr token fetch attempt \$i failed; retrying in \$((i*5))s" >&2
+    sleep \$((i*5))
+  done
+  if [ -z "\${GHCR_TOKEN:-}" ] || [ "\$GHCR_TOKEN" = "None" ]; then
+    echo "FATAL: could not fetch ghcr pull token from \$GHCR_SECRET_ARN; refusing to start with anonymous pulls" >&2
+    exit 1
+  fi
+  export GHCR_TOKEN
+fi
+exec /usr/local/bin/boxlite-runner
+STARTWRAP
+chmod +x /usr/local/bin/boxlite-runner-start.sh
+`
+    : ''
 
   const script = `#!/bin/bash
 exec > /var/log/runner-setup.log 2>&1
@@ -765,7 +847,7 @@ chmod +x /usr/local/bin/boxlite-runner
 # Get host IP via IMDSv2
 IMDS_TOKEN=\$(curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
 HOST_IP=\$(curl -s -H "X-aws-ec2-metadata-token: \$IMDS_TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4)
-
+${ghcrBlock}
 # Create systemd service for the BoxLite runner
 cat > /etc/systemd/system/boxlite-runner.service << UNIT
 [Unit]
@@ -774,7 +856,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/boxlite-runner
+ExecStart=${input.ghcrSecretArn ? '/usr/local/bin/boxlite-runner-start.sh' : '/usr/local/bin/boxlite-runner'}
 Restart=always
 RestartSec=5
 # Give the runner time to gracefully stop all VMs on SIGTERM (it budgets 30s
@@ -790,7 +872,10 @@ Environment=BOXLITE_HOME_DIR=/var/lib/boxlite
 Environment=AWS_REGION=${REGION}
 Environment=OTEL_LOGGING_ENABLED=true
 Environment=OTEL_TRACING_ENABLED=true
-Environment=OTEL_EXPORTER_OTLP_ENDPOINT=${input.otelEndpoint}
+Environment=OTEL_EXPORTER_OTLP_ENDPOINT=${input.otelEndpoint}${input.ghcrSecretArn ? `
+# ghcr: username + secret ARN are non-secret; the start-wrapper fetches the TOKEN at runtime.
+Environment=GHCR_USERNAME=${input.ghcrUsername ?? ''}
+Environment=GHCR_SECRET_ARN=${input.ghcrSecretArn}` : ''}
 
 [Install]
 WantedBy=multi-user.target
