@@ -163,14 +163,7 @@ export class RunnerAdapterV2 implements RunnerAdapter {
       regionId: box.region,
     }
 
-    await this.jobService.createJob(
-      null,
-      JobType.CREATE_SANDBOX,
-      this.runner.id,
-      ResourceType.SANDBOX,
-      box.id,
-      payload,
-    )
+    await this.jobService.createJob(null, JobType.CREATE_SANDBOX, this.runner.id, ResourceType.SANDBOX, box.id, payload)
 
     this.logger.debug(`Created CREATE_SANDBOX job for box ${box.id} on runner ${this.runner.id}`)
 
@@ -403,9 +396,7 @@ export class RunnerAdapterV2 implements RunnerAdapter {
       payload,
     )
 
-    this.logger.debug(
-      `Created UPDATE_SANDBOX_NETWORK_SETTINGS job for box ${boxId} on runner ${this.runner.id}`,
-    )
+    this.logger.debug(`Created UPDATE_SANDBOX_NETWORK_SETTINGS job for box ${boxId} on runner ${this.runner.id}`)
   }
 
   async resizeBox(boxId: string, cpu?: number, memory?: number, disk?: number): Promise<void> {

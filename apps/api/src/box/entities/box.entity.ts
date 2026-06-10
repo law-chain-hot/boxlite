@@ -225,13 +225,9 @@ export class Box {
         throw new Error(`Box ${this.id} is not in a valid state to be started. State: ${this.state}`)
       case BoxDesiredState.STOPPED:
         if (
-          [
-            BoxState.STARTED,
-            BoxState.STOPPING,
-            BoxState.STOPPED,
-            BoxState.ERROR,
-            BoxState.RESIZING,
-          ].includes(this.state)
+          [BoxState.STARTED, BoxState.STOPPING, BoxState.STOPPED, BoxState.ERROR, BoxState.RESIZING].includes(
+            this.state,
+          )
         ) {
           break
         }

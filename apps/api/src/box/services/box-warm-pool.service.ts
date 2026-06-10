@@ -92,9 +92,7 @@ export class BoxWarmPoolService {
         where: templateFilter,
       })
       if (!template) {
-        throw new BadRequestError(
-          `BoxTemplate ${boxTemplate} not found. Did you add it through the BoxLite Dashboard?`,
-        )
+        throw new BadRequestError(`BoxTemplate ${boxTemplate} not found. Did you add it through the BoxLite Dashboard?`)
       }
     } else {
       template = params.template

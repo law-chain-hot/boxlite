@@ -185,9 +185,7 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
                 return
               }
 
-              this.logger.log(
-                `Auto-deleting box ${box.id}: autoDeleteInterval=${box.autoDeleteInterval}min`,
-              )
+              this.logger.log(`Auto-deleting box ${box.id}: autoDeleteInterval=${box.autoDeleteInterval}min`)
 
               try {
                 const updateData = Box.getSoftDeleteUpdate(box)
@@ -232,11 +230,7 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
         })
         .andWhere('sandbox."desiredState"::text != box.state::text')
         .andWhere('sandbox."desiredState"::text IN (:...supportedDesiredStates)', {
-          supportedDesiredStates: [
-            BoxDesiredState.STARTED,
-            BoxDesiredState.STOPPED,
-            BoxDesiredState.DESTROYED,
-          ],
+          supportedDesiredStates: [BoxDesiredState.STARTED, BoxDesiredState.STOPPED, BoxDesiredState.DESTROYED],
         })
         .orderBy('activity."lastActivityAt"', 'DESC', 'NULLS LAST')
 
@@ -322,18 +316,13 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
       })
 
       while (new Date().getTime() - startedAt.getTime() <= 10000) {
-        if (
-          [BoxState.DESTROYED, BoxState.RESIZING].includes(box.state) ||
-          box.state === BoxState.ERROR
-        ) {
+        if ([BoxState.DESTROYED, BoxState.RESIZING].includes(box.state) || box.state === BoxState.ERROR) {
           // Break sync loop if box reaches a terminal state.
           break
         }
 
         if (String(box.state) === String(box.desiredState)) {
-          this.logger.warn(
-            `Box ${boxId} is already in the desired state ${box.desiredState}, skipping sync`,
-          )
+          this.logger.warn(`Box ${boxId} is already in the desired state ${box.desiredState}, skipping sync`)
           // Break sync loop if box is already in the desired state.
           break
         }
@@ -358,9 +347,7 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
           }
         } catch (error) {
           if (error instanceof BoxConflictError) {
-            this.logger.warn(
-              `Box ${boxId} was modified by another operation during sync, skipping error transition`,
-            )
+            this.logger.warn(`Box ${boxId} was modified by another operation during sync, skipping error transition`)
             break
           }
 

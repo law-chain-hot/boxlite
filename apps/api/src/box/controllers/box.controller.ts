@@ -141,11 +141,7 @@ export class BoxController {
     @Query('includeErroredDeleted') includeErroredDeleted?: boolean,
   ): Promise<BoxDto[]> {
     const labels = labelsQuery ? JSON.parse(labelsQuery) : undefined
-    const boxes = await this.boxService.findAllDeprecated(
-      authContext.organizationId,
-      labels,
-      includeErroredDeleted,
-    )
+    const boxes = await this.boxService.findAllDeprecated(authContext.organizationId, labels, includeErroredDeleted)
 
     return this.boxService.toBoxDtos(boxes)
   }
@@ -598,11 +594,7 @@ export class BoxController {
     @Param('sandboxIdOrName') boxIdOrName: string,
     @Body() labelsDto: BoxLabelsDto,
   ): Promise<BoxDto> {
-    const box = await this.boxService.replaceLabels(
-      boxIdOrName,
-      labelsDto.labels,
-      authContext.organizationId,
-    )
+    const box = await this.boxService.replaceLabels(boxIdOrName, labelsDto.labels, authContext.organizationId)
     return this.boxService.toBoxDto(box)
   }
 
@@ -623,10 +615,7 @@ export class BoxController {
   })
   @UseGuards(RunnerAuthGuard)
   @UseGuards(BoxAccessGuard)
-  async updateBoxState(
-    @Param('boxId') boxId: string,
-    @Body() updateStateDto: UpdateBoxStateDto,
-  ): Promise<void> {
+  async updateBoxState(@Param('boxId') boxId: string, @Body() updateStateDto: UpdateBoxStateDto): Promise<void> {
     await this.boxService.updateState(
       boxId,
       updateStateDto.state,
@@ -777,11 +766,7 @@ export class BoxController {
     @Param('sandboxIdOrName') boxIdOrName: string,
     @Param('interval') interval: number,
   ): Promise<BoxDto> {
-    const box = await this.boxService.setAutoDeleteInterval(
-      boxIdOrName,
-      interval,
-      authContext.organizationId,
-    )
+    const box = await this.boxService.setAutoDeleteInterval(boxIdOrName, interval, authContext.organizationId)
     return this.boxService.toBoxDto(box)
   }
 
@@ -891,12 +876,7 @@ export class BoxController {
     @Param('port') port: number,
     @Query('expiresInSeconds') expiresInSeconds?: number,
   ): Promise<SignedPortPreviewUrlDto> {
-    return this.boxService.getSignedPortPreviewUrl(
-      boxIdOrName,
-      authContext.organizationId,
-      port,
-      expiresInSeconds,
-    )
+    return this.boxService.getSignedPortPreviewUrl(boxIdOrName, authContext.organizationId, port, expiresInSeconds)
   }
 
   @Post(':boxIdOrName/ports/:port/signed-preview-url/:token/expire')

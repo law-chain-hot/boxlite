@@ -54,13 +54,7 @@ export class BoxStopAction extends BoxAction {
       await this.updateBoxState(box, BoxState.STOPPED, lockCode)
       return DONT_SYNC_AGAIN
     } else if (boxInfo.state === BoxState.ERROR) {
-      await this.updateBoxState(
-        box,
-        BoxState.ERROR,
-        lockCode,
-        undefined,
-        'Box is in error state on runner',
-      )
+      await this.updateBoxState(box, BoxState.ERROR, lockCode, undefined, 'Box is in error state on runner')
       return DONT_SYNC_AGAIN
     }
 

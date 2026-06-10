@@ -118,9 +118,7 @@ export class JobStateHandlerService {
       const updateData: Partial<Box> = {}
 
       if (job.status === JobStatus.COMPLETED) {
-        this.logger.debug(
-          `CREATE_SANDBOX job ${job.id} completed successfully, marking box ${boxId} as STARTED`,
-        )
+        this.logger.debug(`CREATE_SANDBOX job ${job.id} completed successfully, marking box ${boxId} as STARTED`)
         updateData.state = BoxState.STARTED
         updateData.errorReason = null
         const metadata = job.getResultMetadata()
@@ -235,9 +233,7 @@ export class JobStateHandlerService {
 
       if (box.desiredState === BoxDesiredState.DESTROYED) {
         if (job.status === JobStatus.COMPLETED) {
-          this.logger.debug(
-            `DESTROY_SANDBOX job ${job.id} completed successfully, marking box ${boxId} as DESTROYED`,
-          )
+          this.logger.debug(`DESTROY_SANDBOX job ${job.id} completed successfully, marking box ${boxId} as DESTROYED`)
           updateData.state = BoxState.DESTROYED
           updateData.errorReason = null
         } else if (job.status === JobStatus.FAILED) {
@@ -360,9 +356,7 @@ export class JobStateHandlerService {
       const updateData: Partial<Box> = {}
 
       if (job.status === JobStatus.COMPLETED) {
-        this.logger.debug(
-          `RECOVER_SANDBOX job ${job.id} completed successfully, marking box ${boxId} as STARTED`,
-        )
+        this.logger.debug(`RECOVER_SANDBOX job ${job.id} completed successfully, marking box ${boxId} as STARTED`)
         updateData.state = BoxState.STARTED
         updateData.errorReason = null
       } else if (job.status === JobStatus.FAILED) {
@@ -389,9 +383,7 @@ export class JobStateHandlerService {
       }
 
       if (box.state !== BoxState.RESIZING) {
-        this.logger.warn(
-          `Box ${boxId} is not in RESIZING state for RESIZE_SANDBOX job ${job.id}. State: ${box.state}`,
-        )
+        this.logger.warn(`Box ${boxId} is not in RESIZING state for RESIZE_SANDBOX job ${job.id}. State: ${box.state}`)
         return
       }
 

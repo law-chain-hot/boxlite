@@ -401,16 +401,8 @@ export default function BoxDetails() {
 
       {boxId && (
         <>
-          <CreateSshAccessDialog
-            boxId={boxId}
-            open={createSshDialogOpen}
-            onOpenChange={setCreateSshDialogOpen}
-          />
-          <RevokeSshAccessDialog
-            boxId={boxId}
-            open={revokeSshDialogOpen}
-            onOpenChange={setRevokeSshDialogOpen}
-          />
+          <CreateSshAccessDialog boxId={boxId} open={createSshDialogOpen} onOpenChange={setCreateSshDialogOpen} />
+          <RevokeSshAccessDialog boxId={boxId} open={revokeSshDialogOpen} onOpenChange={setRevokeSshDialogOpen} />
         </>
       )}
     </PageLayout>

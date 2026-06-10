@@ -164,10 +164,7 @@ export class BoxStartAction extends BoxAction {
     }
   }
 
-  private async handleRunnerBoxUnknownStateOnDesiredStateStart(
-    box: Box,
-    lockCode: LockCode,
-  ): Promise<SyncState> {
+  private async handleRunnerBoxUnknownStateOnDesiredStateStart(box: Box, lockCode: LockCode): Promise<SyncState> {
     const runner = await this.runnerService.findOneOrFail(box.runnerId)
     if (runner.state !== RunnerState.READY) {
       return DONT_SYNC_AGAIN
@@ -201,10 +198,7 @@ export class BoxStartAction extends BoxAction {
     return SYNC_AGAIN
   }
 
-  private async handleRunnerBoxStoppedStateOnDesiredStateStart(
-    box: Box,
-    lockCode: LockCode,
-  ): Promise<SyncState> {
+  private async handleRunnerBoxStoppedStateOnDesiredStateStart(box: Box, lockCode: LockCode): Promise<SyncState> {
     const organization = await this.organizationService.findOne(box.organizationId)
 
     //  A stopped box restarts on its own runner. Cross-runner recovery is not supported.
@@ -249,14 +243,7 @@ export class BoxStartAction extends BoxAction {
 
     switch (boxInfo.state) {
       case BoxState.STARTED: {
-        await this.updateBoxState(
-          box,
-          BoxState.STARTED,
-          lockCode,
-          undefined,
-          undefined,
-          boxInfo.daemonVersion,
-        )
+        await this.updateBoxState(box, BoxState.STARTED, lockCode, undefined, undefined, boxInfo.daemonVersion)
 
         //  if box was transferred to a new runner, remove it from the old runner
         if (box.prevRunnerId) {
@@ -306,11 +293,7 @@ export class BoxStartAction extends BoxAction {
         this.logger.warn(
           `Box ${box.id} is in destroyed state while starting on runner ${box.runnerId}, prev runner ${box.prevRunnerId}`,
         )
-        await this.checkTimeoutError(
-          box,
-          15,
-          'Timeout while starting box: Box is in unknown state on runner',
-        )
+        await this.checkTimeoutError(box, 15, 'Timeout while starting box: Box is in unknown state on runner')
         return DONT_SYNC_AGAIN
       }
       // also any other state that is not STARTED

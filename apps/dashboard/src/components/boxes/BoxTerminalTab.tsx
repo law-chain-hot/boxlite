@@ -23,13 +23,7 @@ export function BoxTerminalTab({ box }: { box: Box }) {
 
   const [activated, setActivated] = useState(() => isTerminalActivated(box.id))
 
-  const {
-    data: session,
-    isLoading,
-    isError,
-    isFetching,
-    reset,
-  } = useTerminalSessionQuery(box.id, running && activated)
+  const { data: session, isLoading, isError, isFetching, reset } = useTerminalSessionQuery(box.id, running && activated)
 
   const handleConnect = () => {
     activateTerminal(box.id)

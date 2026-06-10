@@ -211,13 +211,9 @@ export class BoxliteBoxController {
   private isStartAlreadyInProgress(box: Box): boolean {
     return (
       box.desiredState === BoxDesiredState.STARTED &&
-      [
-        BoxState.UNKNOWN,
-        BoxState.CREATING,
-        BoxState.STARTING,
-        BoxState.RESTORING,
-        BoxState.PULLING_ARTIFACT,
-      ].includes(box.state)
+      [BoxState.UNKNOWN, BoxState.CREATING, BoxState.STARTING, BoxState.RESTORING, BoxState.PULLING_ARTIFACT].includes(
+        box.state,
+      )
     )
   }
 }

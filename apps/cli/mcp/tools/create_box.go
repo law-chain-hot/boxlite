@@ -33,7 +33,7 @@ type CreateBoxArgs struct {
 	Disk               *int32                     `json:"disk,omitempty"`
 	AutoStopInterval   *int32                     `json:"autoStopInterval,omitempty"`
 	AutoDeleteInterval *int32                     `json:"autoDeleteInterval,omitempty"`
-	Volumes            *[]apiclient.BoxVolume `json:"volumes,omitempty"`
+	Volumes            *[]apiclient.BoxVolume     `json:"volumes,omitempty"`
 	BuildInfo          *apiclient.CreateBuildInfo `json:"buildInfo,omitempty"`
 	NetworkBlockAll    *bool                      `json:"networkBlockAll,omitempty"`
 	NetworkAllowList   *string                    `json:"networkAllowList,omitempty"`

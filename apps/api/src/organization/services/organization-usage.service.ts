@@ -1195,12 +1195,7 @@ export class OrganizationUsageService {
 
     try {
       await this.updateCurrentQuotaUsage(event.box.organizationId, 'cpu', event.box.cpu, event.box.region)
-      await this.updateCurrentQuotaUsage(
-        event.box.organizationId,
-        'memory',
-        event.box.mem,
-        event.box.region,
-      )
+      await this.updateCurrentQuotaUsage(event.box.organizationId, 'memory', event.box.mem, event.box.region)
       await this.updateCurrentQuotaUsage(event.box.organizationId, 'disk', event.box.disk, event.box.region)
     } catch (error) {
       this.logger.warn(
@@ -1225,18 +1220,8 @@ export class OrganizationUsageService {
     if (event.oldState === event.newState && event.newState === BoxState.STARTED) {
       try {
         await this.updateCurrentQuotaUsage(event.box.organizationId, 'cpu', event.box.cpu, event.box.region)
-        await this.updateCurrentQuotaUsage(
-          event.box.organizationId,
-          'memory',
-          event.box.mem,
-          event.box.region,
-        )
-        await this.updateCurrentQuotaUsage(
-          event.box.organizationId,
-          'disk',
-          event.box.disk,
-          event.box.region,
-        )
+        await this.updateCurrentQuotaUsage(event.box.organizationId, 'memory', event.box.mem, event.box.region)
+        await this.updateCurrentQuotaUsage(event.box.organizationId, 'disk', event.box.disk, event.box.region)
         return
       } catch (error) {
         this.logger.warn(

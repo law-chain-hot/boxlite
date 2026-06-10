@@ -111,14 +111,8 @@ export class NotificationGateway extends NotificationEmitter implements OnGatewa
     this.server.to(box.organizationId).emit(BoxEvents.STATE_UPDATED, { box, oldState, newState })
   }
 
-  emitBoxDesiredStateUpdated(
-    box: BoxDto,
-    oldDesiredState: BoxDesiredState,
-    newDesiredState: BoxDesiredState,
-  ) {
-    this.server
-      .to(box.organizationId)
-      .emit(BoxEvents.DESIRED_STATE_UPDATED, { box, oldDesiredState, newDesiredState })
+  emitBoxDesiredStateUpdated(box: BoxDto, oldDesiredState: BoxDesiredState, newDesiredState: BoxDesiredState) {
+    this.server.to(box.organizationId).emit(BoxEvents.DESIRED_STATE_UPDATED, { box, oldDesiredState, newDesiredState })
   }
 
   emitTemplateCreated(template: BoxTemplateDto) {

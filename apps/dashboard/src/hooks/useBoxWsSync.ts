@@ -44,8 +44,7 @@ export function useBoxWsSync({ boxId, refetchOnCreate = false }: UseBoxWsSyncOpt
       })
     }
 
-    const matchesActiveBox = (box: Box) =>
-      !boxId || box.id === boxId || box.boxId === boxId
+    const matchesActiveBox = (box: Box) => !boxId || box.id === boxId || box.boxId === boxId
 
     const optimisticUpdate = (box: Box, state: BoxState) => {
       updateStateInListCache(box.id, state)

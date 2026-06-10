@@ -751,11 +751,7 @@ export class BoxService {
     return this.getExpectedDesiredStateForState(state) !== undefined
   }
 
-  async findByRunnerId(
-    runnerId: string,
-    states?: BoxState[],
-    skipReconcilingBoxes?: boolean,
-  ): Promise<Box[]> {
+  async findByRunnerId(runnerId: string, states?: BoxState[], skipReconcilingBoxes?: boolean): Promise<Box[]> {
     const where: FindOptionsWhere<Box> = { runnerId }
     if (states && states.length > 0) {
       // Validate that all states have corresponding desired states
@@ -779,11 +775,7 @@ export class BoxService {
     return boxes
   }
 
-  async findOneByIdOrName(
-    boxIdOrName: string,
-    organizationId?: string,
-    returnDestroyed?: boolean,
-  ): Promise<Box> {
+  async findOneByIdOrName(boxIdOrName: string, organizationId?: string, returnDestroyed?: boolean): Promise<Box> {
     const stateFilter = returnDestroyed ? {} : { state: Not(BoxState.DESTROYED) }
     const organizationFilter = organizationId ? { organizationId } : {}
 
@@ -828,12 +820,7 @@ export class BoxService {
       })
     }
 
-    if (
-      !box ||
-      (!returnDestroyed &&
-        box.state === BoxState.ERROR &&
-        box.desiredState === BoxDesiredState.DESTROYED)
-    ) {
+    if (!box || (!returnDestroyed && box.state === BoxState.ERROR && box.desiredState === BoxDesiredState.DESTROYED)) {
       throw new NotFoundException(`Box with Box ID, UUID, or name ${boxIdOrName} not found`)
     }
 
@@ -848,12 +835,7 @@ export class BoxService {
       },
     })
 
-    if (
-      !box ||
-      (!returnDestroyed &&
-        box.state === BoxState.ERROR &&
-        box.desiredState === BoxDesiredState.DESTROYED)
-    ) {
+    if (!box || (!returnDestroyed && box.state === BoxState.ERROR && box.desiredState === BoxDesiredState.DESTROYED)) {
       throw new NotFoundException(`Box with ID ${boxId} not found`)
     }
 
@@ -1337,11 +1319,7 @@ export class BoxService {
 
       // Capture the previous state before transitioning to RESIZING (STARTED or STOPPED)
       const previousState =
-        box.state === BoxState.STARTED
-          ? BoxState.STARTED
-          : box.state === BoxState.STOPPED
-            ? BoxState.STOPPED
-            : null
+        box.state === BoxState.STARTED ? BoxState.STARTED : box.state === BoxState.STOPPED ? BoxState.STOPPED : null
 
       if (!previousState) {
         throw new BadRequestError('Box must be in started or stopped state to resize')
@@ -1552,11 +1530,7 @@ export class BoxService {
     }
   }
 
-  async replaceLabels(
-    boxIdOrName: string,
-    labels: { [key: string]: string },
-    organizationId?: string,
-  ): Promise<Box> {
+  async replaceLabels(boxIdOrName: string, labels: { [key: string]: string }, organizationId?: string): Promise<Box> {
     const box = await this.findOneByIdOrName(boxIdOrName, organizationId)
 
     // Replace all labels
@@ -1656,12 +1630,7 @@ export class BoxService {
 
   // used by internal services to update the state of a box to resolve domain and runner state mismatch
   // notably, when a box instance stops or errors on the runner, the domain state needs to be updated to reflect the actual state
-  async updateState(
-    boxId: string,
-    newState: BoxState,
-    recoverable = false,
-    errorReason?: string,
-  ): Promise<void> {
+  async updateState(boxId: string, newState: BoxState, recoverable = false, errorReason?: string): Promise<void> {
     const box = await this.boxRepository.findOne({
       where: { id: boxId },
     })
@@ -1806,11 +1775,7 @@ export class BoxService {
     return volumes
   }
 
-  async createSshAccess(
-    boxIdOrName: string,
-    expiresInMinutes = 60,
-    organizationId?: string,
-  ): Promise<SshAccessDto> {
+  async createSshAccess(boxIdOrName: string, expiresInMinutes = 60, organizationId?: string): Promise<SshAccessDto> {
     //  check if box exists
     const box = await this.findOneByIdOrName(boxIdOrName, organizationId)
 

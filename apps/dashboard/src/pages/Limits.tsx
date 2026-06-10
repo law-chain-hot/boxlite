@@ -198,12 +198,10 @@ export default function Limits() {
                         selectedOrganization?.boxCreateRateLimitTtlSeconds ?? config?.rateLimit?.boxCreate?.ttl,
                     },
                     {
-                      value:
-                        selectedOrganization?.boxLifecycleRateLimit || config?.rateLimit?.boxLifecycle?.limit,
+                      value: selectedOrganization?.boxLifecycleRateLimit || config?.rateLimit?.boxLifecycle?.limit,
                       label: 'Box Lifecycle',
                       ttlSeconds:
-                        selectedOrganization?.boxLifecycleRateLimitTtlSeconds ??
-                        config?.rateLimit?.boxLifecycle?.ttl,
+                        selectedOrganization?.boxLifecycleRateLimitTtlSeconds ?? config?.rateLimit?.boxLifecycle?.ttl,
                     },
                   ]}
                 />

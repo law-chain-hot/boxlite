@@ -151,9 +151,7 @@ export class UsageService implements TrackableJobExecutions, OnApplicationShutdo
 
           if (
             box &&
-            (box.state === BoxState.STARTED ||
-              box.state === BoxState.STOPPED ||
-              box.state === BoxState.STOPPING)
+            (box.state === BoxState.STARTED || box.state === BoxState.STOPPED || box.state === BoxState.STOPPING)
           ) {
             // Create new usage period
             const newUsagePeriod = BoxUsagePeriod.fromUsagePeriod(usagePeriod)

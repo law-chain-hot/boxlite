@@ -82,9 +82,7 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     private readonly encryptionService: EncryptionService,
   ) {
     this.defaultOrganizationQuota = this.configService.getOrThrow('defaultOrganizationQuota')
-    this.defaultBoxLimitedNetworkEgress = this.configService.getOrThrow(
-      'organizationBoxDefaultLimitedNetworkEgress',
-    )
+    this.defaultBoxLimitedNetworkEgress = this.configService.getOrThrow('organizationBoxDefaultLimitedNetworkEgress')
   }
 
   async onApplicationShutdown() {
@@ -231,8 +229,7 @@ export class OrganizationService implements OnModuleInit, TrackableJobExecutions
     organization.templateQuota = updateDto.templateQuota ?? organization.templateQuota
     organization.authenticatedRateLimit = updateDto.authenticatedRateLimit ?? organization.authenticatedRateLimit
     organization.boxCreateRateLimit = updateDto.boxCreateRateLimit ?? organization.boxCreateRateLimit
-    organization.boxLifecycleRateLimit =
-      updateDto.boxLifecycleRateLimit ?? organization.boxLifecycleRateLimit
+    organization.boxLifecycleRateLimit = updateDto.boxLifecycleRateLimit ?? organization.boxLifecycleRateLimit
     organization.authenticatedRateLimitTtlSeconds =
       updateDto.authenticatedRateLimitTtlSeconds ?? organization.authenticatedRateLimitTtlSeconds
     organization.boxCreateRateLimitTtlSeconds =

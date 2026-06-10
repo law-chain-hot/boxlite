@@ -44,14 +44,8 @@ export class NotificationRedisEmitter extends NotificationEmitter implements OnM
     this.emitter.to(box.organizationId).emit(BoxEvents.STATE_UPDATED, { box, oldState, newState })
   }
 
-  emitBoxDesiredStateUpdated(
-    box: BoxDto,
-    oldDesiredState: BoxDesiredState,
-    newDesiredState: BoxDesiredState,
-  ) {
-    this.emitter
-      .to(box.organizationId)
-      .emit(BoxEvents.DESIRED_STATE_UPDATED, { box, oldDesiredState, newDesiredState })
+  emitBoxDesiredStateUpdated(box: BoxDto, oldDesiredState: BoxDesiredState, newDesiredState: BoxDesiredState) {
+    this.emitter.to(box.organizationId).emit(BoxEvents.DESIRED_STATE_UPDATED, { box, oldDesiredState, newDesiredState })
   }
 
   emitTemplateCreated(template: BoxTemplateDto) {

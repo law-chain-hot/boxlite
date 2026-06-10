@@ -128,19 +128,13 @@ export const BoxUsageTable: React.FC<BoxUsageTableProps> = ({ data, isLoading })
                   <TableCell className="font-mono text-sm">
                     <div className="flex items-center gap-2 group/copy-button">
                       <span className="truncate max-w-[200px]">{box.boxId}</span>
-                      {box.boxId && (
-                        <CopyButton value={box.boxId} tooltipText="Copy box ID" size="icon-xs" autoHide />
-                      )}
+                      {box.boxId && <CopyButton value={box.boxId} tooltipText="Copy box ID" size="icon-xs" autoHide />}
                     </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">${(box.totalPrice ?? 0).toFixed(2)}</TableCell>
                   <TableCell className="text-right tabular-nums">{(box.totalCPUSeconds ?? 0).toFixed(1)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {(box.totalRAMGBSeconds ?? 0).toFixed(1)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {(box.totalDiskGBSeconds ?? 0).toFixed(1)}
-                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{(box.totalRAMGBSeconds ?? 0).toFixed(1)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{(box.totalDiskGBSeconds ?? 0).toFixed(1)}</TableCell>
                 </TableRow>
               ))}
         </TableBody>

@@ -25,10 +25,7 @@ type BoxManagementParametersProps = {
   templatesLoading: boolean
 }
 
-const BoxManagementParameters: React.FC<BoxManagementParametersProps> = ({
-  templatesData,
-  templatesLoading,
-}) => {
+const BoxManagementParameters: React.FC<BoxManagementParametersProps> = ({ templatesData, templatesLoading }) => {
   const { boxParametersState, setBoxParameterValue } = usePlayground()
   const boxLanguage = boxParametersState['language']
   const boxTemplateName = boxParametersState['templateName']

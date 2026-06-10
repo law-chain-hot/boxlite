@@ -148,10 +148,7 @@ const Boxes: React.FC = () => {
     [paginationParams, filters, sorting],
   )
 
-  const baseQueryKey = useMemo<QueryKey>(
-    () => getBoxesQueryKey(selectedOrganization?.id),
-    [selectedOrganization?.id],
-  )
+  const baseQueryKey = useMemo<QueryKey>(() => getBoxesQueryKey(selectedOrganization?.id), [selectedOrganization?.id])
 
   const queryKey = useMemo<QueryKey>(
     () => getBoxesQueryKey(selectedOrganization?.id, queryParams),
@@ -178,9 +175,7 @@ const Boxes: React.FC = () => {
         if (!oldData?.items) return oldData
         return {
           ...oldData,
-          items: oldData.items.map((box: Box) =>
-            box.id === boxId ? { ...box, ...updates } : box,
-          ),
+          items: oldData.items.map((box: Box) => (box.id === boxId ? { ...box, ...updates } : box)),
         }
       })
     },
@@ -323,11 +318,7 @@ const Boxes: React.FC = () => {
       markAllBoxQueriesAsStale(shouldRefetchActiveQueries)
     }
 
-    const handleBoxStateUpdatedEvent = (data: {
-      box: Box
-      oldState: BoxState
-      newState: BoxState
-    }) => {
+    const handleBoxStateUpdatedEvent = (data: { box: Box; oldState: BoxState; newState: BoxState }) => {
       // warm pool boxes
       if (data.oldState === data.newState && data.newState === BoxState.STARTED) {
         handleBoxCreatedEvent()

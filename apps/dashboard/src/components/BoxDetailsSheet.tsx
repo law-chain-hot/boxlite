@@ -93,30 +93,18 @@ const BoxDetailsSheet: React.FC<BoxDetailsSheetProps> = ({
             {writePermitted && (
               <>
                 {box.state === BoxState.STARTED && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleStop(box.id)}
-                    disabled={boxIsLoading[box.id]}
-                  >
+                  <Button variant="outline" onClick={() => handleStop(box.id)} disabled={boxIsLoading[box.id]}>
                     Stop
                   </Button>
                 )}
                 {box.state === BoxState.STOPPED && !box.recoverable && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleStart(box.id)}
-                    disabled={boxIsLoading[box.id]}
-                  >
+                  <Button variant="outline" onClick={() => handleStart(box.id)} disabled={boxIsLoading[box.id]}>
                     <Play className="w-4 h-4" />
                     Start
                   </Button>
                 )}
                 {box.state === BoxState.ERROR && box.recoverable && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleRecover(box.id)}
-                    disabled={boxIsLoading[box.id]}
-                  >
+                  <Button variant="outline" onClick={() => handleRecover(box.id)} disabled={boxIsLoading[box.id]}>
                     <Wrench className="w-4 h-4" />
                     Recover
                   </Button>
@@ -204,11 +192,7 @@ const BoxDetailsSheet: React.FC<BoxDetailsSheetProps> = ({
               <div>
                 <h3 className="text-sm text-muted-foreground">State</h3>
                 <div className="mt-1 text-sm">
-                  <BoxStateComponent
-                    state={box.state}
-                    errorReason={box.errorReason}
-                    recoverable={box.recoverable}
-                  />
+                  <BoxStateComponent state={box.state} errorReason={box.errorReason} recoverable={box.recoverable} />
                 </div>
               </div>
               <div>
@@ -228,17 +212,13 @@ const BoxDetailsSheet: React.FC<BoxDetailsSheetProps> = ({
               <div>
                 <h3 className="text-sm text-muted-foreground">Last event</h3>
                 <p className="mt-1 text-sm font-medium">
-                  <TimestampTooltip timestamp={box.updatedAt}>
-                    {getLastEvent(box).relativeTimeString}
-                  </TimestampTooltip>
+                  <TimestampTooltip timestamp={box.updatedAt}>{getLastEvent(box).relativeTimeString}</TimestampTooltip>
                 </p>
               </div>
               <div>
                 <h3 className="text-sm text-muted-foreground">Created at</h3>
                 <p className="mt-1 text-sm font-medium">
-                  <TimestampTooltip timestamp={box.createdAt}>
-                    {formatTimestamp(box.createdAt)}
-                  </TimestampTooltip>
+                  <TimestampTooltip timestamp={box.createdAt}>{formatTimestamp(box.createdAt)}</TimestampTooltip>
                 </p>
               </div>
             </div>

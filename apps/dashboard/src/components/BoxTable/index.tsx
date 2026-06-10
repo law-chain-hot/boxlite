@@ -215,8 +215,7 @@ export function BoxTable({
                 <div
                   key={row.id}
                   className={cn('border-b border-border last:border-b-0', {
-                    'opacity-80 pointer-events-none':
-                      boxIsLoading[box.id] || box.state === BoxState.DESTROYED,
+                    'opacity-80 pointer-events-none': boxIsLoading[box.id] || box.state === BoxState.DESTROYED,
                     'bg-muted animate-pulse': boxStateIsTransitioning[box.id],
                   })}
                 >
@@ -239,21 +238,15 @@ export function BoxTable({
                   >
                     <div className="grid w-full gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] md:items-center md:gap-4">
                       <div className="min-w-0 space-y-0.5">
-                        <div className="truncate text-sm font-medium text-primary">
-                          {getBoxDisplayName(box)}
-                        </div>
+                        <div className="truncate text-sm font-medium text-primary">{getBoxDisplayName(box)}</div>
                         <div className="truncate font-mono text-xs text-muted-foreground">
                           {getBoxPublicIdLabel(box)}
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 gap-x-5 gap-y-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
-                        <CompactBoxMeta label="Image">
-                          {getTemplateDisplayName(box.template)}
-                        </CompactBoxMeta>
-                        <CompactBoxMeta label="Region">
-                          {getRegionName(box.target) ?? box.target}
-                        </CompactBoxMeta>
+                        <CompactBoxMeta label="Image">{getTemplateDisplayName(box.template)}</CompactBoxMeta>
+                        <CompactBoxMeta label="Region">{getRegionName(box.target) ?? box.target}</CompactBoxMeta>
                         <CompactBoxMeta label="Resources">
                           <div className="flex flex-wrap gap-1">
                             <ResourceChip resource="cpu" value={box.cpu} />

@@ -81,9 +81,7 @@ export function BoxHeader({
             </div>
             <div className="hidden sm:flex items-center gap-1 min-w-0">
               <span className="text-xs text-muted-foreground shrink-0">Box ID</span>
-              <span className="text-sm text-muted-foreground font-mono truncate">
-                {getBoxPublicIdLabel(box)}
-              </span>
+              <span className="text-sm text-muted-foreground font-mono truncate">{getBoxPublicIdLabel(box)}</span>
               {publicBoxId && <CopyButton value={publicBoxId} tooltipText="Copy Box ID" size="icon-xs" />}
             </div>
           </div>

@@ -26,19 +26,9 @@ import {
   ValidatePlaygroundActionWithParams,
   VNCInteractionOptionsParams,
 } from '@/contexts/PlaygroundContext'
-import {
-  MouseButton,
-  MouseScrollDirection,
-  BoxParametersSections,
-  ScreenshotFormatOption,
-} from '@/enums/Playground'
+import { MouseButton, MouseScrollDirection, BoxParametersSections, ScreenshotFormatOption } from '@/enums/Playground'
 import { getLanguageCodeToRun, objectHasAnyValue } from '@/lib/playground'
-import {
-  CreateBoxBaseParams,
-  CreateBoxFromImageParams,
-  CreateBoxFromTemplateParams,
-  Image,
-} from '@boxlite-ai/sdk'
+import { CreateBoxBaseParams, CreateBoxFromImageParams, CreateBoxFromTemplateParams, Image } from '@boxlite-ai/sdk'
 import { useCallback, useState } from 'react'
 
 const PARAM_SECTION_MAP: Partial<Record<keyof BoxParams, BoxParametersSections>> = {
@@ -177,12 +167,7 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         console.error(`Unknown parameter key: ${String(key)}`)
       }
     },
-    [
-      setBoxParameterValue,
-      setVNCInteractionOptionsParamValue,
-      boxParametersState,
-      VNCInteractionOptionsParamsState,
-    ],
+    [setBoxParameterValue, setVNCInteractionOptionsParamValue, boxParametersState, VNCInteractionOptionsParamsState],
   )
 
   const [runningActionMethod, setRunningActionMethod] = useState<RunningActionMethodName>(null)
@@ -327,24 +312,18 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // We specify resources for box creation if there is any specified resource value which has value different from the default one and useCustomBoxTemplateName is false
     const useResources = !useCustomBoxTemplateName && resourceValuesExist && !useDefaultResourceValues
     const useBoxCreateParams =
-      useLanguageParam ||
-      useResources ||
-      createBoxParamsExist ||
-      useCustomBoxTemplateName ||
-      createBoxFromImage
+      useLanguageParam || useResources || createBoxParamsExist || useCustomBoxTemplateName || createBoxFromImage
 
     if (createBoxFromImage) {
       // Set CreateBoxFromImageParams specific params
       if (useResources) {
         createBoxFromImageParams.resources = {}
         if (useResourcesCPU) createBoxFromImageParams.resources.cpu = boxParametersState['resources']['cpu']
-        if (useResourcesMemory)
-          createBoxFromImageParams.resources.memory = boxParametersState['resources']['memory']
+        if (useResourcesMemory) createBoxFromImageParams.resources.memory = boxParametersState['resources']['memory']
         if (useResourcesDisk) createBoxFromImageParams.resources.disk = boxParametersState['resources']['disk']
       }
     }
-    let createBoxParams: CreateBoxBaseParams | CreateBoxFromImageParams | CreateBoxFromTemplateParams =
-      {}
+    let createBoxParams: CreateBoxBaseParams | CreateBoxFromImageParams | CreateBoxFromTemplateParams = {}
     if (createBoxFromTemplate) createBoxParams = createBoxFromTemplateParams
     else if (createBoxFromImage) createBoxParams = createBoxFromImageParams
     // Set CreateBoxBaseParams params which are common for both params types

@@ -105,9 +105,7 @@ const BoxParameters = ({ className }: { className?: string }) => {
                     {section.value === BoxParametersSections.SANDBOX_MANAGEMENT && (
                       <BoxManagementParameters templatesData={[]} templatesLoading={false} />
                     )}
-                    {section.value === BoxParametersSections.PROCESS_CODE_EXECUTION && (
-                      <BoxProcessCodeExecution />
-                    )}
+                    {section.value === BoxParametersSections.PROCESS_CODE_EXECUTION && <BoxProcessCodeExecution />}
                   </div>
                 )}
               </AccordionContent>
