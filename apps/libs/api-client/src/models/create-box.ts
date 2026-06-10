@@ -16,9 +16,6 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { BoxVolume } from './box-volume';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { CreateBuildInfo } from './create-build-info';
 
 export interface CreateBox {
     /**
@@ -26,9 +23,9 @@ export interface CreateBox {
      */
     'name'?: string;
     /**
-     * The ID or name of the snapshot used for the box
+     * The curated image key for the box (one of: base, python, node). Defaults to base.
      */
-    'snapshot'?: string;
+    'image'?: string;
     /**
      * The user associated with the project
      */
@@ -82,10 +79,6 @@ export interface CreateBox {
      */
     'autoStopInterval'?: number;
     /**
-     * Auto-archive interval in minutes (0 means the maximum interval will be used)
-     */
-    'autoArchiveInterval'?: number;
-    /**
      * Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)
      */
     'autoDeleteInterval'?: number;
@@ -93,10 +86,6 @@ export interface CreateBox {
      * Array of volumes to attach to the box
      */
     'volumes'?: Array<BoxVolume>;
-    /**
-     * Build information for the box
-     */
-    'buildInfo'?: CreateBuildInfo;
 }
 
 export const CreateBoxClassEnum = {

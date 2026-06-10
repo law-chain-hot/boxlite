@@ -22,8 +22,8 @@ var _ MappedNullable = &CreateBox{}
 type CreateBox struct {
 	// The name of the box. If not provided, the box ID will be used as the name
 	Name *string `json:"name,omitempty"`
-	// The ID or name of the snapshot used for the box
-	Snapshot *string `json:"snapshot,omitempty"`
+	// The curated image key for the box (one of: base, python, node). Defaults to base.
+	Image *string `json:"image,omitempty"`
 	// The user associated with the project
 	User *string `json:"user,omitempty"`
 	// Environment variables for the box
@@ -50,14 +50,10 @@ type CreateBox struct {
 	Disk *int32 `json:"disk,omitempty"`
 	// Auto-stop interval in minutes (0 means disabled)
 	AutoStopInterval *int32 `json:"autoStopInterval,omitempty"`
-	// Auto-archive interval in minutes (0 means the maximum interval will be used)
-	AutoArchiveInterval *int32 `json:"autoArchiveInterval,omitempty"`
 	// Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)
 	AutoDeleteInterval *int32 `json:"autoDeleteInterval,omitempty"`
 	// Array of volumes to attach to the box
 	Volumes []BoxVolume `json:"volumes,omitempty"`
-	// Build information for the box
-	BuildInfo *CreateBuildInfo `json:"buildInfo,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -112,36 +108,36 @@ func (o *CreateBox) SetName(v string) {
 	o.Name = &v
 }
 
-// GetSnapshot returns the Snapshot field value if set, zero value otherwise.
-func (o *CreateBox) GetSnapshot() string {
-	if o == nil || IsNil(o.Snapshot) {
+// GetImage returns the Image field value if set, zero value otherwise.
+func (o *CreateBox) GetImage() string {
+	if o == nil || IsNil(o.Image) {
 		var ret string
 		return ret
 	}
-	return *o.Snapshot
+	return *o.Image
 }
 
-// GetSnapshotOk returns a tuple with the Snapshot field value if set, nil otherwise
+// GetImageOk returns a tuple with the Image field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBox) GetSnapshotOk() (*string, bool) {
-	if o == nil || IsNil(o.Snapshot) {
+func (o *CreateBox) GetImageOk() (*string, bool) {
+	if o == nil || IsNil(o.Image) {
 		return nil, false
 	}
-	return o.Snapshot, true
+	return o.Image, true
 }
 
-// HasSnapshot returns a boolean if a field has been set.
-func (o *CreateBox) HasSnapshot() bool {
-	if o != nil && !IsNil(o.Snapshot) {
+// HasImage returns a boolean if a field has been set.
+func (o *CreateBox) HasImage() bool {
+	if o != nil && !IsNil(o.Image) {
 		return true
 	}
 
 	return false
 }
 
-// SetSnapshot gets a reference to the given string and assigns it to the Snapshot field.
-func (o *CreateBox) SetSnapshot(v string) {
-	o.Snapshot = &v
+// SetImage gets a reference to the given string and assigns it to the Image field.
+func (o *CreateBox) SetImage(v string) {
+	o.Image = &v
 }
 
 // GetUser returns the User field value if set, zero value otherwise.
@@ -560,38 +556,6 @@ func (o *CreateBox) SetAutoStopInterval(v int32) {
 	o.AutoStopInterval = &v
 }
 
-// GetAutoArchiveInterval returns the AutoArchiveInterval field value if set, zero value otherwise.
-func (o *CreateBox) GetAutoArchiveInterval() int32 {
-	if o == nil || IsNil(o.AutoArchiveInterval) {
-		var ret int32
-		return ret
-	}
-	return *o.AutoArchiveInterval
-}
-
-// GetAutoArchiveIntervalOk returns a tuple with the AutoArchiveInterval field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *CreateBox) GetAutoArchiveIntervalOk() (*int32, bool) {
-	if o == nil || IsNil(o.AutoArchiveInterval) {
-		return nil, false
-	}
-	return o.AutoArchiveInterval, true
-}
-
-// HasAutoArchiveInterval returns a boolean if a field has been set.
-func (o *CreateBox) HasAutoArchiveInterval() bool {
-	if o != nil && !IsNil(o.AutoArchiveInterval) {
-		return true
-	}
-
-	return false
-}
-
-// SetAutoArchiveInterval gets a reference to the given int32 and assigns it to the AutoArchiveInterval field.
-func (o *CreateBox) SetAutoArchiveInterval(v int32) {
-	o.AutoArchiveInterval = &v
-}
-
 // GetAutoDeleteInterval returns the AutoDeleteInterval field value if set, zero value otherwise.
 func (o *CreateBox) GetAutoDeleteInterval() int32 {
 	if o == nil || IsNil(o.AutoDeleteInterval) {
@@ -656,38 +620,6 @@ func (o *CreateBox) SetVolumes(v []BoxVolume) {
 	o.Volumes = v
 }
 
-// GetBuildInfo returns the BuildInfo field value if set, zero value otherwise.
-func (o *CreateBox) GetBuildInfo() CreateBuildInfo {
-	if o == nil || IsNil(o.BuildInfo) {
-		var ret CreateBuildInfo
-		return ret
-	}
-	return *o.BuildInfo
-}
-
-// GetBuildInfoOk returns a tuple with the BuildInfo field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *CreateBox) GetBuildInfoOk() (*CreateBuildInfo, bool) {
-	if o == nil || IsNil(o.BuildInfo) {
-		return nil, false
-	}
-	return o.BuildInfo, true
-}
-
-// HasBuildInfo returns a boolean if a field has been set.
-func (o *CreateBox) HasBuildInfo() bool {
-	if o != nil && !IsNil(o.BuildInfo) {
-		return true
-	}
-
-	return false
-}
-
-// SetBuildInfo gets a reference to the given CreateBuildInfo and assigns it to the BuildInfo field.
-func (o *CreateBox) SetBuildInfo(v CreateBuildInfo) {
-	o.BuildInfo = &v
-}
-
 func (o CreateBox) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -701,8 +633,8 @@ func (o CreateBox) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
 	}
-	if !IsNil(o.Snapshot) {
-		toSerialize["snapshot"] = o.Snapshot
+	if !IsNil(o.Image) {
+		toSerialize["image"] = o.Image
 	}
 	if !IsNil(o.User) {
 		toSerialize["user"] = o.User
@@ -743,17 +675,11 @@ func (o CreateBox) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.AutoStopInterval) {
 		toSerialize["autoStopInterval"] = o.AutoStopInterval
 	}
-	if !IsNil(o.AutoArchiveInterval) {
-		toSerialize["autoArchiveInterval"] = o.AutoArchiveInterval
-	}
 	if !IsNil(o.AutoDeleteInterval) {
 		toSerialize["autoDeleteInterval"] = o.AutoDeleteInterval
 	}
 	if !IsNil(o.Volumes) {
 		toSerialize["volumes"] = o.Volumes
-	}
-	if !IsNil(o.BuildInfo) {
-		toSerialize["buildInfo"] = o.BuildInfo
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -778,7 +704,7 @@ func (o *CreateBox) UnmarshalJSON(data []byte) (err error) {
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "name")
-		delete(additionalProperties, "snapshot")
+		delete(additionalProperties, "image")
 		delete(additionalProperties, "user")
 		delete(additionalProperties, "env")
 		delete(additionalProperties, "labels")
@@ -792,10 +718,8 @@ func (o *CreateBox) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "memory")
 		delete(additionalProperties, "disk")
 		delete(additionalProperties, "autoStopInterval")
-		delete(additionalProperties, "autoArchiveInterval")
 		delete(additionalProperties, "autoDeleteInterval")
 		delete(additionalProperties, "volumes")
-		delete(additionalProperties, "buildInfo")
 		o.AdditionalProperties = additionalProperties
 	}
 
