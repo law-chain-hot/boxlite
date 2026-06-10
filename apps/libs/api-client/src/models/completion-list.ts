@@ -12,26 +12,13 @@
  * Do not edit the class manually.
  */
 
+
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CompletionItem } from './completion-item'
+import type { CompletionItem } from './completion-item';
 
-/**
- *
- * @export
- * @interface CompletionList
- */
 export interface CompletionList {
-  /**
-   *
-   * @type {boolean}
-   * @memberof CompletionList
-   */
-  isIncomplete: boolean
-  /**
-   *
-   * @type {Array<CompletionItem>}
-   * @memberof CompletionList
-   */
-  items: Array<CompletionItem>
+    'isIncomplete': boolean;
+    'items': Array<CompletionItem>;
 }
+

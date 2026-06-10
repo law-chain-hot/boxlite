@@ -74,17 +74,17 @@ export class OrganizationDto {
   @ApiProperty({
     description: 'Max CPU per sandbox',
   })
-  maxCpuPerSandbox: number
+  maxCpuPerBox: number
 
   @ApiProperty({
     description: 'Max memory per sandbox',
   })
-  maxMemoryPerSandbox: number
+  maxMemoryPerBox: number
 
   @ApiProperty({
     description: 'Max disk per sandbox',
   })
-  maxDiskPerSandbox: number
+  maxDiskPerBox: number
 
   @ApiProperty({
     description: 'Time in minutes before an unused template is deactivated',
@@ -93,9 +93,9 @@ export class OrganizationDto {
   templateDeactivationTimeoutMinutes: number
 
   @ApiProperty({
-    description: 'Sandbox default network block all',
+    description: 'Box default network block all',
   })
-  sandboxLimitedNetworkEgress: boolean
+  boxLimitedNetworkEgress: boolean
 
   @ApiPropertyOptional({
     description: 'Default region ID',
@@ -110,16 +110,16 @@ export class OrganizationDto {
   authenticatedRateLimit: number | null
 
   @ApiProperty({
-    description: 'Sandbox create rate limit per minute',
+    description: 'Box create rate limit per minute',
     nullable: true,
   })
-  sandboxCreateRateLimit: number | null
+  boxCreateRateLimit: number | null
 
   @ApiProperty({
-    description: 'Sandbox lifecycle rate limit per minute',
+    description: 'Box lifecycle rate limit per minute',
     nullable: true,
   })
-  sandboxLifecycleRateLimit: number | null
+  boxLifecycleRateLimit: number | null
 
   @ApiProperty({
     description: 'Experimental configuration',
@@ -133,16 +133,16 @@ export class OrganizationDto {
   authenticatedRateLimitTtlSeconds: number | null
 
   @ApiProperty({
-    description: 'Sandbox create rate limit TTL in seconds',
+    description: 'Box create rate limit TTL in seconds',
     nullable: true,
   })
-  sandboxCreateRateLimitTtlSeconds: number | null
+  boxCreateRateLimitTtlSeconds: number | null
 
   @ApiProperty({
-    description: 'Sandbox lifecycle rate limit TTL in seconds',
+    description: 'Box lifecycle rate limit TTL in seconds',
     nullable: true,
   })
-  sandboxLifecycleRateLimitTtlSeconds: number | null
+  boxLifecycleRateLimitTtlSeconds: number | null
 
   static fromOrganization(organization: Organization, isDefaultForAuthenticatedUser = false): OrganizationDto {
     const experimentalConfig = organization._experimentalConfig
@@ -169,19 +169,19 @@ export class OrganizationDto {
       suspendedAt: organization.suspendedAt,
       suspendedUntil: organization.suspendedUntil,
       suspensionCleanupGracePeriodHours: organization.suspensionCleanupGracePeriodHours,
-      maxCpuPerSandbox: organization.maxCpuPerSandbox,
-      maxMemoryPerSandbox: organization.maxMemoryPerSandbox,
-      maxDiskPerSandbox: organization.maxDiskPerSandbox,
+      maxCpuPerBox: organization.maxCpuPerBox,
+      maxMemoryPerBox: organization.maxMemoryPerBox,
+      maxDiskPerBox: organization.maxDiskPerBox,
       templateDeactivationTimeoutMinutes: organization.templateDeactivationTimeoutMinutes,
-      sandboxLimitedNetworkEgress: organization.sandboxLimitedNetworkEgress,
+      boxLimitedNetworkEgress: organization.boxLimitedNetworkEgress,
       defaultRegionId: organization.defaultRegionId,
       authenticatedRateLimit: organization.authenticatedRateLimit,
-      sandboxCreateRateLimit: organization.sandboxCreateRateLimit,
-      sandboxLifecycleRateLimit: organization.sandboxLifecycleRateLimit,
+      boxCreateRateLimit: organization.boxCreateRateLimit,
+      boxLifecycleRateLimit: organization.boxLifecycleRateLimit,
       experimentalConfig,
       authenticatedRateLimitTtlSeconds: organization.authenticatedRateLimitTtlSeconds,
-      sandboxCreateRateLimitTtlSeconds: organization.sandboxCreateRateLimitTtlSeconds,
-      sandboxLifecycleRateLimitTtlSeconds: organization.sandboxLifecycleRateLimitTtlSeconds,
+      boxCreateRateLimitTtlSeconds: organization.boxCreateRateLimitTtlSeconds,
+      boxLifecycleRateLimitTtlSeconds: organization.boxLifecycleRateLimitTtlSeconds,
     }
 
     return dto

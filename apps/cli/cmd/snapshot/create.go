@@ -123,7 +123,7 @@ var CreateCmd = &cobra.Command{
 		}
 
 		view_common.RenderInfoMessageBold(fmt.Sprintf("Template %s successfully created", templateName))
-		view_common.RenderInfoMessage(fmt.Sprintf("%s Run 'boxlite sandbox create --template %s' to create a new sandbox using this template", view_common.Checkmark, templateName))
+		view_common.RenderInfoMessage(fmt.Sprintf("%s Run 'boxlite box create --template %s' to create a new box using this template", view_common.Checkmark, templateName))
 		return nil
 	},
 }
@@ -144,9 +144,9 @@ func init() {
 	CreateCmd.Flags().StringVarP(&imageNameFlag, "image", "i", "", "The image name for the template")
 	CreateCmd.Flags().StringVarP(&dockerfilePathFlag, "dockerfile", "f", "", "Path to Dockerfile to build")
 	CreateCmd.Flags().StringArrayVarP(&contextFlag, "context", "c", []string{}, "Files or directories to include in the build context (can be specified multiple times). If not provided, context will be automatically determined from COPY/ADD commands in the Dockerfile")
-	CreateCmd.Flags().Int32Var(&cpuFlag, "cpu", 0, "CPU cores that will be allocated to the underlying sandboxes (default: 1)")
-	CreateCmd.Flags().Int32Var(&memoryFlag, "memory", 0, "Memory that will be allocated to the underlying sandboxes in GB (default: 1)")
-	CreateCmd.Flags().Int32Var(&diskFlag, "disk", 0, "Disk space that will be allocated to the underlying sandboxes in GB (default: 3)")
+	CreateCmd.Flags().Int32Var(&cpuFlag, "cpu", 0, "CPU cores that will be allocated to the underlying boxes (default: 1)")
+	CreateCmd.Flags().Int32Var(&memoryFlag, "memory", 0, "Memory that will be allocated to the underlying boxes in GB (default: 1)")
+	CreateCmd.Flags().Int32Var(&diskFlag, "disk", 0, "Disk space that will be allocated to the underlying boxes in GB (default: 3)")
 	CreateCmd.Flags().StringVar(&regionIdFlag, "region", "", "ID of the region where the template will be available (defaults to organization default region)")
 
 	CreateCmd.MarkFlagsMutuallyExclusive("image", "dockerfile")

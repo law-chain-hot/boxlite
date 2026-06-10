@@ -6,9 +6,9 @@
 
 export { CodeLanguage, BoxLite } from './BoxLite'
 export type {
-  CreateSandboxBaseParams,
-  CreateSandboxFromImageParams,
-  CreateSandboxFromTemplateParams,
+  CreateBoxBaseParams,
+  CreateBoxFromImageParams,
+  CreateBoxFromTemplateParams,
   BoxliteConfig,
   Resources,
   TemplateResources,
@@ -22,8 +22,8 @@ export { Process } from './Process'
 // export type { LspLanguageId, Position } from './LspServer'
 export { BoxliteError, BoxLiteNotFoundError, BoxLiteRateLimitError, BoxLiteTimeoutError } from './errors/BoxliteError'
 export { Image } from './Image'
-export { Sandbox } from './Sandbox'
-export type { SandboxCodeToolbox } from './Sandbox'
+export { Box } from './Box'
+export type { BoxCodeToolbox } from './Box'
 export { TemplateService } from './Template'
 export type { CreateTemplateParams, PaginatedTemplates, Template } from './Template'
 export { ComputerUse, Mouse, Keyboard, Screenshot, Display } from './ComputerUse'
@@ -41,7 +41,7 @@ export type {
   ScatterChart,
 } from './types/Charts'
 
-export { SandboxState } from '@boxlite-ai/api-client'
+export { BoxState } from '@boxlite-ai/api-client'
 export type {
   FileInfo,
   GitStatus,

@@ -12,28 +12,17 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface ExecuteRequest
- */
+
+
 export interface ExecuteRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof ExecuteRequest
-   */
-  command: string
-  /**
-   * Current working directory
-   * @type {string}
-   * @memberof ExecuteRequest
-   */
-  cwd?: string
-  /**
-   * Timeout in seconds, defaults to 10 seconds
-   * @type {number}
-   * @memberof ExecuteRequest
-   */
-  timeout?: number
+    'command': string;
+    /**
+     * Current working directory
+     */
+    'cwd'?: string;
+    /**
+     * Timeout in seconds, defaults to 10 seconds
+     */
+    'timeout'?: number;
 }
+

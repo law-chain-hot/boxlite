@@ -55,7 +55,7 @@ type ServerConfig struct {
 	WorkDir               string
 	ConfigDir             string
 	ComputerUse           computeruse.IComputerUse
-	SandboxId             string
+	BoxId                 string
 	OtelEndpoint          *string
 	SessionService        *session_svc.SessionService
 	RecordingService      *recording.RecordingService
@@ -69,7 +69,7 @@ func NewServer(config ServerConfig) *server {
 	return &server{
 		logger:                config.Logger.With(slog.String("component", "toolbox_server")),
 		WorkDir:               config.WorkDir,
-		SandboxId:             config.SandboxId,
+		BoxId:                 config.BoxId,
 		otelEndpoint:          config.OtelEndpoint,
 		telemetry:             Telemetry{},
 		sessionService:        config.SessionService,
@@ -85,7 +85,7 @@ func NewServer(config ServerConfig) *server {
 type server struct {
 	WorkDir               string
 	ComputerUse           computeruse.IComputerUse
-	SandboxId             string
+	BoxId                 string
 	logger                *slog.Logger
 	otelEndpoint          *string
 	authToken             string
@@ -123,7 +123,7 @@ func (s *server) Start() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	otelServiceName := fmt.Sprintf("sandbox-%s", s.SandboxId)
+	otelServiceName := fmt.Sprintf("box-%s", s.BoxId)
 
 	r := gin.New()
 	r.Use(common_errors.Recovery())

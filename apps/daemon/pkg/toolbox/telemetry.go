@@ -58,7 +58,7 @@ func (s *server) initTelemetry(ctx context.Context, serviceName, entrypointLogFi
 		ServiceVersion: internal.Version,
 		Endpoint:       *s.otelEndpoint,
 		Headers: map[string]string{
-			"sandbox-auth-token": s.authToken,
+			"box-auth-token": s.authToken,
 		},
 	}
 
@@ -126,7 +126,7 @@ func (s *server) initTelemetry(ctx context.Context, serviceName, entrypointLogFi
 	}()
 
 	// Initialize OpenTelemetry metrics
-	mp, err := telemetry.InitMetrics(ctx, config, "boxlite.sandbox")
+	mp, err := telemetry.InitMetrics(ctx, config, "boxlite.box")
 	if err != nil {
 		if shutDownErr := lp.Shutdown(telemetryContext); shutDownErr != nil {
 			s.logger.ErrorContext(ctx, "Failed to shutdown logger after metrics initialization failure", "shutdownErr", shutDownErr)

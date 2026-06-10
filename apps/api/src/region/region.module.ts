@@ -8,9 +8,9 @@ import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Region } from './entities/region.entity'
 import { RegionService } from './services/region.service'
-import { Runner } from '../sandbox/entities/runner.entity'
+import { Runner } from '../box/entities/runner.entity'
 import { RegionController } from './controllers/region.controller'
-import { BoxTemplate } from '../sandbox/entities/box-template.entity'
+import { BoxTemplate } from '../box/entities/box-template.entity'
 
 @Module({
   imports: [TypeOrmModule.forFeature([Region, Runner, BoxTemplate])],

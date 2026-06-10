@@ -16,9 +16,9 @@ export enum OrganizationResourcePermission {
   WRITE_TEMPLATES = 'write:templates',
   DELETE_TEMPLATES = 'delete:templates',
 
-  // sandboxes
-  WRITE_SANDBOXES = 'write:sandboxes',
-  DELETE_SANDBOXES = 'delete:sandboxes',
+  // boxes
+  WRITE_BOXES = 'write:boxes',
+  DELETE_BOXES = 'delete:boxes',
 
   // volumes
   READ_VOLUMES = 'read:volumes',

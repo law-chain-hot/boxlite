@@ -23,7 +23,7 @@ type RunnerInstanceConfig struct {
 	ArtifactErrorCache *cache.ArtifactErrorCache
 	Boxlite            *blclient.Client
 	MetricsCollector   *metrics.Collector
-	SandboxService     *services.SandboxService
+	BoxService         *services.BoxService
 }
 
 type Runner struct {
@@ -32,7 +32,7 @@ type Runner struct {
 	ArtifactErrorCache *cache.ArtifactErrorCache
 	Boxlite            *blclient.Client
 	MetricsCollector   *metrics.Collector
-	SandboxService     *services.SandboxService
+	BoxService         *services.BoxService
 }
 
 var runner *Runner
@@ -57,7 +57,7 @@ func GetInstance(config *RunnerInstanceConfig) (*Runner, error) {
 			BackupInfoCache:    config.BackupInfoCache,
 			ArtifactErrorCache: config.ArtifactErrorCache,
 			Boxlite:            config.Boxlite,
-			SandboxService:     config.SandboxService,
+			BoxService:         config.BoxService,
 			MetricsCollector:   config.MetricsCollector,
 		}
 	}

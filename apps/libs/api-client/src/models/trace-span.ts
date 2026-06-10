@@ -12,64 +12,44 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface TraceSpan
- */
+
+
 export interface TraceSpan {
-  /**
-   * Trace identifier
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  traceId: string
-  /**
-   * Span identifier
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  spanId: string
-  /**
-   * Parent span identifier
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  parentSpanId?: string
-  /**
-   * Span name
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  spanName: string
-  /**
-   * Span start timestamp
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  timestamp: string
-  /**
-   * Span duration in nanoseconds
-   * @type {number}
-   * @memberof TraceSpan
-   */
-  durationNs: number
-  /**
-   * Span attributes
-   * @type {{ [key: string]: string; }}
-   * @memberof TraceSpan
-   */
-  spanAttributes: { [key: string]: string }
-  /**
-   * Status code of the span
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  statusCode?: string
-  /**
-   * Status message
-   * @type {string}
-   * @memberof TraceSpan
-   */
-  statusMessage?: string
+    /**
+     * Trace identifier
+     */
+    'traceId': string;
+    /**
+     * Span identifier
+     */
+    'spanId': string;
+    /**
+     * Parent span identifier
+     */
+    'parentSpanId'?: string;
+    /**
+     * Span name
+     */
+    'spanName': string;
+    /**
+     * Span start timestamp
+     */
+    'timestamp': string;
+    /**
+     * Span duration in nanoseconds
+     */
+    'durationNs': number;
+    /**
+     * Span attributes
+     */
+    'spanAttributes': { [key: string]: string; };
+    /**
+     * Status code of the span
+     */
+    'statusCode'?: string;
+    /**
+     * Status message
+     */
+    'statusMessage'?: string;
 }
+

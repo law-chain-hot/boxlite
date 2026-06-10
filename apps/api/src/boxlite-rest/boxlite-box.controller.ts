@@ -24,19 +24,19 @@ import { CombinedAuthGuard } from '../auth/combined-auth.guard'
 import { OrganizationResourceActionGuard } from '../organization/guards/organization-resource-action.guard'
 import { AuthContext } from '../common/decorators/auth-context.decorator'
 import { OrganizationAuthContext } from '../common/interfaces/auth-context.interface'
-import { SandboxService } from '../sandbox/services/sandbox.service'
-import { SandboxStateWaiterService } from '../sandbox/services/sandbox-state-waiter.service'
-import { Sandbox } from '../sandbox/entities/sandbox.entity'
-import { SandboxState } from '../sandbox/enums/sandbox-state.enum'
-import { SandboxDesiredState } from '../sandbox/enums/sandbox-desired-state.enum'
+import { BoxService } from '../box/services/box.service'
+import { BoxStateWaiterService } from '../box/services/box-state-waiter.service'
+import { Box } from '../box/entities/box.entity'
+import { BoxState } from '../box/enums/box-state.enum'
+import { BoxDesiredState } from '../box/enums/box-desired-state.enum'
 import { BoxResponseDto, ListBoxesResponseDto } from './dto/box-response.dto'
 import { CreateBoxDto } from './dto/create-box.dto'
-import { sandboxToBoxResponse, createBoxToCreateSandbox } from './mappers/sandbox-to-box.mapper'
+import { boxToBoxResponse, createBoxToCreateBox } from './mappers/box-to-box.mapper'
 import { Audit, MASKED_AUDIT_VALUE, TypedRequest } from '../audit/decorators/audit.decorator'
 import { AuditAction } from '../audit/enums/audit-action.enum'
 import { AuditTarget } from '../audit/enums/audit-target.enum'
 import { BadRequestError } from '../exceptions/bad-request.exception'
-import { getAllowedSystemTemplateNames } from '../sandbox/constants/system-templates'
+import { getAllowedSystemTemplateNames } from '../box/constants/system-templates'
 
 @ApiTags('BoxLite REST')
 @Controller(['v1/boxes', 'v1/:prefix/boxes'])
@@ -46,8 +46,8 @@ export class BoxliteBoxController {
   private readonly logger = new Logger(BoxliteBoxController.name)
 
   constructor(
-    private readonly sandboxService: SandboxService,
-    private readonly sandboxStateWaiter: SandboxStateWaiterService,
+    private readonly boxService: BoxService,
+    private readonly boxStateWaiter: BoxStateWaiterService,
   ) {}
 
   @Post()
@@ -85,18 +85,18 @@ export class BoxliteBoxController {
     @Body() dto: CreateBoxDto,
   ): Promise<BoxResponseDto> {
     const organization = authContext.organization
-    const createSandboxDto = createBoxToCreateSandbox(dto)
-    if (dto.image && !createSandboxDto.templateId) {
+    const createBoxDto = createBoxToCreateBox(dto)
+    if (dto.image && !createBoxDto.templateId) {
       throw new BadRequestError(
         `Choose one of the approved images to create a box. Allowed images: ${getAllowedSystemTemplateNames()}`,
       )
     }
 
-    let sandbox = await this.sandboxService.createFromTemplate(createSandboxDto, organization)
-    if (sandbox.state !== SandboxState.STARTED) {
-      sandbox = await this.sandboxStateWaiter.waitForStarted(sandbox.id, organization.id, 30)
+    let box = await this.boxService.createFromTemplate(createBoxDto, organization)
+    if (box.state !== BoxState.STARTED) {
+      box = await this.boxStateWaiter.waitForStarted(box.id, organization.id, 30)
     }
-    return sandboxToBoxResponse(sandbox)
+    return boxToBoxResponse(box)
   }
 
   @Get()
@@ -109,10 +109,10 @@ export class BoxliteBoxController {
     @AuthContext() authContext: OrganizationAuthContext,
     @Query('pageSize') pageSize?: string,
   ): Promise<ListBoxesResponseDto> {
-    const sandboxes = await this.sandboxService.findAllDeprecated(authContext.organizationId)
-    const dtos = await this.sandboxService.toSandboxDtos(sandboxes)
+    const boxes = await this.boxService.findAllDeprecated(authContext.organizationId)
+    const dtos = await this.boxService.toBoxDtos(boxes)
     return {
-      boxes: dtos.map(sandboxToBoxResponse),
+      boxes: dtos.map(boxToBoxResponse),
     }
   }
 
@@ -126,9 +126,9 @@ export class BoxliteBoxController {
     @AuthContext() authContext: OrganizationAuthContext,
     @Param('boxId') boxId: string,
   ): Promise<BoxResponseDto> {
-    const sandbox = await this.sandboxService.findOneByIdOrName(boxId, authContext.organizationId)
-    const dto = await this.sandboxService.toSandboxDto(sandbox)
-    return sandboxToBoxResponse(dto)
+    const box = await this.boxService.findOneByIdOrName(boxId, authContext.organizationId)
+    const dto = await this.boxService.toBoxDto(box)
+    return boxToBoxResponse(dto)
   }
 
   @Head(':boxId')
@@ -138,7 +138,7 @@ export class BoxliteBoxController {
     @Res() res: Response,
   ) {
     try {
-      await this.sandboxService.findOneByIdOrName(boxId, authContext.organizationId)
+      await this.boxService.findOneByIdOrName(boxId, authContext.organizationId)
       res.status(204).end()
     } catch {
       res.status(404).end()
@@ -153,7 +153,7 @@ export class BoxliteBoxController {
     targetIdFromRequest: (req) => req.params.boxId,
   })
   async removeBox(@AuthContext() authContext: OrganizationAuthContext, @Param('boxId') boxId: string) {
-    await this.sandboxService.destroy(boxId, authContext.organizationId)
+    await this.boxService.destroy(boxId, authContext.organizationId)
   }
 
   @Post(':boxId/start')
@@ -172,19 +172,19 @@ export class BoxliteBoxController {
     @AuthContext() authContext: OrganizationAuthContext,
     @Param('boxId') boxId: string,
   ): Promise<BoxResponseDto> {
-    let sandbox = await this.sandboxService.findOneByIdOrName(boxId, authContext.organizationId)
+    let box = await this.boxService.findOneByIdOrName(boxId, authContext.organizationId)
 
-    if (this.isStartAlreadyInProgress(sandbox)) {
-      const dto = await this.sandboxStateWaiter.waitForStarted(sandbox.id, authContext.organizationId, 30)
-      return sandboxToBoxResponse(dto)
+    if (this.isStartAlreadyInProgress(box)) {
+      const dto = await this.boxStateWaiter.waitForStarted(box.id, authContext.organizationId, 30)
+      return boxToBoxResponse(dto)
     }
 
-    sandbox = await this.sandboxService.start(boxId, authContext.organization)
-    let dto = await this.sandboxService.toSandboxDto(sandbox)
-    if (dto.state !== SandboxState.STARTED) {
-      dto = await this.sandboxStateWaiter.waitForStarted(sandbox.id, authContext.organizationId, 30)
+    box = await this.boxService.start(boxId, authContext.organization)
+    let dto = await this.boxService.toBoxDto(box)
+    if (dto.state !== BoxState.STARTED) {
+      dto = await this.boxStateWaiter.waitForStarted(box.id, authContext.organizationId, 30)
     }
-    return sandboxToBoxResponse(dto)
+    return boxToBoxResponse(dto)
   }
 
   @Post(':boxId/stop')
@@ -203,21 +203,21 @@ export class BoxliteBoxController {
     @AuthContext() authContext: OrganizationAuthContext,
     @Param('boxId') boxId: string,
   ): Promise<BoxResponseDto> {
-    const sandbox = await this.sandboxService.stop(boxId, authContext.organizationId)
-    const dto = await this.sandboxService.toSandboxDto(sandbox)
-    return sandboxToBoxResponse(dto)
+    const box = await this.boxService.stop(boxId, authContext.organizationId)
+    const dto = await this.boxService.toBoxDto(box)
+    return boxToBoxResponse(dto)
   }
 
-  private isStartAlreadyInProgress(sandbox: Sandbox): boolean {
+  private isStartAlreadyInProgress(box: Box): boolean {
     return (
-      sandbox.desiredState === SandboxDesiredState.STARTED &&
+      box.desiredState === BoxDesiredState.STARTED &&
       [
-        SandboxState.UNKNOWN,
-        SandboxState.CREATING,
-        SandboxState.STARTING,
-        SandboxState.RESTORING,
-        SandboxState.PULLING_ARTIFACT,
-      ].includes(sandbox.state)
+        BoxState.UNKNOWN,
+        BoxState.CREATING,
+        BoxState.STARTING,
+        BoxState.RESTORING,
+        BoxState.PULLING_ARTIFACT,
+      ].includes(box.state)
     )
   }
 }

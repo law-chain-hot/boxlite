@@ -12,34 +12,24 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface SignedPortPreviewUrl
- */
+
+
 export interface SignedPortPreviewUrl {
-  /**
-   * ID of the sandbox
-   * @type {string}
-   * @memberof SignedPortPreviewUrl
-   */
-  sandboxId: string
-  /**
-   * Port number of the signed preview URL
-   * @type {number}
-   * @memberof SignedPortPreviewUrl
-   */
-  port: number
-  /**
-   * Token of the signed preview URL
-   * @type {string}
-   * @memberof SignedPortPreviewUrl
-   */
-  token: string
-  /**
-   * Signed preview url
-   * @type {string}
-   * @memberof SignedPortPreviewUrl
-   */
-  url: string
+    /**
+     * ID of the sandbox
+     */
+    'boxId': string;
+    /**
+     * Port number of the signed preview URL
+     */
+    'port': number;
+    /**
+     * Token of the signed preview URL
+     */
+    'token': string;
+    /**
+     * Signed preview url
+     */
+    'url': string;
 }
+

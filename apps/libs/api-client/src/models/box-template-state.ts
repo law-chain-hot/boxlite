@@ -12,21 +12,21 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @enum {string}
- */
 
-export const BoxTemplateState = {
-  BUILDING: 'building',
-  PENDING: 'pending',
-  PULLING: 'pulling',
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-  ERROR: 'error',
-  BUILD_FAILED: 'build_failed',
-  REMOVING: 'removing',
-} as const
 
-export type BoxTemplateState = (typeof BoxTemplateState)[keyof typeof BoxTemplateState]
+
+export const SnapshotState = {
+    BUILDING: 'building',
+    PENDING: 'pending',
+    PULLING: 'pulling',
+    ACTIVE: 'active',
+    INACTIVE: 'inactive',
+    ERROR: 'error',
+    BUILD_FAILED: 'build_failed',
+    REMOVING: 'removing',
+} as const;
+
+export type SnapshotState = typeof SnapshotState[keyof typeof SnapshotState];
+
+
+

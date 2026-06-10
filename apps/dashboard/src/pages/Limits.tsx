@@ -174,9 +174,9 @@ export default function Limits() {
                   description="Resources limit per box."
                   className="border-t border-border"
                   rateLimits={[
-                    { label: 'Compute', value: selectedOrganization?.maxCpuPerSandbox, unit: 'vCPU' },
-                    { label: 'Memory', value: selectedOrganization?.maxMemoryPerSandbox, unit: 'GiB' },
-                    { label: 'Storage', value: selectedOrganization?.maxDiskPerSandbox, unit: 'GiB' },
+                    { label: 'Compute', value: selectedOrganization?.maxCpuPerBox, unit: 'vCPU' },
+                    { label: 'Memory', value: selectedOrganization?.maxMemoryPerBox, unit: 'GiB' },
+                    { label: 'Storage', value: selectedOrganization?.maxDiskPerBox, unit: 'GiB' },
                   ]}
                 />
 
@@ -192,18 +192,18 @@ export default function Limits() {
                         selectedOrganization?.authenticatedRateLimitTtlSeconds ?? config?.rateLimit?.authenticated?.ttl,
                     },
                     {
-                      value: selectedOrganization?.sandboxCreateRateLimit || config?.rateLimit?.sandboxCreate?.limit,
+                      value: selectedOrganization?.boxCreateRateLimit || config?.rateLimit?.boxCreate?.limit,
                       label: 'Box Creation',
                       ttlSeconds:
-                        selectedOrganization?.sandboxCreateRateLimitTtlSeconds ?? config?.rateLimit?.sandboxCreate?.ttl,
+                        selectedOrganization?.boxCreateRateLimitTtlSeconds ?? config?.rateLimit?.boxCreate?.ttl,
                     },
                     {
                       value:
-                        selectedOrganization?.sandboxLifecycleRateLimit || config?.rateLimit?.sandboxLifecycle?.limit,
+                        selectedOrganization?.boxLifecycleRateLimit || config?.rateLimit?.boxLifecycle?.limit,
                       label: 'Box Lifecycle',
                       ttlSeconds:
-                        selectedOrganization?.sandboxLifecycleRateLimitTtlSeconds ??
-                        config?.rateLimit?.sandboxLifecycle?.ttl,
+                        selectedOrganization?.boxLifecycleRateLimitTtlSeconds ??
+                        config?.rateLimit?.boxLifecycle?.ttl,
                     },
                   ]}
                 />

@@ -12,22 +12,10 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface GitDeleteBranchRequest
- */
+
+
 export interface GitDeleteBranchRequest {
-  /**
-   *
-   * @type {string}
-   * @memberof GitDeleteBranchRequest
-   */
-  path: string
-  /**
-   *
-   * @type {string}
-   * @memberof GitDeleteBranchRequest
-   */
-  name: string
+    'path': string;
+    'name': string;
 }
+

@@ -12,16 +12,12 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface Url
- */
+
+
 export interface Url {
-  /**
-   * URL response
-   * @type {string}
-   * @memberof Url
-   */
-  url: string
+    /**
+     * URL response
+     */
+    'url': string;
 }
+

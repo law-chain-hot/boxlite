@@ -159,7 +159,7 @@ export default $config({
     const cluster = new sst.aws.Cluster('Cluster', { vpc, forceUpgrade: 'v2' })
 
     // ─── 3. IAM ──────────────────────────────────────────────────────────────
-    // S3 IAM user: API signs STS tokens for sandbox S3 uploads.
+    // S3 IAM user: API signs STS tokens for box S3 uploads.
     const s3User = new aws.iam.User('S3User', {})
     new aws.iam.UserPolicy('S3UserPolicy', {
       user: s3User.name,
@@ -365,7 +365,7 @@ export default $config({
           OIDC_POST_LOGOUT_REDIRECT_ALLOWLIST: process.env.OIDC_POST_LOGOUT_REDIRECT_ALLOWLIST,
         }),
 
-        // S3 (API signs STS creds for per-sandbox buckets)
+        // S3 (API signs STS creds for per-box buckets)
         S3_ENDPOINT: $interpolate`https://s3.${aws.getRegionOutput().name}.amazonaws.com`,
         S3_STS_ENDPOINT: $interpolate`https://sts.${aws.getRegionOutput().name}.amazonaws.com`,
         S3_REGION: REGION,
@@ -462,7 +462,7 @@ export default $config({
         DEFAULT_RUNNER_API_URL: runnerEndpoint('DEFAULT_RUNNER_API_URL', PORTS.RUNNER, 'http://'),
         DEFAULT_RUNNER_PROXY_URL: runnerEndpoint('DEFAULT_RUNNER_PROXY_URL', PORTS.PROXY, 'http://'),
 
-        // PostHog (enables the dashboard's "Create Sandbox" feature flag)
+        // PostHog (enables the dashboard's "Create Box" feature flag)
         ...(process.env.POSTHOG_API_KEY && {
           POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
           POSTHOG_HOST: envOr('POSTHOG_HOST', 'https://us.posthog.com'),
@@ -477,7 +477,7 @@ export default $config({
     })
 
     // ─── 7. EDGE SERVICES ────────────────────────────────────────────────────
-    // Proxy: routes `<port>-<sandboxid>.proxy.<stack>` to the sandbox port.
+    // Proxy: routes `<port>-<sandboxid>.proxy.<stack>` to the box port.
     // Wildcard cert covers *.proxy.<stack>; Cloudflare serves wildcard DNS.
     const proxyDomain = `proxy.${stackDomain}`
     new sst.aws.Service('Proxy', {
@@ -512,7 +512,7 @@ export default $config({
       },
     })
 
-    // SSH Gateway: `ssh <sandbox>@ssh.<stackDomain>:2222` proxies to the sandbox.
+    // SSH Gateway: `ssh <box>@ssh.<stackDomain>:2222` proxies to the box.
     // The NLB has no domain field (TCP listeners don't take ACM certs); instead we
     // attach a Cloudflare CNAME directly via cloudflareDns.createAlias below so users
     // get a stable, memorable hostname instead of the auto-generated NLB DNS name.
@@ -521,7 +521,7 @@ export default $config({
       image: { context: '../..', dockerfile: 'apps/ssh-gateway/Dockerfile', cache: false },
       loadBalancer: { rules: [{ listen: `${PORTS.SSH_GATEWAY}/tcp`, forward: `${PORTS.SSH_GATEWAY}/tcp` }] },
       environment: {
-        // api-client-go composes paths like "/sandbox/ssh-access/validate" directly.
+        // api-client-go composes paths like "/box/ssh-access/validate" directly.
         // The Nest control plane is globally mounted under /api, so the gateway
         // must use the API base path rather than the raw ALB root.
         API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
@@ -665,7 +665,7 @@ export default $config({
       buildRunnerUserData({ apiUrl, token, otelEndpoint, ghcrSecretArn: ghcrSecretArn || undefined, ghcrUsername }),
     )
 
-    // Runner holds load-bearing sandbox state (/var/lib/boxlite + in-memory
+    // Runner holds load-bearing box state (/var/lib/boxlite + in-memory
     // libkrun VMs). Two Pulumi resource options keep it persistent across
     // routine deploys:
     //

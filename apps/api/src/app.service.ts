@@ -9,16 +9,16 @@ import { OrganizationService } from './organization/services/organization.servic
 import { UserService } from './user/user.service'
 import { ApiKeyService } from './api-key/api-key.service'
 import { EventEmitterReadinessWatcher } from '@nestjs/event-emitter'
-import { BoxTemplateService } from './sandbox/services/box-template.service'
+import { BoxTemplateService } from './box/services/box-template.service'
 import { SystemRole } from './user/enums/system-role.enum'
 import { TypedConfigService } from './config/typed-config.service'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { RegionService } from './region/services/region.service'
-import { RunnerService } from './sandbox/services/runner.service'
-import { RunnerAdapterFactory } from './sandbox/runner-adapter/runnerAdapter'
+import { RunnerService } from './box/services/runner.service'
+import { RunnerAdapterFactory } from './box/runner-adapter/runnerAdapter'
 import { RegionType } from './region/enums/region-type.enum'
-import { RunnerState } from './sandbox/enums/runner-state.enum'
-import { resolveSystemTemplateName, SYSTEM_TEMPLATES } from './sandbox/constants/system-templates'
+import { RunnerState } from './box/enums/runner-state.enum'
+import { resolveSystemTemplateName, SYSTEM_TEMPLATES } from './box/constants/system-templates'
 
 export const BOXLITE_ADMIN_USER_ID = 'boxlite-admin'
 
@@ -170,9 +170,9 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
           totalCpuQuota: this.configService.getOrThrow('admin.totalCpuQuota'),
           totalMemoryQuota: this.configService.getOrThrow('admin.totalMemoryQuota'),
           totalDiskQuota: this.configService.getOrThrow('admin.totalDiskQuota'),
-          maxCpuPerSandbox: this.configService.getOrThrow('admin.maxCpuPerSandbox'),
-          maxMemoryPerSandbox: this.configService.getOrThrow('admin.maxMemoryPerSandbox'),
-          maxDiskPerSandbox: this.configService.getOrThrow('admin.maxDiskPerSandbox'),
+          maxCpuPerBox: this.configService.getOrThrow('admin.maxCpuPerBox'),
+          maxMemoryPerBox: this.configService.getOrThrow('admin.maxMemoryPerBox'),
+          maxDiskPerBox: this.configService.getOrThrow('admin.maxDiskPerBox'),
           templateQuota: this.configService.getOrThrow('admin.templateQuota'),
           maxTemplateSize: this.configService.getOrThrow('admin.maxTemplateSize'),
           volumeQuota: this.configService.getOrThrow('admin.volumeQuota'),
@@ -203,9 +203,9 @@ Admin API key ensured: ${this.maskApiKeyForLog(value)}
 
   private async ensureAdminOrganizationQuota(organizationId: string): Promise<void> {
     await this.organizationService.updateQuota(organizationId, {
-      maxCpuPerSandbox: this.configService.getOrThrow('admin.maxCpuPerSandbox'),
-      maxMemoryPerSandbox: this.configService.getOrThrow('admin.maxMemoryPerSandbox'),
-      maxDiskPerSandbox: this.configService.getOrThrow('admin.maxDiskPerSandbox'),
+      maxCpuPerBox: this.configService.getOrThrow('admin.maxCpuPerBox'),
+      maxMemoryPerBox: this.configService.getOrThrow('admin.maxMemoryPerBox'),
+      maxDiskPerBox: this.configService.getOrThrow('admin.maxDiskPerBox'),
       templateQuota: this.configService.getOrThrow('admin.templateQuota'),
       maxTemplateSize: this.configService.getOrThrow('admin.maxTemplateSize'),
       volumeQuota: this.configService.getOrThrow('admin.volumeQuota'),

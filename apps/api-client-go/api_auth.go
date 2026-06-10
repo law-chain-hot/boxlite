@@ -19,15 +19,16 @@ import (
 	"net/url"
 )
 
+
 type AuthAPI interface {
 
 	/*
-		LogoutControllerEndSession OIDC RP-initiated logout endpoint
+	LogoutControllerEndSession OIDC RP-initiated logout endpoint
 
-		Implements OpenID Connect RP-Initiated Logout 1.0 for IdPs (e.g. Dex) that do not natively advertise end_session_endpoint. Validates the post-logout redirect target, then 302-redirects the browser back to the SPA.
+	Implements OpenID Connect RP-Initiated Logout 1.0 for IdPs (e.g. Dex) that do not natively advertise end_session_endpoint. Validates the post-logout redirect target, then 302-redirects the browser back to the SPA.
 
-		@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-		@return AuthAPILogoutControllerEndSessionRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return AuthAPILogoutControllerEndSessionRequest
 	*/
 	LogoutControllerEndSession(ctx context.Context) AuthAPILogoutControllerEndSessionRequest
 
@@ -39,11 +40,11 @@ type AuthAPI interface {
 type AuthAPIService service
 
 type AuthAPILogoutControllerEndSessionRequest struct {
-	ctx                   context.Context
-	ApiService            AuthAPI
+	ctx context.Context
+	ApiService AuthAPI
 	postLogoutRedirectUri *string
-	idTokenHint           *string
-	state                 *string
+	idTokenHint *string
+	state *string
 }
 
 func (r AuthAPILogoutControllerEndSessionRequest) PostLogoutRedirectUri(postLogoutRedirectUri string) AuthAPILogoutControllerEndSessionRequest {
@@ -70,22 +71,22 @@ LogoutControllerEndSession OIDC RP-initiated logout endpoint
 
 Implements OpenID Connect RP-Initiated Logout 1.0 for IdPs (e.g. Dex) that do not natively advertise end_session_endpoint. Validates the post-logout redirect target, then 302-redirects the browser back to the SPA.
 
-	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return AuthAPILogoutControllerEndSessionRequest
+ @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ @return AuthAPILogoutControllerEndSessionRequest
 */
 func (a *AuthAPIService) LogoutControllerEndSession(ctx context.Context) AuthAPILogoutControllerEndSessionRequest {
 	return AuthAPILogoutControllerEndSessionRequest{
 		ApiService: a,
-		ctx:        ctx,
+		ctx: ctx,
 	}
 }
 
 // Execute executes the request
 func (a *AuthAPIService) LogoutControllerEndSessionExecute(r AuthAPILogoutControllerEndSessionRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod = http.MethodGet
-		localVarPostBody   interface{}
-		formFiles          []formFile
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		formFiles            []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AuthAPIService.LogoutControllerEndSession")

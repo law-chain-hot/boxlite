@@ -16,56 +16,56 @@ import (
 	"fmt"
 )
 
-// checks if the CreateBoxTemplate type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &CreateBoxTemplate{}
+// checks if the CreateSnapshot type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &CreateSnapshot{}
 
-// CreateBoxTemplate struct for CreateBoxTemplate
-type CreateBoxTemplate struct {
-	// The template name
+// CreateSnapshot struct for CreateSnapshot
+type CreateSnapshot struct {
+	// The name of the snapshot
 	Name string `json:"name"`
-	// The source image used to create the template artifact
+	// The image name of the snapshot
 	ImageName *string `json:"imageName,omitempty"`
-	// The entrypoint command for boxes created from the template
+	// The entrypoint command for the snapshot
 	Entrypoint []string `json:"entrypoint,omitempty"`
-	// Whether the template is available to all organizations
+	// Whether the snapshot is general
 	General *bool `json:"general,omitempty"`
-	// Default CPU cores allocated to boxes created from the template
+	// CPU cores allocated to the resulting sandbox
 	Cpu *int32 `json:"cpu,omitempty"`
-	// Default GPU units allocated to boxes created from the template
+	// GPU units allocated to the resulting sandbox
 	Gpu *int32 `json:"gpu,omitempty"`
-	// Default memory allocated to boxes created from the template in GB
+	// Memory allocated to the resulting box in GB
 	Memory *int32 `json:"memory,omitempty"`
-	// Default disk allocated to boxes created from the template in GB
+	// Disk space allocated to the box in GB
 	Disk *int32 `json:"disk,omitempty"`
-	// Build information for the template artifact
+	// Build information for the snapshot
 	BuildInfo *CreateBuildInfo `json:"buildInfo,omitempty"`
-	// ID of the region where the template will be available. Defaults to organization default region if not specified.
-	RegionId             *string `json:"regionId,omitempty"`
+	// ID of the region where the snapshot will be available. Defaults to organization default region if not specified.
+	RegionId *string `json:"regionId,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
-type _CreateBoxTemplate CreateBoxTemplate
+type _CreateSnapshot CreateSnapshot
 
-// NewCreateBoxTemplate instantiates a new CreateBoxTemplate object
+// NewCreateSnapshot instantiates a new CreateSnapshot object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreateBoxTemplate(name string) *CreateBoxTemplate {
-	this := CreateBoxTemplate{}
+func NewCreateSnapshot(name string) *CreateSnapshot {
+	this := CreateSnapshot{}
 	this.Name = name
 	return &this
 }
 
-// NewCreateBoxTemplateWithDefaults instantiates a new CreateBoxTemplate object
+// NewCreateSnapshotWithDefaults instantiates a new CreateSnapshot object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewCreateBoxTemplateWithDefaults() *CreateBoxTemplate {
-	this := CreateBoxTemplate{}
+func NewCreateSnapshotWithDefaults() *CreateSnapshot {
+	this := CreateSnapshot{}
 	return &this
 }
 
 // GetName returns the Name field value
-func (o *CreateBoxTemplate) GetName() string {
+func (o *CreateSnapshot) GetName() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -76,7 +76,7 @@ func (o *CreateBoxTemplate) GetName() string {
 
 // GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetNameOk() (*string, bool) {
+func (o *CreateSnapshot) GetNameOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -84,12 +84,12 @@ func (o *CreateBoxTemplate) GetNameOk() (*string, bool) {
 }
 
 // SetName sets field value
-func (o *CreateBoxTemplate) SetName(v string) {
+func (o *CreateSnapshot) SetName(v string) {
 	o.Name = v
 }
 
 // GetImageName returns the ImageName field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetImageName() string {
+func (o *CreateSnapshot) GetImageName() string {
 	if o == nil || IsNil(o.ImageName) {
 		var ret string
 		return ret
@@ -99,7 +99,7 @@ func (o *CreateBoxTemplate) GetImageName() string {
 
 // GetImageNameOk returns a tuple with the ImageName field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetImageNameOk() (*string, bool) {
+func (o *CreateSnapshot) GetImageNameOk() (*string, bool) {
 	if o == nil || IsNil(o.ImageName) {
 		return nil, false
 	}
@@ -107,7 +107,7 @@ func (o *CreateBoxTemplate) GetImageNameOk() (*string, bool) {
 }
 
 // HasImageName returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasImageName() bool {
+func (o *CreateSnapshot) HasImageName() bool {
 	if o != nil && !IsNil(o.ImageName) {
 		return true
 	}
@@ -116,12 +116,12 @@ func (o *CreateBoxTemplate) HasImageName() bool {
 }
 
 // SetImageName gets a reference to the given string and assigns it to the ImageName field.
-func (o *CreateBoxTemplate) SetImageName(v string) {
+func (o *CreateSnapshot) SetImageName(v string) {
 	o.ImageName = &v
 }
 
 // GetEntrypoint returns the Entrypoint field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetEntrypoint() []string {
+func (o *CreateSnapshot) GetEntrypoint() []string {
 	if o == nil || IsNil(o.Entrypoint) {
 		var ret []string
 		return ret
@@ -131,7 +131,7 @@ func (o *CreateBoxTemplate) GetEntrypoint() []string {
 
 // GetEntrypointOk returns a tuple with the Entrypoint field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetEntrypointOk() ([]string, bool) {
+func (o *CreateSnapshot) GetEntrypointOk() ([]string, bool) {
 	if o == nil || IsNil(o.Entrypoint) {
 		return nil, false
 	}
@@ -139,7 +139,7 @@ func (o *CreateBoxTemplate) GetEntrypointOk() ([]string, bool) {
 }
 
 // HasEntrypoint returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasEntrypoint() bool {
+func (o *CreateSnapshot) HasEntrypoint() bool {
 	if o != nil && !IsNil(o.Entrypoint) {
 		return true
 	}
@@ -148,12 +148,12 @@ func (o *CreateBoxTemplate) HasEntrypoint() bool {
 }
 
 // SetEntrypoint gets a reference to the given []string and assigns it to the Entrypoint field.
-func (o *CreateBoxTemplate) SetEntrypoint(v []string) {
+func (o *CreateSnapshot) SetEntrypoint(v []string) {
 	o.Entrypoint = v
 }
 
 // GetGeneral returns the General field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetGeneral() bool {
+func (o *CreateSnapshot) GetGeneral() bool {
 	if o == nil || IsNil(o.General) {
 		var ret bool
 		return ret
@@ -163,7 +163,7 @@ func (o *CreateBoxTemplate) GetGeneral() bool {
 
 // GetGeneralOk returns a tuple with the General field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetGeneralOk() (*bool, bool) {
+func (o *CreateSnapshot) GetGeneralOk() (*bool, bool) {
 	if o == nil || IsNil(o.General) {
 		return nil, false
 	}
@@ -171,7 +171,7 @@ func (o *CreateBoxTemplate) GetGeneralOk() (*bool, bool) {
 }
 
 // HasGeneral returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasGeneral() bool {
+func (o *CreateSnapshot) HasGeneral() bool {
 	if o != nil && !IsNil(o.General) {
 		return true
 	}
@@ -180,12 +180,12 @@ func (o *CreateBoxTemplate) HasGeneral() bool {
 }
 
 // SetGeneral gets a reference to the given bool and assigns it to the General field.
-func (o *CreateBoxTemplate) SetGeneral(v bool) {
+func (o *CreateSnapshot) SetGeneral(v bool) {
 	o.General = &v
 }
 
 // GetCpu returns the Cpu field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetCpu() int32 {
+func (o *CreateSnapshot) GetCpu() int32 {
 	if o == nil || IsNil(o.Cpu) {
 		var ret int32
 		return ret
@@ -195,7 +195,7 @@ func (o *CreateBoxTemplate) GetCpu() int32 {
 
 // GetCpuOk returns a tuple with the Cpu field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetCpuOk() (*int32, bool) {
+func (o *CreateSnapshot) GetCpuOk() (*int32, bool) {
 	if o == nil || IsNil(o.Cpu) {
 		return nil, false
 	}
@@ -203,7 +203,7 @@ func (o *CreateBoxTemplate) GetCpuOk() (*int32, bool) {
 }
 
 // HasCpu returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasCpu() bool {
+func (o *CreateSnapshot) HasCpu() bool {
 	if o != nil && !IsNil(o.Cpu) {
 		return true
 	}
@@ -212,12 +212,12 @@ func (o *CreateBoxTemplate) HasCpu() bool {
 }
 
 // SetCpu gets a reference to the given int32 and assigns it to the Cpu field.
-func (o *CreateBoxTemplate) SetCpu(v int32) {
+func (o *CreateSnapshot) SetCpu(v int32) {
 	o.Cpu = &v
 }
 
 // GetGpu returns the Gpu field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetGpu() int32 {
+func (o *CreateSnapshot) GetGpu() int32 {
 	if o == nil || IsNil(o.Gpu) {
 		var ret int32
 		return ret
@@ -227,7 +227,7 @@ func (o *CreateBoxTemplate) GetGpu() int32 {
 
 // GetGpuOk returns a tuple with the Gpu field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetGpuOk() (*int32, bool) {
+func (o *CreateSnapshot) GetGpuOk() (*int32, bool) {
 	if o == nil || IsNil(o.Gpu) {
 		return nil, false
 	}
@@ -235,7 +235,7 @@ func (o *CreateBoxTemplate) GetGpuOk() (*int32, bool) {
 }
 
 // HasGpu returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasGpu() bool {
+func (o *CreateSnapshot) HasGpu() bool {
 	if o != nil && !IsNil(o.Gpu) {
 		return true
 	}
@@ -244,12 +244,12 @@ func (o *CreateBoxTemplate) HasGpu() bool {
 }
 
 // SetGpu gets a reference to the given int32 and assigns it to the Gpu field.
-func (o *CreateBoxTemplate) SetGpu(v int32) {
+func (o *CreateSnapshot) SetGpu(v int32) {
 	o.Gpu = &v
 }
 
 // GetMemory returns the Memory field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetMemory() int32 {
+func (o *CreateSnapshot) GetMemory() int32 {
 	if o == nil || IsNil(o.Memory) {
 		var ret int32
 		return ret
@@ -259,7 +259,7 @@ func (o *CreateBoxTemplate) GetMemory() int32 {
 
 // GetMemoryOk returns a tuple with the Memory field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetMemoryOk() (*int32, bool) {
+func (o *CreateSnapshot) GetMemoryOk() (*int32, bool) {
 	if o == nil || IsNil(o.Memory) {
 		return nil, false
 	}
@@ -267,7 +267,7 @@ func (o *CreateBoxTemplate) GetMemoryOk() (*int32, bool) {
 }
 
 // HasMemory returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasMemory() bool {
+func (o *CreateSnapshot) HasMemory() bool {
 	if o != nil && !IsNil(o.Memory) {
 		return true
 	}
@@ -276,12 +276,12 @@ func (o *CreateBoxTemplate) HasMemory() bool {
 }
 
 // SetMemory gets a reference to the given int32 and assigns it to the Memory field.
-func (o *CreateBoxTemplate) SetMemory(v int32) {
+func (o *CreateSnapshot) SetMemory(v int32) {
 	o.Memory = &v
 }
 
 // GetDisk returns the Disk field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetDisk() int32 {
+func (o *CreateSnapshot) GetDisk() int32 {
 	if o == nil || IsNil(o.Disk) {
 		var ret int32
 		return ret
@@ -291,7 +291,7 @@ func (o *CreateBoxTemplate) GetDisk() int32 {
 
 // GetDiskOk returns a tuple with the Disk field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetDiskOk() (*int32, bool) {
+func (o *CreateSnapshot) GetDiskOk() (*int32, bool) {
 	if o == nil || IsNil(o.Disk) {
 		return nil, false
 	}
@@ -299,7 +299,7 @@ func (o *CreateBoxTemplate) GetDiskOk() (*int32, bool) {
 }
 
 // HasDisk returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasDisk() bool {
+func (o *CreateSnapshot) HasDisk() bool {
 	if o != nil && !IsNil(o.Disk) {
 		return true
 	}
@@ -308,12 +308,12 @@ func (o *CreateBoxTemplate) HasDisk() bool {
 }
 
 // SetDisk gets a reference to the given int32 and assigns it to the Disk field.
-func (o *CreateBoxTemplate) SetDisk(v int32) {
+func (o *CreateSnapshot) SetDisk(v int32) {
 	o.Disk = &v
 }
 
 // GetBuildInfo returns the BuildInfo field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetBuildInfo() CreateBuildInfo {
+func (o *CreateSnapshot) GetBuildInfo() CreateBuildInfo {
 	if o == nil || IsNil(o.BuildInfo) {
 		var ret CreateBuildInfo
 		return ret
@@ -323,7 +323,7 @@ func (o *CreateBoxTemplate) GetBuildInfo() CreateBuildInfo {
 
 // GetBuildInfoOk returns a tuple with the BuildInfo field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetBuildInfoOk() (*CreateBuildInfo, bool) {
+func (o *CreateSnapshot) GetBuildInfoOk() (*CreateBuildInfo, bool) {
 	if o == nil || IsNil(o.BuildInfo) {
 		return nil, false
 	}
@@ -331,7 +331,7 @@ func (o *CreateBoxTemplate) GetBuildInfoOk() (*CreateBuildInfo, bool) {
 }
 
 // HasBuildInfo returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasBuildInfo() bool {
+func (o *CreateSnapshot) HasBuildInfo() bool {
 	if o != nil && !IsNil(o.BuildInfo) {
 		return true
 	}
@@ -340,12 +340,12 @@ func (o *CreateBoxTemplate) HasBuildInfo() bool {
 }
 
 // SetBuildInfo gets a reference to the given CreateBuildInfo and assigns it to the BuildInfo field.
-func (o *CreateBoxTemplate) SetBuildInfo(v CreateBuildInfo) {
+func (o *CreateSnapshot) SetBuildInfo(v CreateBuildInfo) {
 	o.BuildInfo = &v
 }
 
 // GetRegionId returns the RegionId field value if set, zero value otherwise.
-func (o *CreateBoxTemplate) GetRegionId() string {
+func (o *CreateSnapshot) GetRegionId() string {
 	if o == nil || IsNil(o.RegionId) {
 		var ret string
 		return ret
@@ -355,7 +355,7 @@ func (o *CreateBoxTemplate) GetRegionId() string {
 
 // GetRegionIdOk returns a tuple with the RegionId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateBoxTemplate) GetRegionIdOk() (*string, bool) {
+func (o *CreateSnapshot) GetRegionIdOk() (*string, bool) {
 	if o == nil || IsNil(o.RegionId) {
 		return nil, false
 	}
@@ -363,7 +363,7 @@ func (o *CreateBoxTemplate) GetRegionIdOk() (*string, bool) {
 }
 
 // HasRegionId returns a boolean if a field has been set.
-func (o *CreateBoxTemplate) HasRegionId() bool {
+func (o *CreateSnapshot) HasRegionId() bool {
 	if o != nil && !IsNil(o.RegionId) {
 		return true
 	}
@@ -372,19 +372,19 @@ func (o *CreateBoxTemplate) HasRegionId() bool {
 }
 
 // SetRegionId gets a reference to the given string and assigns it to the RegionId field.
-func (o *CreateBoxTemplate) SetRegionId(v string) {
+func (o *CreateSnapshot) SetRegionId(v string) {
 	o.RegionId = &v
 }
 
-func (o CreateBoxTemplate) MarshalJSON() ([]byte, error) {
-	toSerialize, err := o.ToMap()
+func (o CreateSnapshot) MarshalJSON() ([]byte, error) {
+	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
 	return json.Marshal(toSerialize)
 }
 
-func (o CreateBoxTemplate) ToMap() (map[string]interface{}, error) {
+func (o CreateSnapshot) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["name"] = o.Name
 	if !IsNil(o.ImageName) {
@@ -422,7 +422,7 @@ func (o CreateBoxTemplate) ToMap() (map[string]interface{}, error) {
 	return toSerialize, nil
 }
 
-func (o *CreateBoxTemplate) UnmarshalJSON(data []byte) (err error) {
+func (o *CreateSnapshot) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -435,24 +435,24 @@ func (o *CreateBoxTemplate) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err
+		return err;
 	}
 
-	for _, requiredProperty := range requiredProperties {
+	for _, requiredProperty := range(requiredProperties) {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
 	}
 
-	varCreateBoxTemplate := _CreateBoxTemplate{}
+	varCreateSnapshot := _CreateSnapshot{}
 
-	err = json.Unmarshal(data, &varCreateBoxTemplate)
+	err = json.Unmarshal(data, &varCreateSnapshot)
 
 	if err != nil {
 		return err
 	}
 
-	*o = CreateBoxTemplate(varCreateBoxTemplate)
+	*o = CreateSnapshot(varCreateSnapshot)
 
 	additionalProperties := make(map[string]interface{})
 
@@ -473,38 +473,40 @@ func (o *CreateBoxTemplate) UnmarshalJSON(data []byte) (err error) {
 	return err
 }
 
-type NullableCreateBoxTemplate struct {
-	value *CreateBoxTemplate
+type NullableCreateSnapshot struct {
+	value *CreateSnapshot
 	isSet bool
 }
 
-func (v NullableCreateBoxTemplate) Get() *CreateBoxTemplate {
+func (v NullableCreateSnapshot) Get() *CreateSnapshot {
 	return v.value
 }
 
-func (v *NullableCreateBoxTemplate) Set(val *CreateBoxTemplate) {
+func (v *NullableCreateSnapshot) Set(val *CreateSnapshot) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableCreateBoxTemplate) IsSet() bool {
+func (v NullableCreateSnapshot) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableCreateBoxTemplate) Unset() {
+func (v *NullableCreateSnapshot) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableCreateBoxTemplate(val *CreateBoxTemplate) *NullableCreateBoxTemplate {
-	return &NullableCreateBoxTemplate{value: val, isSet: true}
+func NewNullableCreateSnapshot(val *CreateSnapshot) *NullableCreateSnapshot {
+	return &NullableCreateSnapshot{value: val, isSet: true}
 }
 
-func (v NullableCreateBoxTemplate) MarshalJSON() ([]byte, error) {
+func (v NullableCreateSnapshot) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableCreateBoxTemplate) UnmarshalJSON(src []byte) error {
+func (v *NullableCreateSnapshot) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
+
+

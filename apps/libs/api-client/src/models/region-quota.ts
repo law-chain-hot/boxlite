@@ -12,40 +12,13 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface RegionQuota
- */
+
+
 export interface RegionQuota {
-  /**
-   *
-   * @type {string}
-   * @memberof RegionQuota
-   */
-  organizationId: string
-  /**
-   *
-   * @type {string}
-   * @memberof RegionQuota
-   */
-  regionId: string
-  /**
-   *
-   * @type {number}
-   * @memberof RegionQuota
-   */
-  totalCpuQuota: number
-  /**
-   *
-   * @type {number}
-   * @memberof RegionQuota
-   */
-  totalMemoryQuota: number
-  /**
-   *
-   * @type {number}
-   * @memberof RegionQuota
-   */
-  totalDiskQuota: number
+    'organizationId': string;
+    'regionId': string;
+    'totalCpuQuota': number;
+    'totalMemoryQuota': number;
+    'totalDiskQuota': number;
 }
+

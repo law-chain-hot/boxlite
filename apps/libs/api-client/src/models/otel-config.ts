@@ -12,22 +12,16 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface OtelConfig
- */
+
+
 export interface OtelConfig {
-  /**
-   * Endpoint
-   * @type {string}
-   * @memberof OtelConfig
-   */
-  endpoint: string
-  /**
-   * Headers
-   * @type {{ [key: string]: string; }}
-   * @memberof OtelConfig
-   */
-  headers?: { [key: string]: string } | null
+    /**
+     * Endpoint
+     */
+    'endpoint': string;
+    /**
+     * Headers
+     */
+    'headers'?: { [key: string]: string; } | null;
 }
+

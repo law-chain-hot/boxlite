@@ -12,34 +12,24 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface MouseClickRequest
- */
+
+
 export interface MouseClickRequest {
-  /**
-   * The X coordinate where to perform the mouse click
-   * @type {number}
-   * @memberof MouseClickRequest
-   */
-  x: number
-  /**
-   * The Y coordinate where to perform the mouse click
-   * @type {number}
-   * @memberof MouseClickRequest
-   */
-  y: number
-  /**
-   * The mouse button to click (left, right, middle). Defaults to left
-   * @type {string}
-   * @memberof MouseClickRequest
-   */
-  button?: string
-  /**
-   * Whether to perform a double-click instead of a single click
-   * @type {boolean}
-   * @memberof MouseClickRequest
-   */
-  double?: boolean
+    /**
+     * The X coordinate where to perform the mouse click
+     */
+    'x': number;
+    /**
+     * The Y coordinate where to perform the mouse click
+     */
+    'y': number;
+    /**
+     * The mouse button to click (left, right, middle). Defaults to left
+     */
+    'button'?: string;
+    /**
+     * Whether to perform a double-click instead of a single click
+     */
+    'double'?: boolean;
 }
+

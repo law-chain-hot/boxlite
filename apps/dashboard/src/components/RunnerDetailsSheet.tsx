@@ -223,7 +223,7 @@ const RunnerDetailsSheet: React.FC<RunnerDetailsSheetProps> = ({
                 </div>
                 <div>
                   <h4 className="text-muted-foreground text-xs">Active Boxes</h4>
-                  <p className="mt-1 text-2xl font-semibold">{runner.currentStartedSandboxes ?? 0}</p>
+                  <p className="mt-1 text-2xl font-semibold">{runner.currentStartedBoxes ?? 0}</p>
                 </div>
                 <div>
                   <h4 className="text-muted-foreground text-xs">Images</h4>

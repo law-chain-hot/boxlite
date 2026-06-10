@@ -12,88 +12,24 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface UpdateOrganizationQuota
- */
+
+
 export interface UpdateOrganizationQuota {
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  maxCpuPerSandbox: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  maxMemoryPerSandbox: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  maxDiskPerSandbox: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  templateQuota: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  maxTemplateSize: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  volumeQuota: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  authenticatedRateLimit: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  sandboxCreateRateLimit: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  sandboxLifecycleRateLimit: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  authenticatedRateLimitTtlSeconds: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  sandboxCreateRateLimitTtlSeconds: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  sandboxLifecycleRateLimitTtlSeconds: number | null
-  /**
-   * Time in minutes before an unused template is deactivated
-   * @type {number}
-   * @memberof UpdateOrganizationQuota
-   */
-  templateDeactivationTimeoutMinutes: number | null
+    'maxCpuPerBox': number | null;
+    'maxMemoryPerBox': number | null;
+    'maxDiskPerBox': number | null;
+    'snapshotQuota': number | null;
+    'maxSnapshotSize': number | null;
+    'volumeQuota': number | null;
+    'authenticatedRateLimit': number | null;
+    'boxCreateRateLimit': number | null;
+    'boxLifecycleRateLimit': number | null;
+    'authenticatedRateLimitTtlSeconds': number | null;
+    'boxCreateRateLimitTtlSeconds': number | null;
+    'boxLifecycleRateLimitTtlSeconds': number | null;
+    /**
+     * Time in minutes before an unused snapshot is deactivated
+     */
+    'snapshotDeactivationTimeoutMinutes': number | null;
 }
+

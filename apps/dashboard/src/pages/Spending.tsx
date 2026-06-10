@@ -9,7 +9,7 @@ import { PageContent, PageHeader, PageLayout, PageTitle } from '@/components/Pag
 import { AggregatedUsageChart, ResourceUsageBreakdown, UsageSummary } from '@/components/spending/AggregatedUsageChart'
 import { CostBreakdown } from '@/components/spending/CostBreakdown'
 import { UsageChartData } from '@/components/spending/ResourceUsageChart'
-import { SandboxUsageTable } from '@/components/spending/SandboxUsageTable'
+import { BoxUsageTable } from '@/components/spending/BoxUsageTable'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { DateRangePicker, QuickRangesConfig } from '@/components/ui/date-range-picker'
@@ -17,7 +17,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Separator } from '@/components/ui/separator'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { UsageTimelineChart } from '@/components/spending/UsageTimelineChart'
-import { useAggregatedUsage, useSandboxesUsage, useUsageChart } from '@/hooks/queries/useAnalyticsUsage'
+import { useAggregatedUsage, useBoxesUsage, useUsageChart } from '@/hooks/queries/useAnalyticsUsage'
 import { useOrganizationUsageOverviewQuery } from '@/hooks/queries/useOrganizationUsageOverviewQuery'
 import { useOrganizationUsageQuery } from '@/hooks/queries/useOrganizationUsageQuery'
 import { usePastOrganizationUsageQuery } from '@/hooks/queries/usePastOrganizationUsageQuery'
@@ -37,7 +37,7 @@ const analyticsQuickRanges: QuickRangesConfig = {
 const Spending = () => {
   const { selectedOrganization } = useSelectedOrganization()
   const config = useConfig()
-  const spendingEnabled = useFeatureFlagEnabled(FeatureFlags.SANDBOX_SPENDING)
+  const spendingEnabled = useFeatureFlagEnabled(FeatureFlags.BOX_SPENDING)
   const analyticsAvailable = spendingEnabled && !!config.analyticsApiUrl
 
   const [analyticsDateRange, setAnalyticsDateRange] = useState<DateRange>(() => {
@@ -72,11 +72,11 @@ const Spending = () => {
     refetch: refetchAggregated,
   } = useAggregatedUsage(analyticsParams)
   const {
-    data: sandboxesUsage,
-    isLoading: sandboxesLoading,
-    isError: sandboxesError,
-    refetch: refetchSandboxes,
-  } = useSandboxesUsage(analyticsParams)
+    data: boxesUsage,
+    isLoading: boxesLoading,
+    isError: boxesError,
+    refetch: refetchBoxes,
+  } = useBoxesUsage(analyticsParams)
   const { data: usageChartPoints, isLoading: chartLoading } = useUsageChart({
     ...analyticsParams,
     region: selectedChartRegion,
@@ -173,7 +173,7 @@ const Spending = () => {
                   </Button>
                 </EmptyContent>
               </Empty>
-            ) : !aggregatedLoading && !aggregatedUsage?.sandboxCount ? (
+            ) : !aggregatedLoading && !aggregatedUsage?.boxCount ? (
               <Empty className="py-12">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -208,7 +208,7 @@ const Spending = () => {
               <p className="text-xl font-semibold leading-none tracking-tight">Per-Box Usage</p>
               <p className="text-sm text-muted-foreground mt-2">Resource consumption broken down by individual box.</p>
             </div>
-            {sandboxesError ? (
+            {boxesError ? (
               <Empty className="py-12">
                 <EmptyHeader>
                   <EmptyMedia variant="icon" className="bg-destructive-background text-destructive">
@@ -220,13 +220,13 @@ const Spending = () => {
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <Button variant="secondary" size="sm" onClick={() => refetchSandboxes()}>
+                  <Button variant="secondary" size="sm" onClick={() => refetchBoxes()}>
                     <RefreshCw />
                     Retry
                   </Button>
                 </EmptyContent>
               </Empty>
-            ) : !sandboxesLoading && !sandboxesUsage?.length ? (
+            ) : !boxesLoading && !boxesUsage?.length ? (
               <Empty className="py-12">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -239,7 +239,7 @@ const Spending = () => {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <SandboxUsageTable data={sandboxesUsage} isLoading={sandboxesLoading} />
+              <BoxUsageTable data={boxesUsage} isLoading={boxesLoading} />
             )}
           </Card>
         )}

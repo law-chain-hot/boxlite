@@ -12,28 +12,11 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface UpdateOrganizationRegionQuota
- */
+
+
 export interface UpdateOrganizationRegionQuota {
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationRegionQuota
-   */
-  totalCpuQuota: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationRegionQuota
-   */
-  totalMemoryQuota: number | null
-  /**
-   *
-   * @type {number}
-   * @memberof UpdateOrganizationRegionQuota
-   */
-  totalDiskQuota: number | null
+    'totalCpuQuota': number | null;
+    'totalMemoryQuota': number | null;
+    'totalDiskQuota': number | null;
 }
+

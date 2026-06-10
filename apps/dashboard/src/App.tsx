@@ -38,11 +38,11 @@ import Logout from './pages/Logout'
 import NotFound from './pages/NotFound'
 import Admin from './pages/Admin'
 import Billing from './pages/Billing'
-import Sandboxes from './pages/Sandboxes'
-import { SandboxDetails, SandboxTerminalFullscreen, SandboxVncFullscreen } from './components/sandboxes'
+import Boxes from './pages/Boxes'
+import { BoxDetails, BoxTerminalFullscreen, BoxVncFullscreen } from './components/boxes'
 import { ApiProvider } from './providers/ApiProvider'
 import { RegionsProvider } from './providers/RegionsProvider'
-import { SandboxSessionProvider } from './providers/SandboxSessionProvider'
+import { BoxSessionProvider } from './providers/BoxSessionProvider'
 
 const HIDDEN_DASHBOARD_ROUTES = [
   RoutePath.IMAGES,
@@ -79,29 +79,29 @@ const SlackRedirect = () => {
   return null
 }
 
-const LegacySandboxRedirect = ({
+const LegacyBoxRedirect = ({
   route,
 }: {
   route: RoutePath.BOX_DETAILS | RoutePath.BOX_TERMINAL | RoutePath.BOX_VNC
 }) => {
   const location = useLocation()
-  const { sandboxId } = useParams()
+  const { boxId } = useParams()
 
-  if (!sandboxId) {
+  if (!boxId) {
     return <Navigate to={`${RoutePath.BOXES}${location.search}`} replace />
   }
 
-  return <Navigate to={`${generatePath(route, { sandboxId })}${location.search}`} replace />
+  return <Navigate to={`${generatePath(route, { boxId })}${location.search}`} replace />
 }
 
-const SandboxVncFeatureRoute = ({ enabled }: { enabled: boolean }) => {
-  const { sandboxId } = useParams()
+const BoxVncFeatureRoute = ({ enabled }: { enabled: boolean }) => {
+  const { boxId } = useParams()
 
   if (!enabled) {
-    return <Navigate to={sandboxId ? generatePath(RoutePath.BOX_DETAILS, { sandboxId }) : RoutePath.BOXES} replace />
+    return <Navigate to={boxId ? generatePath(RoutePath.BOX_DETAILS, { boxId }) : RoutePath.BOXES} replace />
   }
 
-  return <SandboxVncFullscreen />
+  return <BoxVncFullscreen />
 }
 
 // Same-origin OIDC silent-renew iframes are legitimate, so frame refusal
@@ -207,7 +207,7 @@ function App() {
       >
         <Route index element={<Navigate to={boxesRedirect} replace />} />
         <Route path={getRouteSubPath(RoutePath.KEYS)} element={<Keys />} />
-        <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Sandboxes />} />
+        <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Boxes />} />
         <Route path={getRouteSubPath(RoutePath.BILLING)} element={<Billing />} />
         <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Navigate to={RoutePath.BILLING} replace />} />
         <Route path={getRouteSubPath(RoutePath.ADMIN)} element={<Admin />} />
@@ -216,32 +216,32 @@ function App() {
           path={getRouteSubPath(RoutePath.LEGACY_TEMPLATES)}
           element={<Navigate to={RoutePath.IMAGES} replace />}
         />
-        {/* Pathless layout route: a single SandboxSessionProvider fiber
-            persists across the three sandbox routes, so activation state
+        {/* Pathless layout route: a single BoxSessionProvider fiber
+            persists across the three box routes, so activation state
             (e.g. "terminal connected") survives navigation between the
             details view and its fullscreen siblings. Per-route providers
             held state in a useRef that died with each unmount. */}
         <Route
           element={
-            <SandboxSessionProvider>
+            <BoxSessionProvider>
               <Outlet />
-            </SandboxSessionProvider>
+            </BoxSessionProvider>
           }
         >
-          <Route path={getRouteSubPath(RoutePath.BOX_TERMINAL)} element={<SandboxTerminalFullscreen />} />
-          <Route path={getRouteSubPath(RoutePath.BOX_VNC)} element={<SandboxVncFeatureRoute enabled={vncEnabled} />} />
-          <Route path={getRouteSubPath(RoutePath.BOX_DETAILS)} element={<SandboxDetails />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_TERMINAL)} element={<BoxTerminalFullscreen />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_VNC)} element={<BoxVncFeatureRoute enabled={vncEnabled} />} />
+          <Route path={getRouteSubPath(RoutePath.BOX_DETAILS)} element={<BoxDetails />} />
           <Route
             path={getRouteSubPath(RoutePath.LEGACY_SANDBOX_TERMINAL)}
-            element={<LegacySandboxRedirect route={RoutePath.BOX_TERMINAL} />}
+            element={<LegacyBoxRedirect route={RoutePath.BOX_TERMINAL} />}
           />
           <Route
             path={getRouteSubPath(RoutePath.LEGACY_SANDBOX_VNC)}
-            element={<LegacySandboxRedirect route={vncEnabled ? RoutePath.BOX_VNC : RoutePath.BOX_DETAILS} />}
+            element={<LegacyBoxRedirect route={vncEnabled ? RoutePath.BOX_VNC : RoutePath.BOX_DETAILS} />}
           />
           <Route
             path={getRouteSubPath(RoutePath.LEGACY_SANDBOX_DETAILS)}
-            element={<LegacySandboxRedirect route={RoutePath.BOX_DETAILS} />}
+            element={<LegacyBoxRedirect route={RoutePath.BOX_DETAILS} />}
           />
         </Route>
         {HIDDEN_DASHBOARD_ROUTES.map((path) => (

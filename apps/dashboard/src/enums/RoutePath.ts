@@ -46,15 +46,15 @@ export enum RoutePath {
   WEBHOOKS = '/dashboard/webhooks',
   WEBHOOK_ENDPOINT_DETAILS = '/dashboard/webhooks/:endpointId',
   // Boxes
-  BOX_DETAILS = '/dashboard/boxes/:sandboxId',
-  BOX_TERMINAL = '/dashboard/boxes/:sandboxId/terminal',
-  BOX_VNC = '/dashboard/boxes/:sandboxId/vnc',
+  BOX_DETAILS = '/dashboard/boxes/:boxId',
+  BOX_TERMINAL = '/dashboard/boxes/:boxId/terminal',
+  BOX_VNC = '/dashboard/boxes/:boxId/vnc',
 
-  // Legacy sandbox routes
-  LEGACY_SANDBOXES = '/dashboard/sandboxes',
-  LEGACY_SANDBOX_DETAILS = '/dashboard/sandboxes/:sandboxId',
-  LEGACY_SANDBOX_TERMINAL = '/dashboard/sandboxes/:sandboxId/terminal',
-  LEGACY_SANDBOX_VNC = '/dashboard/sandboxes/:sandboxId/vnc',
+  // Legacy box routes
+  LEGACY_SANDBOXES = '/dashboard/boxes',
+  LEGACY_SANDBOX_DETAILS = '/dashboard/boxes/:boxId',
+  LEGACY_SANDBOX_TERMINAL = '/dashboard/boxes/:boxId/terminal',
+  LEGACY_SANDBOX_VNC = '/dashboard/boxes/:boxId/vnc',
   LEGACY_TEMPLATES = '/dashboard/templates',
 
   // Email verification

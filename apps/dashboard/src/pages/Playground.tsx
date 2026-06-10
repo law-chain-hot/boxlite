@@ -10,8 +10,8 @@ import {
   PlaygroundLayoutContent,
   PlaygroundLayoutSidebar,
 } from '@/components/Playground/PlaygroundLayout'
-import SandboxCodeSnippetsResponse from '@/components/Playground/Sandbox/CodeSnippetsResponse'
-import SandboxParameters from '@/components/Playground/Sandbox/Parameters'
+import BoxCodeSnippetsResponse from '@/components/Playground/Box/CodeSnippetsResponse'
+import BoxParameters from '@/components/Playground/Box/Parameters'
 import TerminalDescription from '@/components/Playground/Terminal/Description'
 import WebTerminal from '@/components/Playground/Terminal/WebTerminal'
 import VNCDesktopWindowResponse from '@/components/Playground/VNC/DesktopWindowResponse'
@@ -23,7 +23,7 @@ import { FeatureFlags } from '@/enums/FeatureFlags'
 import { PlaygroundCategories } from '@/enums/Playground'
 import { isDashboardVncEnabled } from '@/lib/dashboard-features'
 import { PlaygroundProvider } from '@/providers/PlaygroundProvider'
-import { PlaygroundSandboxProvider } from '@/providers/PlaygroundSandboxProvider'
+import { PlaygroundBoxProvider } from '@/providers/PlaygroundBoxProvider'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SettingsIcon } from 'lucide-react'
 import { useFeatureFlagEnabled } from 'posthog-js/react'
@@ -97,7 +97,7 @@ const Playground: React.FC = () => {
   }, [availableCategories, playgroundCategory])
 
   const sidePanel = useMemo(() => {
-    if (playgroundCategory === PlaygroundCategories.SANDBOX) return <SandboxParameters />
+    if (playgroundCategory === PlaygroundCategories.SANDBOX) return <BoxParameters />
     if (playgroundCategory === PlaygroundCategories.TERMINAL) return <TerminalDescription />
     if (playgroundCategory === PlaygroundCategories.VNC) return <VNCInteractionOptions />
     return null
@@ -111,7 +111,7 @@ const Playground: React.FC = () => {
 
       <PageContent size="full" className="!p-0 h-full flex flex-col flex-1 overflow-auto" ref={pageContentRef}>
         <PlaygroundProvider>
-          <PlaygroundSandboxProvider activeTab={playgroundCategory} vncEnabled={vncEnabled}>
+          <PlaygroundBoxProvider activeTab={playgroundCategory} vncEnabled={vncEnabled}>
             <Tabs
               value={playgroundCategory}
               onValueChange={(value) => setPlaygroundCategory(value as PlaygroundCategories)}
@@ -159,14 +159,14 @@ const Playground: React.FC = () => {
                     </DrawerContent>
                   </Drawer>
                   <PlaygroundLayoutContent className="[&>*]:w-full [&>*]:max-w-[min(90%,1024px)]">
-                    {playgroundCategory === PlaygroundCategories.SANDBOX && <SandboxCodeSnippetsResponse />}
+                    {playgroundCategory === PlaygroundCategories.SANDBOX && <BoxCodeSnippetsResponse />}
                     {playgroundCategory === PlaygroundCategories.TERMINAL && <WebTerminal />}
                     {playgroundCategory === PlaygroundCategories.VNC && <VNCDesktopWindowResponse />}
                   </PlaygroundLayoutContent>
                 </PlaygroundLayout>
               </TabsContent>
             </Tabs>
-          </PlaygroundSandboxProvider>
+          </PlaygroundBoxProvider>
         </PlaygroundProvider>
       </PageContent>
     </PageLayout>

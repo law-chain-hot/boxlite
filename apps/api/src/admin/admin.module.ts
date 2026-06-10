@@ -8,7 +8,7 @@ import { Module } from '@nestjs/common'
 import { AdminObservabilityController } from './controllers/observability.controller'
 import { AdminOverviewController } from './controllers/overview.controller'
 import { AdminRunnerController } from './controllers/runner.controller'
-import { AdminSandboxController } from './controllers/sandbox.controller'
+import { AdminBoxController } from './controllers/box.controller'
 import {
   ADMIN_AUDIT_LOG_READER,
   ADMIN_CLOUDWATCH_LOG_READER,
@@ -19,7 +19,7 @@ import {
 import { AdminCloudWatchLogReader } from './services/observability-cloudwatch.reader'
 import { AdminOverviewService } from './services/overview.service'
 import { AdminS3ObjectReader } from './services/observability-s3.reader'
-import { SandboxModule } from '../sandbox/sandbox.module'
+import { BoxModule } from '../box/box.module'
 import { RegionModule } from '../region/region.module'
 import { OrganizationModule } from '../organization/organization.module'
 import { UserModule } from '../user/user.module'
@@ -27,8 +27,8 @@ import { AuditModule } from '../audit/audit.module'
 import { AuditService } from '../audit/services/audit.service'
 
 @Module({
-  imports: [SandboxModule, RegionModule, OrganizationModule, UserModule, AuditModule],
-  controllers: [AdminRunnerController, AdminSandboxController, AdminOverviewController, AdminObservabilityController],
+  imports: [BoxModule, RegionModule, OrganizationModule, UserModule, AuditModule],
+  controllers: [AdminRunnerController, AdminBoxController, AdminOverviewController, AdminObservabilityController],
   providers: [
     AdminOverviewService,
     AdminObservabilityService,

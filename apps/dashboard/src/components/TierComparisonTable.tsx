@@ -61,8 +61,8 @@ function buildTierComparisonTableData(tiers: Tier[]): ComparisonSection[] {
               `${tier.tierLimit.concurrentRAMGiB}`,
               `${tier.tierLimit.concurrentDiskGiB}`,
               `${TIER_RATE_LIMITS[tier.tier]?.authenticatedRateLimit.toLocaleString() || '-'}`,
-              `${TIER_RATE_LIMITS[tier.tier]?.sandboxCreateRateLimit.toLocaleString() || '-'}`,
-              `${TIER_RATE_LIMITS[tier.tier]?.sandboxLifecycleRateLimit.toLocaleString() || '-'}`,
+              `${TIER_RATE_LIMITS[tier.tier]?.boxCreateRateLimit.toLocaleString() || '-'}`,
+              `${TIER_RATE_LIMITS[tier.tier]?.boxLifecycleRateLimit.toLocaleString() || '-'}`,
             ],
           }
         })

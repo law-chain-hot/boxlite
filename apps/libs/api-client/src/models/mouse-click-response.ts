@@ -12,22 +12,16 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface MouseClickResponse
- */
+
+
 export interface MouseClickResponse {
-  /**
-   * The actual X coordinate where the click occurred
-   * @type {number}
-   * @memberof MouseClickResponse
-   */
-  x: number
-  /**
-   * The actual Y coordinate where the click occurred
-   * @type {number}
-   * @memberof MouseClickResponse
-   */
-  y: number
+    /**
+     * The actual X coordinate where the click occurred
+     */
+    'x': number;
+    /**
+     * The actual Y coordinate where the click occurred
+     */
+    'y': number;
 }
+

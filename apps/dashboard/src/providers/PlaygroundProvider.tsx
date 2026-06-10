@@ -18,9 +18,9 @@ import {
   RunningActionMethodName,
   RunPlaygroundActionBasic,
   RunPlaygroundActionWithParams,
-  SandboxParams,
+  BoxParams,
   SetPlaygroundActionParamValue,
-  SetSandboxParamsValue,
+  SetBoxParamsValue,
   SetVNCInteractionOptionsParamValue,
   ValidatePlaygroundActionRequiredParams,
   ValidatePlaygroundActionWithParams,
@@ -29,59 +29,59 @@ import {
 import {
   MouseButton,
   MouseScrollDirection,
-  SandboxParametersSections,
+  BoxParametersSections,
   ScreenshotFormatOption,
 } from '@/enums/Playground'
 import { getLanguageCodeToRun, objectHasAnyValue } from '@/lib/playground'
 import {
-  CreateSandboxBaseParams,
-  CreateSandboxFromImageParams,
-  CreateSandboxFromTemplateParams,
+  CreateBoxBaseParams,
+  CreateBoxFromImageParams,
+  CreateBoxFromTemplateParams,
   Image,
 } from '@boxlite-ai/sdk'
 import { useCallback, useState } from 'react'
 
-const PARAM_SECTION_MAP: Partial<Record<keyof SandboxParams, SandboxParametersSections>> = {
-  listFilesParams: SandboxParametersSections.FILE_SYSTEM,
-  createFolderParams: SandboxParametersSections.FILE_SYSTEM,
-  deleteFileParams: SandboxParametersSections.FILE_SYSTEM,
-  gitCloneParams: SandboxParametersSections.GIT_OPERATIONS,
-  gitStatusParams: SandboxParametersSections.GIT_OPERATIONS,
-  gitBranchesParams: SandboxParametersSections.GIT_OPERATIONS,
-  codeRunParams: SandboxParametersSections.PROCESS_CODE_EXECUTION,
-  shellCommandRunParams: SandboxParametersSections.PROCESS_CODE_EXECUTION,
+const PARAM_SECTION_MAP: Partial<Record<keyof BoxParams, BoxParametersSections>> = {
+  listFilesParams: BoxParametersSections.FILE_SYSTEM,
+  createFolderParams: BoxParametersSections.FILE_SYSTEM,
+  deleteFileParams: BoxParametersSections.FILE_SYSTEM,
+  gitCloneParams: BoxParametersSections.GIT_OPERATIONS,
+  gitStatusParams: BoxParametersSections.GIT_OPERATIONS,
+  gitBranchesParams: BoxParametersSections.GIT_OPERATIONS,
+  codeRunParams: BoxParametersSections.PROCESS_CODE_EXECUTION,
+  shellCommandRunParams: BoxParametersSections.PROCESS_CODE_EXECUTION,
 }
 
 export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [openedParametersSections, setOpenedParametersSections] = useState<SandboxParametersSections[]>([
-    SandboxParametersSections.SANDBOX_MANAGEMENT,
+  const [openedParametersSections, setOpenedParametersSections] = useState<BoxParametersSections[]>([
+    BoxParametersSections.SANDBOX_MANAGEMENT,
   ])
-  const [enabledSections, setEnabledSections] = useState<SandboxParametersSections[]>([
-    SandboxParametersSections.SANDBOX_MANAGEMENT,
+  const [enabledSections, setEnabledSections] = useState<BoxParametersSections[]>([
+    BoxParametersSections.SANDBOX_MANAGEMENT,
   ])
-  const [pendingScrollSection, setPendingScrollSection] = useState<SandboxParametersSections | null>(null)
+  const [pendingScrollSection, setPendingScrollSection] = useState<BoxParametersSections | null>(null)
 
-  const enableSection = useCallback((section: SandboxParametersSections) => {
+  const enableSection = useCallback((section: BoxParametersSections) => {
     setEnabledSections((prev) => (prev.includes(section) ? prev : [...prev, section]))
     setOpenedParametersSections((prev) => (prev.includes(section) ? prev : [...prev, section]))
     setPendingScrollSection(section)
   }, [])
 
-  const disableSection = useCallback((section: SandboxParametersSections) => {
+  const disableSection = useCallback((section: BoxParametersSections) => {
     setEnabledSections((prev) => prev.filter((s) => s !== section))
     setOpenedParametersSections((prev) => prev.filter((s) => s !== section))
   }, [])
 
   const clearPendingScrollSection = useCallback(() => setPendingScrollSection(null), [])
 
-  const [sandboxParametersState, setSandboxParametersState] = useState<SandboxParams>({
+  const [boxParametersState, setBoxParametersState] = useState<BoxParams>({
     templateName: SANDBOX_TEMPLATE_DEFAULT_VALUE,
     resources: {
       cpu: DEFAULT_CPU_RESOURCES,
       memory: DEFAULT_MEMORY_RESOURCES,
       disk: DEFAULT_DISK_RESOURCES,
     },
-    createSandboxBaseParams: {
+    createBoxBaseParams: {
       autoStopInterval: 5,
       autoDeleteInterval: 0,
     },
@@ -156,8 +156,8 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     },
   )
 
-  const setSandboxParameterValue: SetSandboxParamsValue = useCallback((key, value) => {
-    setSandboxParametersState((prev) => ({ ...prev, [key]: value }))
+  const setBoxParameterValue: SetBoxParamsValue = useCallback((key, value) => {
+    setBoxParametersState((prev) => ({ ...prev, [key]: value }))
   }, [])
 
   const setVNCInteractionOptionsParamValue: SetVNCInteractionOptionsParamValue = useCallback((key, value) => {
@@ -166,8 +166,8 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const setPlaygroundActionParamValue: SetPlaygroundActionParamValue = useCallback(
     (key, value) => {
-      if (key in sandboxParametersState) {
-        setSandboxParameterValue(key as keyof SandboxParams, value as SandboxParams[keyof SandboxParams])
+      if (key in boxParametersState) {
+        setBoxParameterValue(key as keyof BoxParams, value as BoxParams[keyof BoxParams])
       } else if (key in VNCInteractionOptionsParamsState) {
         setVNCInteractionOptionsParamValue(
           key as keyof VNCInteractionOptionsParams,
@@ -178,9 +178,9 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     },
     [
-      setSandboxParameterValue,
+      setBoxParameterValue,
       setVNCInteractionOptionsParamValue,
-      sandboxParametersState,
+      boxParametersState,
       VNCInteractionOptionsParamsState,
     ],
   )
@@ -271,8 +271,8 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const playgroundActionParamValueSetter: PlaygroundActionParamValueSetter = useCallback(
     (actionFormData, paramFormData, actionParamsKey, value) => {
       const prev =
-        actionParamsKey in sandboxParametersState
-          ? sandboxParametersState[actionParamsKey as keyof SandboxParams]
+        actionParamsKey in boxParametersState
+          ? boxParametersState[actionParamsKey as keyof BoxParams]
           : VNCInteractionOptionsParamsState[actionParamsKey as keyof VNCInteractionOptionsParams]
       const newState = Object.assign({}, prev, { [paramFormData.key]: value })
 
@@ -281,103 +281,103 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         validatePlaygroundActionWithParams(actionFormData, newState as typeof actionFormData.parametersState)
 
       // Auto-enable the section that owns this param if it's currently disabled
-      const section = PARAM_SECTION_MAP[actionParamsKey as keyof SandboxParams]
+      const section = PARAM_SECTION_MAP[actionParamsKey as keyof BoxParams]
       if (section && !enabledSections.includes(section)) enableSection(section)
     },
     [
       setPlaygroundActionParamValue,
       validatePlaygroundActionWithParams,
-      sandboxParametersState,
+      boxParametersState,
       VNCInteractionOptionsParamsState,
       enabledSections,
       enableSection,
     ],
   )
 
-  const getSandboxParametersInfo = useCallback(() => {
-    const useLanguageParam = !!sandboxParametersState['language']
-    const resourceValuesExist = objectHasAnyValue(sandboxParametersState['resources'])
-    const useResourcesCPU = resourceValuesExist && sandboxParametersState['resources']['cpu'] !== undefined
-    const useResourcesMemory = resourceValuesExist && sandboxParametersState['resources']['memory'] !== undefined
-    const useResourcesDisk = resourceValuesExist && sandboxParametersState['resources']['disk'] !== undefined
+  const getBoxParametersInfo = useCallback(() => {
+    const useLanguageParam = !!boxParametersState['language']
+    const resourceValuesExist = objectHasAnyValue(boxParametersState['resources'])
+    const useResourcesCPU = resourceValuesExist && boxParametersState['resources']['cpu'] !== undefined
+    const useResourcesMemory = resourceValuesExist && boxParametersState['resources']['memory'] !== undefined
+    const useResourcesDisk = resourceValuesExist && boxParametersState['resources']['disk'] !== undefined
     const useDefaultResourceValues = !(
-      (useResourcesCPU && sandboxParametersState['resources']['cpu'] !== DEFAULT_CPU_RESOURCES) ||
-      (useResourcesMemory && sandboxParametersState['resources']['memory'] !== DEFAULT_MEMORY_RESOURCES) ||
-      (useResourcesDisk && sandboxParametersState['resources']['disk'] !== DEFAULT_DISK_RESOURCES)
+      (useResourcesCPU && boxParametersState['resources']['cpu'] !== DEFAULT_CPU_RESOURCES) ||
+      (useResourcesMemory && boxParametersState['resources']['memory'] !== DEFAULT_MEMORY_RESOURCES) ||
+      (useResourcesDisk && boxParametersState['resources']['disk'] !== DEFAULT_DISK_RESOURCES)
     )
 
-    const createSandboxParamsExist = objectHasAnyValue(sandboxParametersState['createSandboxBaseParams'])
+    const createBoxParamsExist = objectHasAnyValue(boxParametersState['createBoxBaseParams'])
     const useAutoStopInterval =
-      createSandboxParamsExist && sandboxParametersState['createSandboxBaseParams']['autoStopInterval'] !== undefined
+      createBoxParamsExist && boxParametersState['createBoxBaseParams']['autoStopInterval'] !== undefined
     const useAutoDeleteInterval =
-      createSandboxParamsExist && sandboxParametersState['createSandboxBaseParams']['autoDeleteInterval'] !== undefined
+      createBoxParamsExist && boxParametersState['createBoxBaseParams']['autoDeleteInterval'] !== undefined
 
-    const createSandboxFromImageParams: CreateSandboxFromImageParams = { image: Image.debianSlim('3.13') } // Default and fixed image if CreateSandboxFromImageParams are used
-    const templateName = sandboxParametersState['templateName']
-    const useCustomSandboxTemplateName = templateName !== undefined && templateName !== SANDBOX_TEMPLATE_DEFAULT_VALUE
-    const createSandboxFromTemplateParams: CreateSandboxFromTemplateParams = {
-      templateId: useCustomSandboxTemplateName ? templateName : undefined,
+    const createBoxFromImageParams: CreateBoxFromImageParams = { image: Image.debianSlim('3.13') } // Default and fixed image if CreateBoxFromImageParams are used
+    const templateName = boxParametersState['templateName']
+    const useCustomBoxTemplateName = templateName !== undefined && templateName !== SANDBOX_TEMPLATE_DEFAULT_VALUE
+    const createBoxFromTemplateParams: CreateBoxFromTemplateParams = {
+      templateId: useCustomBoxTemplateName ? templateName : undefined,
     }
-    const createSandboxFromTemplate = useCustomSandboxTemplateName || useDefaultResourceValues
+    const createBoxFromTemplate = useCustomBoxTemplateName || useDefaultResourceValues
 
     // SDK/API still use templateId for persisted dashboard Images. That
     // template-backed path takes precedence over ad-hoc image/resource params.
-    const createSandboxFromImage = !useDefaultResourceValues && !useCustomSandboxTemplateName
+    const createBoxFromImage = !useDefaultResourceValues && !useCustomBoxTemplateName
 
-    // We specify resources for sandbox creation if there is any specified resource value which has value different from the default one and useCustomSandboxTemplateName is false
-    const useResources = !useCustomSandboxTemplateName && resourceValuesExist && !useDefaultResourceValues
-    const useSandboxCreateParams =
+    // We specify resources for box creation if there is any specified resource value which has value different from the default one and useCustomBoxTemplateName is false
+    const useResources = !useCustomBoxTemplateName && resourceValuesExist && !useDefaultResourceValues
+    const useBoxCreateParams =
       useLanguageParam ||
       useResources ||
-      createSandboxParamsExist ||
-      useCustomSandboxTemplateName ||
-      createSandboxFromImage
+      createBoxParamsExist ||
+      useCustomBoxTemplateName ||
+      createBoxFromImage
 
-    if (createSandboxFromImage) {
-      // Set CreateSandboxFromImageParams specific params
+    if (createBoxFromImage) {
+      // Set CreateBoxFromImageParams specific params
       if (useResources) {
-        createSandboxFromImageParams.resources = {}
-        if (useResourcesCPU) createSandboxFromImageParams.resources.cpu = sandboxParametersState['resources']['cpu']
+        createBoxFromImageParams.resources = {}
+        if (useResourcesCPU) createBoxFromImageParams.resources.cpu = boxParametersState['resources']['cpu']
         if (useResourcesMemory)
-          createSandboxFromImageParams.resources.memory = sandboxParametersState['resources']['memory']
-        if (useResourcesDisk) createSandboxFromImageParams.resources.disk = sandboxParametersState['resources']['disk']
+          createBoxFromImageParams.resources.memory = boxParametersState['resources']['memory']
+        if (useResourcesDisk) createBoxFromImageParams.resources.disk = boxParametersState['resources']['disk']
       }
     }
-    let createSandboxParams: CreateSandboxBaseParams | CreateSandboxFromImageParams | CreateSandboxFromTemplateParams =
+    let createBoxParams: CreateBoxBaseParams | CreateBoxFromImageParams | CreateBoxFromTemplateParams =
       {}
-    if (createSandboxFromTemplate) createSandboxParams = createSandboxFromTemplateParams
-    else if (createSandboxFromImage) createSandboxParams = createSandboxFromImageParams
-    // Set CreateSandboxBaseParams params which are common for both params types
-    if (useLanguageParam) createSandboxParams.language = sandboxParametersState['language']
+    if (createBoxFromTemplate) createBoxParams = createBoxFromTemplateParams
+    else if (createBoxFromImage) createBoxParams = createBoxFromImageParams
+    // Set CreateBoxBaseParams params which are common for both params types
+    if (useLanguageParam) createBoxParams.language = boxParametersState['language']
     if (useAutoStopInterval)
-      createSandboxParams.autoStopInterval = sandboxParametersState['createSandboxBaseParams']['autoStopInterval']
+      createBoxParams.autoStopInterval = boxParametersState['createBoxBaseParams']['autoStopInterval']
     if (useAutoDeleteInterval)
-      createSandboxParams.autoDeleteInterval = sandboxParametersState['createSandboxBaseParams']['autoDeleteInterval']
-    createSandboxParams.labels = { 'boxlite-playground': 'true' }
+      createBoxParams.autoDeleteInterval = boxParametersState['createBoxBaseParams']['autoDeleteInterval']
+    createBoxParams.labels = { 'boxlite-playground': 'true' }
     if (useLanguageParam)
-      createSandboxParams.labels['boxlite-playground-language'] = sandboxParametersState['language'] as string // useLanguageParam guarantees that value isn't undefined so we put as string to silence TS compiler
+      createBoxParams.labels['boxlite-playground-language'] = boxParametersState['language'] as string // useLanguageParam guarantees that value isn't undefined so we put as string to silence TS compiler
     return {
       useLanguageParam,
       useResources,
       useResourcesCPU,
       useResourcesMemory,
       useResourcesDisk,
-      createSandboxParamsExist,
+      createBoxParamsExist,
       useAutoStopInterval,
       useAutoDeleteInterval,
-      useSandboxCreateParams,
-      useCustomSandboxTemplateName,
-      createSandboxFromImage,
-      createSandboxFromTemplate,
-      createSandboxParams,
+      useBoxCreateParams,
+      useCustomBoxTemplateName,
+      createBoxFromImage,
+      createBoxFromTemplate,
+      createBoxParams,
     }
-  }, [sandboxParametersState])
+  }, [boxParametersState])
 
   return (
     <PlaygroundContext.Provider
       value={{
-        sandboxParametersState,
-        setSandboxParameterValue,
+        boxParametersState,
+        setBoxParameterValue,
         VNCInteractionOptionsParamsState,
         setVNCInteractionOptionsParamValue,
         runPlaygroundActionWithParams,
@@ -386,7 +386,7 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         playgroundActionParamValueSetter,
         runningActionMethod,
         actionRuntimeError,
-        getSandboxParametersInfo,
+        getBoxParametersInfo,
         openedParametersSections,
         setOpenedParametersSections,
         enabledSections,

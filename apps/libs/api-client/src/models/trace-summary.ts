@@ -12,52 +12,36 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface TraceSummary
- */
+
+
 export interface TraceSummary {
-  /**
-   * Unique trace identifier
-   * @type {string}
-   * @memberof TraceSummary
-   */
-  traceId: string
-  /**
-   * Name of the root span
-   * @type {string}
-   * @memberof TraceSummary
-   */
-  rootSpanName: string
-  /**
-   * Trace start time
-   * @type {string}
-   * @memberof TraceSummary
-   */
-  startTime: string
-  /**
-   * Trace end time
-   * @type {string}
-   * @memberof TraceSummary
-   */
-  endTime: string
-  /**
-   * Total duration in milliseconds
-   * @type {number}
-   * @memberof TraceSummary
-   */
-  durationMs: number
-  /**
-   * Number of spans in this trace
-   * @type {number}
-   * @memberof TraceSummary
-   */
-  spanCount: number
-  /**
-   * Status code of the trace
-   * @type {string}
-   * @memberof TraceSummary
-   */
-  statusCode?: string
+    /**
+     * Unique trace identifier
+     */
+    'traceId': string;
+    /**
+     * Name of the root span
+     */
+    'rootSpanName': string;
+    /**
+     * Trace start time
+     */
+    'startTime': string;
+    /**
+     * Trace end time
+     */
+    'endTime': string;
+    /**
+     * Total duration in milliseconds
+     */
+    'durationMs': number;
+    /**
+     * Number of spans in this trace
+     */
+    'spanCount': number;
+    /**
+     * Status code of the trace
+     */
+    'statusCode'?: string;
 }
+

@@ -12,28 +12,20 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface SessionExecuteResponse
- */
+
+
 export interface SessionExecuteResponse {
-  /**
-   * The ID of the executed command
-   * @type {string}
-   * @memberof SessionExecuteResponse
-   */
-  cmdId?: string
-  /**
-   * The output of the executed command marked with stdout and stderr prefixes
-   * @type {string}
-   * @memberof SessionExecuteResponse
-   */
-  output?: string
-  /**
-   * The exit code of the executed command
-   * @type {number}
-   * @memberof SessionExecuteResponse
-   */
-  exitCode?: number
+    /**
+     * The ID of the executed command
+     */
+    'cmdId'?: string;
+    /**
+     * The output of the executed command marked with stdout and stderr prefixes
+     */
+    'output'?: string;
+    /**
+     * The exit code of the executed command
+     */
+    'exitCode'?: number;
 }
+

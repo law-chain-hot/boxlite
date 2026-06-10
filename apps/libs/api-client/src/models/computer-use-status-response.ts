@@ -12,26 +12,22 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface ComputerUseStatusResponse
- */
+
+
 export interface ComputerUseStatusResponse {
-  /**
-   * Status of computer use services (active, partial, inactive, error)
-   * @type {string}
-   * @memberof ComputerUseStatusResponse
-   */
-  status: ComputerUseStatusResponseStatusEnum
+    /**
+     * Status of computer use services (active, partial, inactive, error)
+     */
+    'status': ComputerUseStatusResponseStatusEnum;
 }
 
 export const ComputerUseStatusResponseStatusEnum = {
-  ACTIVE: 'active',
-  PARTIAL: 'partial',
-  INACTIVE: 'inactive',
-  ERROR: 'error',
-} as const
+    ACTIVE: 'active',
+    PARTIAL: 'partial',
+    INACTIVE: 'inactive',
+    ERROR: 'error',
+} as const;
 
-export type ComputerUseStatusResponseStatusEnum =
-  (typeof ComputerUseStatusResponseStatusEnum)[keyof typeof ComputerUseStatusResponseStatusEnum]
+export type ComputerUseStatusResponseStatusEnum = typeof ComputerUseStatusResponseStatusEnum[keyof typeof ComputerUseStatusResponseStatusEnum];
+
+

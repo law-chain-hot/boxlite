@@ -12,16 +12,12 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface SetBoxTemplateGeneralStatus
- */
-export interface SetBoxTemplateGeneralStatus {
-  /**
-   * Whether the template is general
-   * @type {boolean}
-   * @memberof SetBoxTemplateGeneralStatus
-   */
-  general: boolean
+
+
+export interface SetSnapshotGeneralStatusDto {
+    /**
+     * Whether the snapshot is general
+     */
+    'general': boolean;
 }
+

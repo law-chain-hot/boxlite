@@ -12,44 +12,31 @@
  * Do not edit the class manually.
  */
 
+
 // May contain unused imports in some cases
 // @ts-ignore
-import type { UserPublicKey } from './user-public-key'
+import type { UserPublicKey } from './user-public-key';
 
-/**
- *
- * @export
- * @interface User
- */
 export interface User {
-  /**
-   * User ID
-   * @type {string}
-   * @memberof User
-   */
-  id: string
-  /**
-   * User name
-   * @type {string}
-   * @memberof User
-   */
-  name: string
-  /**
-   * User email
-   * @type {string}
-   * @memberof User
-   */
-  email: string
-  /**
-   * User public keys
-   * @type {Array<UserPublicKey>}
-   * @memberof User
-   */
-  publicKeys: Array<UserPublicKey>
-  /**
-   * Creation timestamp
-   * @type {Date}
-   * @memberof User
-   */
-  createdAt: Date
+    /**
+     * User ID
+     */
+    'id': string;
+    /**
+     * User name
+     */
+    'name': string;
+    /**
+     * User email
+     */
+    'email': string;
+    /**
+     * User public keys
+     */
+    'publicKeys': Array<UserPublicKey>;
+    /**
+     * Creation timestamp
+     */
+    'createdAt': Date;
 }
+

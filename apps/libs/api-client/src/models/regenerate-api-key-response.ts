@@ -12,16 +12,12 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface RegenerateApiKeyResponse
- */
+
+
 export interface RegenerateApiKeyResponse {
-  /**
-   * The newly generated API key
-   * @type {string}
-   * @memberof RegenerateApiKeyResponse
-   */
-  apiKey: string
+    /**
+     * The newly generated API key
+     */
+    'apiKey': string;
 }
+

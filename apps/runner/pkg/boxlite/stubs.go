@@ -13,12 +13,12 @@ import (
 	"github.com/containerd/errdefs"
 )
 
-// Resize changes the CPU/memory/disk allocation of a sandbox.
+// Resize changes the CPU/memory/disk allocation of a box.
 // BoxLite VMs don't support hot-resize, so this stops, removes, and recreates.
-func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.ResizeSandboxDTO) error {
-	c.logger.Info("resize sandbox (stop/recreate)", "sandbox", sandboxId)
+func (c *Client) Resize(ctx context.Context, boxId string, resizeDto dto.ResizeBoxDTO) error {
+	c.logger.Info("resize box (stop/recreate)", "sandbox", boxId)
 
-	bx, err := c.getOrFetchBox(ctx, sandboxId)
+	bx, err := c.getOrFetchBox(ctx, boxId)
 	if err != nil {
 		return fmt.Errorf("failed to get box for resize: %w", err)
 	}
@@ -32,11 +32,11 @@ func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.Res
 		c.logger.Warn("failed to stop box during resize", "error", err)
 	}
 
-	if err := c.Destroy(ctx, sandboxId); err != nil {
+	if err := c.Destroy(ctx, boxId); err != nil {
 		return fmt.Errorf("failed to destroy box during resize: %w", err)
 	}
 
-	// API sends cores / GB / GB as small integers (see apps/api ResizeSandboxDto).
+	// API sends cores / GB / GB as small integers (see apps/api ResizeBoxDto).
 	cpus := info.CPUs
 	if resizeDto.Cpu > 0 {
 		cpus = int(resizeDto.Cpu)
@@ -47,7 +47,7 @@ func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.Res
 	}
 
 	opts := []boxlite.BoxOption{
-		boxlite.WithName(sandboxId),
+		boxlite.WithName(boxId),
 		boxlite.WithCPUs(cpus),
 		boxlite.WithMemory(memoryMiB),
 		boxlite.WithAutoRemove(false),
@@ -55,7 +55,7 @@ func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.Res
 		boxlite.WithNetwork(boxlite.NetworkSpec{Mode: boxlite.NetworkModeEnabled}),
 	}
 
-	toolboxHostPort, err := c.reserveToolboxHostPort(ctx, sandboxId)
+	toolboxHostPort, err := c.reserveToolboxHostPort(ctx, boxId)
 	if err != nil {
 		return fmt.Errorf("failed to reserve toolbox port during resize: %w", err)
 	}
@@ -67,14 +67,14 @@ func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.Res
 
 	newBox, err := c.runtime.Create(ctx, info.Image, opts...)
 	if err != nil {
-		if cleanupErr := c.removeToolboxPortRecord(ctx, sandboxId); cleanupErr != nil {
-			c.logger.Warn("failed to remove toolbox port record after resize create failure", "sandbox", sandboxId, "error", cleanupErr)
+		if cleanupErr := c.removeToolboxPortRecord(ctx, boxId); cleanupErr != nil {
+			c.logger.Warn("failed to remove toolbox port record after resize create failure", "sandbox", boxId, "error", cleanupErr)
 		}
 		return fmt.Errorf("failed to recreate box during resize: %w", err)
 	}
 
 	c.mu.Lock()
-	c.boxes[sandboxId] = newBox
+	c.boxes[boxId] = newBox
 	c.mu.Unlock()
 
 	if err := newBox.Start(ctx); err != nil {
@@ -84,11 +84,11 @@ func (c *Client) Resize(ctx context.Context, sandboxId string, resizeDto dto.Res
 	return nil
 }
 
-// RecoverSandbox destroys and recreates a sandbox from its snapshot.
-func (c *Client) RecoverSandbox(ctx context.Context, sandboxId string, recoverDto dto.RecoverSandboxDTO) error {
-	c.logger.Info("recover sandbox", "sandbox", sandboxId)
+// RecoverBox destroys and recreates a box from its snapshot.
+func (c *Client) RecoverBox(ctx context.Context, boxId string, recoverDto dto.RecoverBoxDTO) error {
+	c.logger.Info("recover sandbox", "sandbox", boxId)
 
-	if err := c.Destroy(ctx, sandboxId); err != nil {
+	if err := c.Destroy(ctx, boxId); err != nil {
 		c.logger.Warn("failed to destroy during recover", "error", err)
 	}
 
@@ -97,8 +97,8 @@ func (c *Client) RecoverSandbox(ctx context.Context, sandboxId string, recoverDt
 		artifactRef = *recoverDto.Snapshot
 	}
 
-	createDto := dto.CreateSandboxDTO{
-		Id:               sandboxId,
+	createDto := dto.CreateBoxDTO{
+		Id:               boxId,
 		ArtifactRef:      artifactRef,
 		OsUser:           recoverDto.OsUser,
 		CpuQuota:         recoverDto.CpuQuota,
@@ -132,10 +132,10 @@ func (c *Client) GetImageInfo(ctx context.Context, imageName string) (*ImageInfo
 	}, nil
 }
 
-// UpdateNetworkSettings updates the network allowlist/blocklist for a sandbox.
+// UpdateNetworkSettings updates the network allowlist/blocklist for a box.
 // TODO: Implement when BoxLite Go SDK exposes network configuration.
-func (c *Client) UpdateNetworkSettings(ctx context.Context, sandboxId string, settings dto.UpdateNetworkSettingsDTO) error {
-	c.logger.Warn("update network settings not yet implemented in BoxLite", "sandbox", sandboxId)
+func (c *Client) UpdateNetworkSettings(ctx context.Context, boxId string, settings dto.UpdateNetworkSettingsDTO) error {
+	c.logger.Warn("update network settings not yet implemented in BoxLite", "sandbox", boxId)
 	return errdefs.ErrNotImplemented.WithMessage("live network settings update is not supported by the BoxLite Go SDK")
 }
 
@@ -151,8 +151,8 @@ func (c *Client) PushImage(ctx context.Context, imageName string, reg *dto.Regis
 	return errdefs.ErrNotImplemented.WithMessage("image push is not supported by the BoxLite Go SDK")
 }
 
-// GetDaemonVersion returns the version of the in-sandbox daemon.
-func (c *Client) GetDaemonVersion(ctx context.Context, sandboxId string) (string, error) {
+// GetDaemonVersion returns the version of the in-box daemon.
+func (c *Client) GetDaemonVersion(ctx context.Context, boxId string) (string, error) {
 	return "boxlite", nil
 }
 

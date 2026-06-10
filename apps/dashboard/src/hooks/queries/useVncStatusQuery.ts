@@ -16,35 +16,35 @@ const parseVncStatus = (data: { status?: unknown }) => {
   return data.status
 }
 
-export const useVncInitialStatusQuery = (sandboxId: string, enabled: boolean) => {
+export const useVncInitialStatusQuery = (boxId: string, enabled: boolean) => {
   const { toolboxApi } = useApi()
   const { selectedOrganization } = useSelectedOrganization()
 
   return useQuery({
-    queryKey: queryKeys.sandboxes.vncInitialStatus(sandboxId),
+    queryKey: queryKeys.boxes.vncInitialStatus(boxId),
     queryFn: async () => {
-      const { data } = await toolboxApi.getComputerUseStatusDeprecated(sandboxId, selectedOrganization?.id)
+      const { data } = await toolboxApi.getComputerUseStatusDeprecated(boxId, selectedOrganization?.id)
       return parseVncStatus(data)
     },
-    enabled: enabled && !!sandboxId && !!selectedOrganization?.id,
+    enabled: enabled && !!boxId && !!selectedOrganization?.id,
     retry: false,
     staleTime: 0,
   })
 }
 
-export const useVncPollStatusQuery = (sandboxId: string, enabled: boolean) => {
+export const useVncPollStatusQuery = (boxId: string, enabled: boolean) => {
   const { toolboxApi } = useApi()
   const { selectedOrganization } = useSelectedOrganization()
 
   return useQuery({
-    queryKey: queryKeys.sandboxes.vncPollStatus(sandboxId),
+    queryKey: queryKeys.boxes.vncPollStatus(boxId),
     queryFn: async () => {
-      const { data } = await toolboxApi.getComputerUseStatusDeprecated(sandboxId, selectedOrganization?.id)
+      const { data } = await toolboxApi.getComputerUseStatusDeprecated(boxId, selectedOrganization?.id)
       const status = parseVncStatus(data)
       if (status !== 'active') throw new Error(`VNC not ready: ${status}`)
       return status
     },
-    enabled: enabled && !!sandboxId && !!selectedOrganization?.id,
+    enabled: enabled && !!boxId && !!selectedOrganization?.id,
     retry: 30,
     retryDelay: 2000,
   })

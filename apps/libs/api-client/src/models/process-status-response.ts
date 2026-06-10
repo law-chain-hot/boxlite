@@ -12,22 +12,16 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface ProcessStatusResponse
- */
+
+
 export interface ProcessStatusResponse {
-  /**
-   * The name of the VNC process being checked
-   * @type {string}
-   * @memberof ProcessStatusResponse
-   */
-  processName: string
-  /**
-   * Whether the specified VNC process is currently running
-   * @type {boolean}
-   * @memberof ProcessStatusResponse
-   */
-  running: boolean
+    /**
+     * The name of the VNC process being checked
+     */
+    'processName': string;
+    /**
+     * Whether the specified VNC process is currently running
+     */
+    'running': boolean;
 }
+

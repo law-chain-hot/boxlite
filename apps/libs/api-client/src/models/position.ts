@@ -12,22 +12,10 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface Position
- */
+
+
 export interface Position {
-  /**
-   *
-   * @type {number}
-   * @memberof Position
-   */
-  line: number
-  /**
-   *
-   * @type {number}
-   * @memberof Position
-   */
-  character: number
+    'line': number;
+    'character': number;
 }
+

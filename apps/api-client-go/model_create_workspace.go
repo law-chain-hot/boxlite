@@ -45,7 +45,7 @@ type CreateWorkspace struct {
 	// Auto-stop interval in minutes (0 means disabled)
 	AutoStopInterval *int32 `json:"autoStopInterval,omitempty"`
 	// Array of volumes to attach to the workspace
-	Volumes []SandboxVolume `json:"volumes,omitempty"`
+	Volumes []BoxVolume `json:"volumes,omitempty"`
 	// Build information for the workspace
 	BuildInfo            *CreateBuildInfo `json:"buildInfo,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -455,9 +455,9 @@ func (o *CreateWorkspace) SetAutoStopInterval(v int32) {
 }
 
 // GetVolumes returns the Volumes field value if set, zero value otherwise.
-func (o *CreateWorkspace) GetVolumes() []SandboxVolume {
+func (o *CreateWorkspace) GetVolumes() []BoxVolume {
 	if o == nil || IsNil(o.Volumes) {
-		var ret []SandboxVolume
+		var ret []BoxVolume
 		return ret
 	}
 	return o.Volumes
@@ -465,7 +465,7 @@ func (o *CreateWorkspace) GetVolumes() []SandboxVolume {
 
 // GetVolumesOk returns a tuple with the Volumes field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateWorkspace) GetVolumesOk() ([]SandboxVolume, bool) {
+func (o *CreateWorkspace) GetVolumesOk() ([]BoxVolume, bool) {
 	if o == nil || IsNil(o.Volumes) {
 		return nil, false
 	}
@@ -481,8 +481,8 @@ func (o *CreateWorkspace) HasVolumes() bool {
 	return false
 }
 
-// SetVolumes gets a reference to the given []SandboxVolume and assigns it to the Volumes field.
-func (o *CreateWorkspace) SetVolumes(v []SandboxVolume) {
+// SetVolumes gets a reference to the given []BoxVolume and assigns it to the Volumes field.
+func (o *CreateWorkspace) SetVolumes(v []BoxVolume) {
 	o.Volumes = v
 }
 
@@ -647,3 +647,5 @@ func (v *NullableCreateWorkspace) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
+
+
