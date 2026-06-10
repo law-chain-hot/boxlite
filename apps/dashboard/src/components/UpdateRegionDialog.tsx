@@ -37,7 +37,6 @@ export const UpdateRegionDialog: React.FC<UpdateRegionDialogProps> = ({
   const [formData, setFormData] = useState({
     proxyUrl: region.proxyUrl || '',
     sshGatewayUrl: region.sshGatewayUrl || '',
-    artifactRegistryUrl: region.artifactRegistryUrl || '',
   })
 
   // Reset form when dialog opens with new region
@@ -46,7 +45,6 @@ export const UpdateRegionDialog: React.FC<UpdateRegionDialogProps> = ({
       setFormData({
         proxyUrl: region.proxyUrl || '',
         sshGatewayUrl: region.sshGatewayUrl || '',
-        artifactRegistryUrl: region.artifactRegistryUrl || '',
       })
     }
   }, [open, region])
@@ -54,9 +52,7 @@ export const UpdateRegionDialog: React.FC<UpdateRegionDialogProps> = ({
   const hasChanges = useMemo(() => {
     const proxyChanged = (formData.proxyUrl.trim() || null) !== (region.proxyUrl || null)
     const sshGatewayChanged = (formData.sshGatewayUrl.trim() || null) !== (region.sshGatewayUrl || null)
-    const artifactRegistryChanged =
-      (formData.artifactRegistryUrl.trim() || null) !== (region.artifactRegistryUrl || null)
-    return proxyChanged || sshGatewayChanged || artifactRegistryChanged
+    return proxyChanged || sshGatewayChanged
   }, [formData, region])
 
   const handleUpdate = async () => {
@@ -65,16 +61,12 @@ export const UpdateRegionDialog: React.FC<UpdateRegionDialogProps> = ({
 
     const proxyUrlValue = formData.proxyUrl.trim() || null
     const sshGatewayUrlValue = formData.sshGatewayUrl.trim() || null
-    const artifactRegistryUrlValue = formData.artifactRegistryUrl.trim() || null
 
     if (proxyUrlValue !== (region.proxyUrl || null)) {
       updateData.proxyUrl = proxyUrlValue
     }
     if (sshGatewayUrlValue !== (region.sshGatewayUrl || null)) {
       updateData.sshGatewayUrl = sshGatewayUrlValue
-    }
-    if (artifactRegistryUrlValue !== (region.artifactRegistryUrl || null)) {
-      updateData.artifactRegistryUrl = artifactRegistryUrlValue
     }
 
     const success = await onUpdateRegion(region.id, updateData)
@@ -126,22 +118,6 @@ export const UpdateRegionDialog: React.FC<UpdateRegionDialogProps> = ({
             />
             <p className="text-sm text-muted-foreground mt-1 pl-1">
               (Optional) URL of the custom SSH gateway for this region
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="artifact-registry-url">Artifact registry URL</Label>
-            <Input
-              id="artifact-registry-url"
-              value={formData.artifactRegistryUrl}
-              onChange={(e) => {
-                setFormData((prev) => ({ ...prev, artifactRegistryUrl: e.target.value }))
-              }}
-              placeholder="https://artifact-registry.example.com"
-            />
-            <p className="text-sm text-muted-foreground mt-1 pl-1">
-              (Optional) URL of the custom artifact registry for this region. Cannot be changed if images exist in this
-              region.
             </p>
           </div>
         </form>

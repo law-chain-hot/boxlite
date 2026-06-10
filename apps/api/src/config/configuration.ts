@@ -74,18 +74,6 @@ const configuration = {
   dashboardUrl: process.env.DASHBOARD_URL,
   // Default to empty string - dashboard will then hit '/api'
   dashboardBaseApiUrl: process.env.DASHBOARD_BASE_API_URL || '',
-  transientRegistry: {
-    url: process.env.TRANSIENT_REGISTRY_URL,
-    admin: process.env.TRANSIENT_REGISTRY_ADMIN,
-    password: process.env.TRANSIENT_REGISTRY_PASSWORD,
-    projectId: process.env.TRANSIENT_REGISTRY_PROJECT_ID,
-  },
-  internalRegistry: {
-    url: process.env.INTERNAL_REGISTRY_URL,
-    admin: process.env.INTERNAL_REGISTRY_ADMIN,
-    password: process.env.INTERNAL_REGISTRY_PASSWORD,
-    projectId: process.env.INTERNAL_REGISTRY_PROJECT_ID,
-  },
   systemSourceRegistry: {
     name: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_NAME || 'BoxLite System Source Registry',
     url: process.env.BOXLITE_SYSTEM_SOURCE_REGISTRY_URL,

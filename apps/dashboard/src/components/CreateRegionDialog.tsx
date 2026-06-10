@@ -28,7 +28,6 @@ const DEFAULT_FORM_DATA = {
   name: '',
   proxyUrl: '',
   sshGatewayUrl: '',
-  artifactRegistryUrl: '',
 }
 
 interface CreateRegionDialogProps {
@@ -48,7 +47,6 @@ export const CreateRegionDialog: React.FC<CreateRegionDialogProps> = ({
   const [createdRegion, setCreatedRegion] = useState<CreateRegionResponse | null>(null)
   const [isProxyApiKeyRevealed, setIsProxyApiKeyRevealed] = useState(false)
   const [isSshGatewayApiKeyRevealed, setIsSshGatewayApiKeyRevealed] = useState(false)
-  const [isArtifactRegistryPasswordRevealed, setIsArtifactRegistryPasswordRevealed] = useState(false)
 
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA)
 
@@ -59,17 +57,11 @@ export const CreateRegionDialog: React.FC<CreateRegionDialogProps> = ({
         name: formData.name,
         proxyUrl: formData.proxyUrl.trim() || null,
         sshGatewayUrl: formData.sshGatewayUrl.trim() || null,
-        artifactRegistryUrl: formData.artifactRegistryUrl.trim() || null,
       }
 
       const region = await onCreateRegion(createRegionData)
       if (region) {
-        if (
-          !region.proxyApiKey &&
-          !region.sshGatewayApiKey &&
-          !region.artifactRegistryUsername &&
-          !region.artifactRegistryPassword
-        ) {
+        if (!region.proxyApiKey && !region.sshGatewayApiKey) {
           setOpen(false)
           setCreatedRegion(null)
         } else {
@@ -106,7 +98,6 @@ export const CreateRegionDialog: React.FC<CreateRegionDialogProps> = ({
           setFormData(DEFAULT_FORM_DATA)
           setIsProxyApiKeyRevealed(false)
           setIsSshGatewayApiKeyRevealed(false)
-          setIsArtifactRegistryPasswordRevealed(false)
         }
       }}
     >
@@ -123,20 +114,13 @@ export const CreateRegionDialog: React.FC<CreateRegionDialogProps> = ({
           <DialogDescription>
             {!createdRegion
               ? 'Add a new region for grouping runners and boxes.'
-              : createdRegion.proxyApiKey ||
-                  createdRegion.sshGatewayApiKey ||
-                  createdRegion.artifactRegistryUsername ||
-                  createdRegion.artifactRegistryPassword
+              : createdRegion.proxyApiKey || createdRegion.sshGatewayApiKey
                 ? "Save these credentials securely. You won't be able to see them again."
                 : ''}
           </DialogDescription>
         </DialogHeader>
 
-        {createdRegion &&
-        (createdRegion.proxyApiKey ||
-          createdRegion.sshGatewayApiKey ||
-          createdRegion.artifactRegistryUsername ||
-          createdRegion.artifactRegistryPassword) ? (
+        {createdRegion && (createdRegion.proxyApiKey || createdRegion.sshGatewayApiKey) ? (
           <div className="space-y-6">
             {createdRegion.proxyApiKey && (
               <div className="space-y-3">
@@ -171,38 +155,6 @@ export const CreateRegionDialog: React.FC<CreateRegionDialogProps> = ({
                   valueProps={{
                     onMouseEnter: () => setIsSshGatewayApiKeyRevealed(true),
                     onMouseLeave: () => setIsSshGatewayApiKeyRevealed(false),
-                  }}
-                />
-              </div>
-            )}
-
-            {createdRegion.artifactRegistryUsername && (
-              <div className="space-y-3">
-                <Label htmlFor="artifact-registry-username">Artifact registry username</Label>
-                <CopyableValue
-                  displayValue={createdRegion.artifactRegistryUsername}
-                  copyValue={createdRegion.artifactRegistryUsername}
-                  copyLabel="artifact registry username"
-                  onCopy={copyToClipboard}
-                />
-              </div>
-            )}
-
-            {createdRegion.artifactRegistryPassword && (
-              <div className="space-y-3">
-                <Label htmlFor="artifact-registry-password">Artifact registry password</Label>
-                <CopyableValue
-                  displayValue={
-                    isArtifactRegistryPasswordRevealed
-                      ? createdRegion.artifactRegistryPassword
-                      : getMaskedToken(createdRegion.artifactRegistryPassword)
-                  }
-                  copyValue={createdRegion.artifactRegistryPassword}
-                  copyLabel="artifact registry password"
-                  onCopy={copyToClipboard}
-                  valueProps={{
-                    onMouseEnter: () => setIsArtifactRegistryPasswordRevealed(true),
-                    onMouseLeave: () => setIsArtifactRegistryPasswordRevealed(false),
                   }}
                 />
               </div>
@@ -259,21 +211,6 @@ export const CreateRegionDialog: React.FC<CreateRegionDialogProps> = ({
               />
               <p className="text-sm text-muted-foreground mt-1 pl-1">
                 (Optional) URL of the custom SSH gateway for this region
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="artifact-registry-url">Artifact registry URL</Label>
-              <Input
-                id="artifact-registry-url"
-                value={formData.artifactRegistryUrl}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, artifactRegistryUrl: e.target.value }))
-                }}
-                placeholder="https://artifact-registry.example.com"
-              />
-              <p className="text-sm text-muted-foreground mt-1 pl-1">
-                (Optional) URL of the custom artifact registry for this region
               </p>
             </div>
           </form>

@@ -13,27 +13,21 @@ import {
   HttpStatus,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { DataSource, In, IsNull, Like, Repository } from 'typeorm'
+import { DataSource, In, IsNull, Repository } from 'typeorm'
 import { REGION_NAME_REGEX } from '../constants/region-name-regex.constant'
 import { CreateRegionInternalDto } from '../dto/create-region-internal.dto'
 import { Region } from '../entities/region.entity'
 import { Runner } from '../../box/entities/runner.entity'
 import { RegionType } from '../enums/region-type.enum'
 import { CreateRegionResponseDto } from '../dto/create-region.dto'
-import { generateApiKeyHash, generateApiKeyValue, generateRandomString } from '../../common/utils/api-key'
+import { generateApiKeyHash, generateApiKeyValue } from '../../common/utils/api-key'
 import { TypedConfigService } from '../../config/typed-config.service'
 import { RegionDto } from '../dto/region.dto'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { RegionEvents } from '../constants/region-events.constant'
 import { RegionCreatedEvent } from '../events/region-created.event'
 import { RegionDeletedEvent } from '../events/region-deleted.event'
-import { ArtifactRegistryCredentialsDto } from '../dto/artifact-registry-credentials.dto'
-import {
-  RegionArtifactRegistryCredsRegeneratedEvent,
-  RegionArtifactRegistryUpdatedEvent,
-} from '../events/region-artifact-registry-creds.event'
 import { UpdateRegionDto } from '../dto/update-region.dto'
-import { BoxTemplate } from '../../box/entities/box-template.entity'
 import { InjectRedis } from '@nestjs-modules/ioredis'
 import { Redis } from 'ioredis'
 import { toolboxProxyUrlCacheKey } from '../../box/utils/box-lookup-cache.util'
@@ -49,8 +43,6 @@ export class RegionService {
     private readonly runnerRepository: Repository<Runner>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
-    @InjectRepository(BoxTemplate)
-    private readonly boxTemplateRepository: Repository<BoxTemplate>,
     @InjectRedis() private readonly redis: Redis,
     private readonly configService: TypedConfigService,
   ) {}
@@ -87,9 +79,6 @@ export class RegionService {
         ? generateApiKeyValue(this.configService.getOrThrow('apiKey.prefix'), 'svc')
         : undefined
 
-      const artifactRegistryUsername = createRegionDto.artifactRegistryUrl ? 'boxlite' : undefined
-      const artifactRegistryPassword = createRegionDto.artifactRegistryUrl ? generateRandomString(16) : undefined
-
       const region = new Region({
         name: createRegionDto.name,
         enforceQuotas: createRegionDto.enforceQuotas,
@@ -100,23 +89,17 @@ export class RegionService {
         sshGatewayUrl: createRegionDto.sshGatewayUrl,
         proxyApiKeyHash: proxyApiKey ? generateApiKeyHash(proxyApiKey) : null,
         sshGatewayApiKeyHash: sshGatewayApiKey ? generateApiKeyHash(sshGatewayApiKey) : null,
-        artifactRegistryUrl: createRegionDto.artifactRegistryUrl,
       })
 
       await this.dataSource.transaction(async (em) => {
         await em.save(region)
-        await this.eventEmitter.emitAsync(
-          RegionEvents.CREATED,
-          new RegionCreatedEvent(em, region, organizationId, artifactRegistryUsername, artifactRegistryPassword),
-        )
+        await this.eventEmitter.emitAsync(RegionEvents.CREATED, new RegionCreatedEvent(em, region, organizationId))
       })
 
       return new CreateRegionResponseDto({
         id: region.id,
         proxyApiKey,
         sshGatewayApiKey,
-        artifactRegistryUsername,
-        artifactRegistryPassword,
       })
     } catch (error) {
       if (error.code === '23505') {
@@ -296,47 +279,6 @@ export class RegionService {
         region.sshGatewayUrl = updateRegion.sshGatewayUrl ?? null
       }
 
-      if (updateRegion.artifactRegistryUrl !== undefined) {
-        if (region.artifactRegistryUrl) {
-          // Existing template artifacts may still be pinned to this registry host.
-          const exists = await this.boxTemplateRepository.exists({
-            where: {
-              artifactRef: Like(`${region.artifactRegistryUrl.replace(/^https?:\/\//, '')}%`),
-            },
-          })
-          if (exists) {
-            throw new BadRequestException(
-              'Cannot change artifact registry URL for region with existing template artifacts. Please remove them first.',
-            )
-          }
-        }
-
-        const prevArtifactRegistryUrl = region.artifactRegistryUrl
-        region.artifactRegistryUrl = updateRegion.artifactRegistryUrl ?? null
-
-        let newUsername: string | undefined = undefined
-        let newPassword: string | undefined = undefined
-
-        // If the region did not have an artifact registry, create new credentials.
-        if (!prevArtifactRegistryUrl) {
-          newUsername = 'boxlite'
-          newPassword = generateRandomString(16)
-        }
-
-        await this.eventEmitter.emitAsync(
-          RegionEvents.ARTIFACT_REGISTRY_UPDATED,
-          new RegionArtifactRegistryUpdatedEvent(
-            region,
-            region.organizationId,
-            region.artifactRegistryUrl,
-            prevArtifactRegistryUrl,
-            newUsername,
-            newPassword,
-            em,
-          ),
-        )
-      }
-
       await em.save(region)
     })
 
@@ -395,36 +337,5 @@ export class RegionService {
     await this.regionRepository.save(region)
 
     return newApiKey
-  }
-
-  /**
-   * @param regionId - The ID of the region.
-   * @throws {NotFoundException} If the region is not found.
-   * @throws {BadRequestException} If the region does not have an artifact registry URL configured.
-   * @returns The newly generated artifact registry credentials.
-   */
-  async regenerateArtifactRegistryCredentials(regionId: string): Promise<ArtifactRegistryCredentialsDto> {
-    const region = await this.findOne(regionId)
-
-    if (!region) {
-      throw new NotFoundException('Region not found')
-    }
-
-    if (!region.artifactRegistryUrl) {
-      throw new BadRequestException('Region does not have an artifact registry URL configured')
-    }
-
-    const newUsername = 'boxlite'
-    const newPassword = generateRandomString(16)
-
-    await this.eventEmitter.emitAsync(
-      RegionEvents.ARTIFACT_REGISTRY_CREDENTIALS_REGENERATED,
-      new RegionArtifactRegistryCredsRegeneratedEvent(regionId, region.artifactRegistryUrl, newUsername, newPassword),
-    )
-
-    return new ArtifactRegistryCredentialsDto({
-      username: newUsername,
-      password: newPassword,
-    })
   }
 }

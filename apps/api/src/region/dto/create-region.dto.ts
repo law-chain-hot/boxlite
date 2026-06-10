@@ -32,14 +32,6 @@ export class CreateRegionDto {
     required: false,
   })
   sshGatewayUrl?: string
-
-  @ApiProperty({
-    description: 'Artifact Registry URL for the region',
-    example: 'https://artifact-registry.example.com',
-    nullable: true,
-    required: false,
-  })
-  artifactRegistryUrl?: string
 }
 
 @ApiSchema({ name: 'CreateRegionResponse' })
@@ -68,32 +60,9 @@ export class CreateRegionResponseDto {
   })
   sshGatewayApiKey?: string
 
-  @ApiProperty({
-    description: 'Artifact Registry username for the region',
-    example: 'boxlite',
-    nullable: true,
-    required: false,
-  })
-  artifactRegistryUsername?: string
-
-  @ApiProperty({
-    description: 'Artifact Registry password for the region',
-    nullable: true,
-    required: false,
-  })
-  artifactRegistryPassword?: string
-
-  constructor(params: {
-    id: string
-    proxyApiKey?: string
-    sshGatewayApiKey?: string
-    artifactRegistryUsername?: string
-    artifactRegistryPassword?: string
-  }) {
+  constructor(params: { id: string; proxyApiKey?: string; sshGatewayApiKey?: string }) {
     this.id = params.id
     this.proxyApiKey = params.proxyApiKey
     this.sshGatewayApiKey = params.sshGatewayApiKey
-    this.artifactRegistryUsername = params.artifactRegistryUsername
-    this.artifactRegistryPassword = params.artifactRegistryPassword
   }
 }

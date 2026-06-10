@@ -11,7 +11,6 @@ import {
   OrganizationRolePermissionsEnum,
   CreateRegion,
   CreateRegionResponse,
-  ArtifactRegistryCredentials,
   UpdateRegion,
 } from '@boxlite-ai/api-client'
 import { RegionTable } from '@/components/RegionTable'
@@ -63,13 +62,9 @@ const Regions: React.FC = () => {
   // Regenerate API Key state
   const [showRegenerateProxyApiKeyDialog, setShowRegenerateProxyApiKeyDialog] = useState(false)
   const [showRegenerateSshGatewayApiKeyDialog, setShowRegenerateSshGatewayApiKeyDialog] = useState(false)
-  const [showRegenerateArtifactRegistryCredsDialog, setShowRegenerateArtifactRegistryCredsDialog] = useState(false)
   const [regeneratedApiKey, setRegeneratedApiKey] = useState<string | null>(null)
-  const [regeneratedArtifactRegistryCreds, setRegeneratedArtifactRegistryCreds] =
-    useState<ArtifactRegistryCredentials | null>(null)
   const [regionForRegenerate, setRegionForRegenerate] = useState<Region | null>(null)
   const [isApiKeyRevealed, setIsApiKeyRevealed] = useState(false)
-  const [isArtifactRegistryPasswordRevealed, setIsArtifactRegistryPasswordRevealed] = useState(false)
 
   // Region Details Sheet state
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
@@ -135,12 +130,6 @@ const Regions: React.FC = () => {
     setRegionForRegenerate(region)
     setRegeneratedApiKey(null)
     setShowRegenerateSshGatewayApiKeyDialog(true)
-  }
-
-  const handleRegenerateArtifactRegistryCredentials = async (region: Region) => {
-    setRegionForRegenerate(region)
-    setRegeneratedArtifactRegistryCreds(null)
-    setShowRegenerateArtifactRegistryCredsDialog(true)
   }
 
   const handleOpenRegionDetails = (region: Region) => {
@@ -216,30 +205,6 @@ const Regions: React.FC = () => {
     }
   }
 
-  const confirmRegenerateArtifactRegistryCredentials = async () => {
-    if (!regionForRegenerate || !selectedOrganization) {
-      return
-    }
-
-    setRegionIsLoading((prev) => ({ ...prev, [regionForRegenerate.id]: true }))
-
-    try {
-      const response = await organizationsApi.regenerateArtifactRegistryCredentials(
-        regionForRegenerate.id,
-        selectedOrganization.id,
-      )
-      setRegeneratedArtifactRegistryCreds(response.data)
-      setShowRegenerateArtifactRegistryCredsDialog(true)
-      toast.success('Artifact Registry credentials regenerated successfully')
-    } catch (error) {
-      handleApiError(error, 'Failed to regenerate Artifact Registry credentials')
-      setShowRegenerateArtifactRegistryCredsDialog(false)
-      setRegionForRegenerate(null)
-    } finally {
-      setRegionIsLoading((prev) => ({ ...prev, [regionForRegenerate.id]: false }))
-    }
-  }
-
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -296,7 +261,6 @@ const Regions: React.FC = () => {
         onUpdate={handleOpenUpdateDialog}
         onRegenerateProxyApiKey={handleRegenerateProxyApiKey}
         onRegenerateSshGatewayApiKey={handleRegenerateSshGatewayApiKey}
-        onRegenerateArtifactRegistryCredentials={handleRegenerateArtifactRegistryCredentials}
       />
 
       {regionToUpdate && (
@@ -481,96 +445,6 @@ const Regions: React.FC = () => {
                   setRegionForRegenerate(null)
                   setRegeneratedApiKey(null)
                   setIsApiKeyRevealed(false)
-                }}
-                className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              >
-                Close
-              </AlertDialogAction>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Regenerate Artifact Registry Credentials Dialog */}
-      <AlertDialog
-        open={showRegenerateArtifactRegistryCredsDialog}
-        onOpenChange={(isOpen) => {
-          setShowRegenerateArtifactRegistryCredsDialog(isOpen)
-          if (!isOpen) {
-            setRegionForRegenerate(null)
-            setRegeneratedArtifactRegistryCreds(null)
-            setIsArtifactRegistryPasswordRevealed(false)
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {regeneratedArtifactRegistryCreds
-                ? 'Artifact Registry Credentials Regenerated'
-                : 'Regenerate Artifact Registry Credentials'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {regeneratedArtifactRegistryCreds ? (
-                'The new credentials have been generated. Copy them now as they will not be shown again.'
-              ) : (
-                <>
-                  <strong>Warning:</strong> This will immediately invalidate the current Artifact Registry credentials.
-                  The Artifact Registry will need to be reconfigured with the new credentials.
-                </>
-              )}
-              {regeneratedArtifactRegistryCreds && (
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <span className="text-xs text-muted-foreground">Username</span>
-                    <CopyableValue
-                      displayValue={regeneratedArtifactRegistryCreds.username}
-                      copyValue={regeneratedArtifactRegistryCreds.username}
-                      copyLabel="artifact registry username"
-                      onCopy={copyToClipboard}
-                    />
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground">Password</span>
-                    <CopyableValue
-                      displayValue={
-                        isArtifactRegistryPasswordRevealed
-                          ? regeneratedArtifactRegistryCreds.password
-                          : getMaskedToken(regeneratedArtifactRegistryCreds.password)
-                      }
-                      copyValue={regeneratedArtifactRegistryCreds.password}
-                      copyLabel="artifact registry password"
-                      onCopy={copyToClipboard}
-                      valueProps={{
-                        onMouseEnter: () => setIsArtifactRegistryPasswordRevealed(true),
-                        onMouseLeave: () => setIsArtifactRegistryPasswordRevealed(false),
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            {!regeneratedArtifactRegistryCreds ? (
-              <>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={confirmRegenerateArtifactRegistryCredentials}
-                  disabled={!regionForRegenerate || regionIsLoading[regionForRegenerate?.id || '']}
-                  className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                >
-                  {regionForRegenerate && regionIsLoading[regionForRegenerate.id] ? 'Regenerating...' : 'Regenerate'}
-                </AlertDialogAction>
-              </>
-            ) : (
-              <AlertDialogAction
-                onClick={() => {
-                  setShowRegenerateArtifactRegistryCredsDialog(false)
-                  setRegionForRegenerate(null)
-                  setRegeneratedArtifactRegistryCreds(null)
-                  setIsArtifactRegistryPasswordRevealed(false)
                 }}
                 className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
               >

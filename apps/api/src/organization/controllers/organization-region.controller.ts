@@ -39,7 +39,6 @@ import { FeatureFlags } from '../../common/constants/feature-flags'
 import { CustomHeaders } from '../../common/constants/header.constants'
 import { AuthContext } from '../../common/decorators/auth-context.decorator'
 import { OrganizationAuthContext } from '../../common/interfaces/auth-context.interface'
-import { ArtifactRegistryCredentialsDto } from '../../region/dto/artifact-registry-credentials.dto'
 import { UpdateRegionDto } from '../../region/dto/update-region.dto'
 
 @ApiTags('organizations')
@@ -246,34 +245,5 @@ export class OrganizationRegionController {
   async regenerateSshGatewayApiKey(@Param('id') id: string): Promise<RegenerateApiKeyResponseDto> {
     const apiKey = await this.regionService.regenerateSshGatewayApiKey(id)
     return new RegenerateApiKeyResponseDto(apiKey)
-  }
-
-  @Post(':id/regenerate-artifact-registry-credentials')
-  @HttpCode(200)
-  @UseInterceptors(ContentTypeInterceptor)
-  @ApiOperation({
-    summary: 'Regenerate artifact registry credentials for a region',
-    operationId: 'regenerateArtifactRegistryCredentials',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'The artifact registry credentials have been successfully regenerated.',
-    type: ArtifactRegistryCredentialsDto,
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Region ID',
-    type: String,
-  })
-  @Audit({
-    action: AuditAction.REGENERATE_ARTIFACT_REGISTRY_CREDENTIALS,
-    targetType: AuditTarget.REGION,
-    targetIdFromRequest: (req) => req.params.id,
-  })
-  @UseGuards(RegionAccessGuard)
-  @RequiredOrganizationResourcePermissions([OrganizationResourcePermission.WRITE_REGIONS])
-  @RequireFlagsEnabled({ flags: [{ flagKey: FeatureFlags.ORGANIZATION_INFRASTRUCTURE, defaultValue: false }] })
-  async regenerateArtifactRegistryCredentials(@Param('id') id: string): Promise<ArtifactRegistryCredentialsDto> {
-    return await this.regionService.regenerateArtifactRegistryCredentials(id)
   }
 }

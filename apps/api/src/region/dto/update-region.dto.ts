@@ -23,12 +23,4 @@ export class UpdateRegionDto {
     required: false,
   })
   sshGatewayUrl?: string
-
-  @ApiProperty({
-    description: 'Artifact Registry URL for the region',
-    example: 'https://artifact-registry.example.com',
-    nullable: true,
-    required: false,
-  })
-  artifactRegistryUrl?: string
 }
