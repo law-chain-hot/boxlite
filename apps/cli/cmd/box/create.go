@@ -8,12 +8,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	apiclient_cli "github.com/boxlite-ai/boxlite/cli/apiclient"
 	"github.com/boxlite-ai/boxlite/cli/cmd/common"
-	"github.com/boxlite-ai/boxlite/cli/config"
-	"github.com/boxlite-ai/boxlite/cli/util"
 	views_common "github.com/boxlite-ai/boxlite/cli/views/common"
 	apiclient "github.com/boxlite-ai/boxlite/libs/api-client-go"
 	"github.com/charmbracelet/lipgloss"
@@ -39,6 +36,9 @@ var CreateCmd = &cobra.Command{
 
 		if nameFlag != "" {
 			createBox.SetName(nameFlag)
+		}
+		if imageFlag != "" {
+			createBox.SetImage(imageFlag)
 		}
 		if userFlag != "" {
 			createBox.SetUser(userFlag)
@@ -94,14 +94,6 @@ var CreateCmd = &cobra.Command{
 			createBox.SetNetworkAllowList(networkAllowListFlag)
 		}
 
-		if dockerfileFlag != "" {
-			createBuildInfoDto, err := common.GetCreateBuildInfoDto(ctx, dockerfileFlag, contextFlag)
-			if err != nil {
-				return err
-			}
-			createBox.SetBuildInfo(*createBuildInfoDto)
-		}
-
 		if len(volumesFlag) > 0 {
 			volumes := make([]apiclient.BoxVolume, 0, len(volumesFlag))
 			for _, v := range volumesFlag {
@@ -128,37 +120,13 @@ var CreateCmd = &cobra.Command{
 			return apiclient_cli.HandleErrorResponse(res, err)
 		}
 
-		if box.State != nil && *box.State == apiclient.BOXSTATE_PENDING_BUILD {
-			c, err := config.GetConfig()
-			if err != nil {
+		// A freshly created box returns in a transitional state (UNKNOWN/CREATING) while the
+		// runner pulls the curated image and boots it. Wait until it reaches STARTED before
+		// fetching the preview URL, which is only available once the box is running.
+		if box.State == nil || *box.State != apiclient.BOXSTATE_STARTED {
+			if err := common.AwaitBoxState(ctx, apiClient, box.Id, apiclient.BOXSTATE_STARTED); err != nil {
 				return err
 			}
-
-			activeProfile, err := c.GetActiveProfile()
-			if err != nil {
-				return err
-			}
-
-			logsContext, stopLogs := context.WithCancel(context.Background())
-			defer stopLogs()
-
-			go common.ReadBuildLogs(logsContext, common.ReadLogParams{
-				Id:                   box.Id,
-				ServerUrl:            activeProfile.Api.Url,
-				ServerApi:            activeProfile.Api,
-				ActiveOrganizationId: activeProfile.ActiveOrganizationId,
-				Follow:               util.Pointer(true),
-				ResourceType:         common.ResourceTypeBox,
-			})
-
-			err = common.AwaitBoxState(ctx, apiClient, box.Id, apiclient.BOXSTATE_STARTED)
-			if err != nil {
-				return err
-			}
-
-			// Wait for the last logs to be read
-			time.Sleep(250 * time.Millisecond)
-			stopLogs()
 		}
 
 		previewUrl, res, err := apiClient.BoxAPI.GetPortPreviewUrl(ctx, box.Id, BOX_TERMINAL_PORT).Execute()
@@ -177,6 +145,7 @@ var CreateCmd = &cobra.Command{
 
 var (
 	nameFlag             string
+	imageFlag            string
 	userFlag             string
 	envFlag              []string
 	labelsFlag           []string
@@ -190,14 +159,13 @@ var (
 	autoStopFlag         int32
 	autoDeleteFlag       int32
 	volumesFlag          []string
-	dockerfileFlag       string
-	contextFlag          []string
 	networkBlockAllFlag  bool
 	networkAllowListFlag string
 )
 
 func init() {
 	CreateCmd.Flags().StringVar(&nameFlag, "name", "", "Name of the box")
+	CreateCmd.Flags().StringVar(&imageFlag, "image", "", "Curated image for the box (base, python, node). Defaults to base.")
 	CreateCmd.Flags().StringVar(&userFlag, "user", "", "User associated with the box")
 	CreateCmd.Flags().StringArrayVarP(&envFlag, "env", "e", []string{}, "Environment variables (format: KEY=VALUE)")
 	CreateCmd.Flags().StringArrayVarP(&labelsFlag, "label", "l", []string{}, "Labels (format: KEY=VALUE)")
@@ -211,8 +179,6 @@ func init() {
 	CreateCmd.Flags().Int32Var(&autoStopFlag, "auto-stop", 15, "Auto-stop interval in minutes (0 means disabled)")
 	CreateCmd.Flags().Int32Var(&autoDeleteFlag, "auto-delete", -1, "Auto-delete interval in minutes (negative value means disabled, 0 means delete immediately upon stopping)")
 	CreateCmd.Flags().StringArrayVarP(&volumesFlag, "volume", "v", []string{}, "Volumes to mount (format: VOLUME_NAME:MOUNT_PATH)")
-	CreateCmd.Flags().StringVarP(&dockerfileFlag, "dockerfile", "f", "", "Path to Dockerfile for box build")
-	CreateCmd.Flags().StringArrayVarP(&contextFlag, "context", "c", []string{}, "Files or directories to include in the build context (can be specified multiple times)")
 	CreateCmd.Flags().BoolVar(&networkBlockAllFlag, "network-block-all", false, "Whether to block all network access for the box")
 	CreateCmd.Flags().StringVar(&networkAllowListFlag, "network-allow-list", "", "Comma-separated list of allowed CIDR network addresses for the box")
 }

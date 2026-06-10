@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -60,11 +61,14 @@ const parseOptionalInteger = (value: string | undefined) => {
   return trimmedValue ? Number(trimmedValue) : undefined
 }
 
+const CURATED_IMAGES = ['base', 'python', 'node'] as const
+
 const formSchema = z.object({
   name: z
     .string()
     .optional()
     .refine((val) => !val || NAME_REGEX.test(val), 'Only letters, digits, dots, underscores and dashes are allowed'),
+  image: z.enum(CURATED_IMAGES),
   autoStopInterval: z
     .string()
     .optional()
@@ -82,6 +86,7 @@ type FormValues = z.input<typeof formSchema>
 
 const defaultValues: FormValues = {
   name: '',
+  image: 'base',
   autoStopInterval: '',
   autoDeleteInterval: '',
   cpu: '',
@@ -148,18 +153,21 @@ export const CreateBoxSheet = ({
 
       let boxId: string | undefined = undefined
       try {
-        // TODO(image-rewrite): the image/template picker was removed with the image/template
-        // subsystem; box creation no longer selects an image. Rebuild image selection here once
-        // the new model lands.
+        const cpu = parseOptionalInteger(value.cpu)
+        const memory = parseOptionalInteger(value.memory)
+        const disk = parseOptionalInteger(value.disk)
+        const hasResourceOverrides = cpu !== undefined || memory !== undefined || disk !== undefined
         const box = await createBoxMutation.mutateAsync({
           name: value.name?.trim() || undefined,
+          image: value.image,
           public: false,
           networkBlockAll: false,
           autoStopInterval: parseOptionalInteger(value.autoStopInterval),
           autoDeleteInterval: parseOptionalInteger(value.autoDeleteInterval),
-          cpu: parseOptionalInteger(value.cpu),
-          memory: parseOptionalInteger(value.memory),
-          disk: parseOptionalInteger(value.disk),
+          // The SDK only reads resource overrides from `resources`; top-level cpu/memory/disk
+          // are silently dropped. Omit the key entirely when nothing was entered so the box
+          // keeps its default sizing.
+          ...(hasResourceOverrides ? { resources: { cpu, memory, disk } } : {}),
         })
         boxId = getBoxRouteId(box)
         onCreated?.(box)
@@ -243,7 +251,30 @@ export const CreateBoxSheet = ({
               }}
             </form.Field>
 
-            {/* TODO(image-rewrite): image/template picker removed with the image/template subsystem; rebuild here. */}
+            <form.Field name="image">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name} className="text-sm font-semibold">
+                    Image
+                  </FieldLabel>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value as FormValues['image'])}
+                  >
+                    <SelectTrigger id={field.name} className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURATED_IMAGES.map((image) => (
+                        <SelectItem key={image} value={image}>
+                          {image}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            </form.Field>
 
             <Accordion
               type="single"

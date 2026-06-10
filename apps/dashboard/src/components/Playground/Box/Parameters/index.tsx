@@ -91,9 +91,7 @@ const BoxParameters = ({ className }: { className?: string }) => {
                   <div className="space-y-4">
                     {section.value === BoxParametersSections.FILE_SYSTEM && <BoxFileSystem />}
                     {section.value === BoxParametersSections.GIT_OPERATIONS && <BoxGitOperations />}
-                    {section.value === BoxParametersSections.BOX_MANAGEMENT && (
-                      <BoxManagementParameters templatesData={[]} templatesLoading={false} />
-                    )}
+                    {section.value === BoxParametersSections.BOX_MANAGEMENT && <BoxManagementParameters />}
                     {section.value === BoxParametersSections.PROCESS_CODE_EXECUTION && <BoxProcessCodeExecution />}
                   </div>
                 )}

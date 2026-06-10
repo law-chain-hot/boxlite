@@ -457,24 +457,19 @@ export class BoxLite implements AsyncDisposable {
     const codeToolbox = this.getCodeToolbox(params.language as CodeLanguage)
 
     try {
-      let buildInfo: any | undefined
-      let templateId: string | undefined
+      let image: string | undefined
       let resources: Resources | undefined
       let gpu: number | undefined
 
-      if ('templateId' in params) {
-        templateId = params.templateId
-      }
-
       if ('image' in params) {
         if (typeof params.image === 'string') {
-          buildInfo = {
-            dockerfileContent: Image.base(params.image).dockerfile,
-          }
+          // Curated image key ('base' | 'python' | 'node'); the API validates it against the
+          // allowlist and rejects anything else with a 400.
+          image = params.image
         } else if (params.image instanceof Image) {
-          buildInfo = {
-            dockerfileContent: params.image.dockerfile,
-          }
+          throw new BoxliteError(
+            'Custom Image builds are not supported. Pass a curated image key: base, python, or node.',
+          )
         }
       }
 
@@ -486,8 +481,7 @@ export class BoxLite implements AsyncDisposable {
       const response = await this.boxApi.createBox(
         {
           name: params.name,
-          templateId,
-          buildInfo,
+          image,
           user: params.user,
           env: params.envVars || {},
           labels: labels,
@@ -509,44 +503,7 @@ export class BoxLite implements AsyncDisposable {
         },
       )
 
-      let boxInstance = response.data
-
-      if (boxInstance.state === BoxState.PENDING_BUILD && options.onTemplateCreateLogs) {
-        const terminalStates: BoxState[] = [
-          BoxState.STARTED,
-          BoxState.STARTING,
-          BoxState.ERROR,
-          BoxState.BUILD_FAILED,
-        ]
-
-        while (boxInstance.state === BoxState.PENDING_BUILD) {
-          if (options.timeout) {
-            const elapsed = (Date.now() - startTime) / 1000
-            if (elapsed > options.timeout) {
-              throw new BoxliteError(
-                `Box build has been pending for more than ${options.timeout} seconds. Please check the box state again later.`,
-              )
-            }
-          }
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-          boxInstance = (await this.boxApi.getBox(boxInstance.id)).data
-        }
-
-        const response = await this.boxApi.getBuildLogsUrl(boxInstance.id)
-
-        await processStreamingResponse(
-          () =>
-            fetch(response.data.url + '?follow=true', {
-              method: 'GET',
-              headers: this.clientConfig.baseOptions.headers,
-            }),
-          (chunk) => options.onTemplateCreateLogs?.(chunk.trimEnd()),
-          async () => {
-            boxInstance = (await this.boxApi.getBox(boxInstance.id)).data
-            return boxInstance.state !== undefined && terminalStates.includes(boxInstance.state)
-          },
-        )
-      }
+      const boxInstance = response.data
 
       const box = new Box(
         boxInstance,

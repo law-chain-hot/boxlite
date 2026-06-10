@@ -28,7 +28,7 @@ import {
 } from '@/contexts/PlaygroundContext'
 import { MouseButton, MouseScrollDirection, BoxParametersSections, ScreenshotFormatOption } from '@/enums/Playground'
 import { getLanguageCodeToRun, objectHasAnyValue } from '@/lib/playground'
-import { CreateBoxBaseParams, CreateBoxFromImageParams, CreateBoxFromTemplateParams, Image } from '@boxlite-ai/sdk'
+import { CreateBoxFromImageParams } from '@boxlite-ai/sdk'
 import { useCallback, useState } from 'react'
 
 const PARAM_SECTION_MAP: Partial<Record<keyof BoxParams, BoxParametersSections>> = {
@@ -297,11 +297,13 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const useAutoDeleteInterval =
       createBoxParamsExist && boxParametersState['createBoxBaseParams']['autoDeleteInterval'] !== undefined
 
-    const createBoxFromImageParams: CreateBoxFromImageParams = { image: Image.debianSlim('3.13') } // Default and fixed image if CreateBoxFromImageParams are used
     const templateName = boxParametersState['templateName']
     const useCustomImageName = templateName !== undefined && templateName !== BOX_TEMPLATE_DEFAULT_VALUE
-    // TODO(image-rewrite): templateId param was removed with the image/template subsystem.
-    const createBoxFromTemplateParams: CreateBoxFromTemplateParams = {}
+    // Curated image key sent to the API: the default picker value maps to 'base'; any other
+    // selection ('python' | 'node') flows through as the curated key. The allowlist is enforced
+    // server-side, so an unexpected value surfaces as a 400 rather than being silently dropped.
+    const selectedImage = useCustomImageName ? (templateName as string) : 'base'
+    const createBoxFromImageParams: CreateBoxFromImageParams = { image: selectedImage }
     const createBoxFromTemplate = useCustomImageName || useDefaultResourceValues
 
     const createBoxFromImage = !useDefaultResourceValues && !useCustomImageName
@@ -320,9 +322,10 @@ export const PlaygroundProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (useResourcesDisk) createBoxFromImageParams.resources.disk = boxParametersState['resources']['disk']
       }
     }
-    let createBoxParams: CreateBoxBaseParams | CreateBoxFromImageParams | CreateBoxFromTemplateParams = {}
-    if (createBoxFromTemplate) createBoxParams = createBoxFromTemplateParams
-    else if (createBoxFromImage) createBoxParams = createBoxFromImageParams
+    // Always create from a curated image now: carry the selected key (and any resource
+    // overrides applied above) regardless of the legacy template/image flags, which remain only
+    // to drive the SDK code-snippet preview.
+    const createBoxParams: CreateBoxFromImageParams = createBoxFromImageParams
     // Set CreateBoxBaseParams params which are common for both params types
     if (useLanguageParam) createBoxParams.language = boxParametersState['language']
     if (useAutoStopInterval)

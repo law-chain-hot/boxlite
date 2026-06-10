@@ -18,15 +18,15 @@ import FormSelectInput from '../../Inputs/SelectInput'
 import StackedInputFormControl from '../../Inputs/StackedInputFormControl'
 import { useEffect } from 'react'
 
-// TODO(image-rewrite): template selection UI was removed with the image/template subsystem.
-// Props are kept (hardcoded to an empty list) so the playground compiles; rebuild template
-// selection here once the new image/template model lands.
-type BoxManagementParametersProps = {
-  templatesData: Array<{ name: string }>
-  templatesLoading: boolean
-}
+// The box image is one of the curated keys (base, python, node). The default picker value maps
+// to 'base' server-side; the selection is carried via the existing templateName playground state.
+const CURATED_IMAGE_OPTIONS = [
+  { value: BOX_TEMPLATE_DEFAULT_VALUE, label: 'Base (default)' },
+  { value: 'python', label: 'Python' },
+  { value: 'node', label: 'Node' },
+]
 
-const BoxManagementParameters: React.FC<BoxManagementParametersProps> = ({ templatesData, templatesLoading }) => {
+const BoxManagementParameters: React.FC = () => {
   const { boxParametersState, setBoxParameterValue } = usePlayground()
   const boxLanguage = boxParametersState['language']
   const boxTemplateName = boxParametersState['templateName']
@@ -39,11 +39,11 @@ const BoxManagementParameters: React.FC<BoxManagementParametersProps> = ({ templ
     placeholder: 'Select box language',
   }
 
-  // const boxTemplateFormData: ParameterFormItem = {
-  //   label: 'Image',
-  //   key: 'templateName',
-  //   placeholder: 'Select box image',
-  // }
+  const boxImageFormData: ParameterFormItem = {
+    label: 'Image',
+    key: 'templateName',
+    placeholder: 'Select box image',
+  }
 
   // Available languages
   const languageOptions = [
@@ -94,23 +94,16 @@ const BoxManagementParameters: React.FC<BoxManagementParametersProps> = ({ templ
           }}
         />
       </StackedInputFormControl>
-      {/* <StackedInputFormControl formItem={boxTemplateFormData}>
+      <StackedInputFormControl formItem={boxImageFormData}>
         <FormSelectInput
-          selectOptions={[
-            { value: BOX_TEMPLATE_DEFAULT_VALUE, label: 'Default' },
-            ...templatesData.map((template) => ({
-              value: template.name,
-              label: template.name,
-            })),
-          ]}
-          loading={templatesLoading}
+          selectOptions={CURATED_IMAGE_OPTIONS}
           selectValue={boxTemplateName}
-          formItem={boxTemplateFormData}
+          formItem={boxImageFormData}
           onChangeHandler={(templateName) => {
-            setBoxParameterValue(boxTemplateFormData.key as 'templateName', templateName)
+            setBoxParameterValue(boxImageFormData.key as 'templateName', templateName)
           }}
         />
-      </StackedInputFormControl> */}
+      </StackedInputFormControl>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="resources" className="text-sm text-muted-foreground">
