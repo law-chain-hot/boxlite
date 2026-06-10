@@ -16,41 +16,41 @@ import (
 	"fmt"
 )
 
-// checks if the ArtifactRegistryCredentials type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &ArtifactRegistryCredentials{}
+// checks if the SnapshotManagerCredentials type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &SnapshotManagerCredentials{}
 
-// ArtifactRegistryCredentials struct for ArtifactRegistryCredentials
-type ArtifactRegistryCredentials struct {
-	// Artifact Registry username for the region
+// SnapshotManagerCredentials struct for SnapshotManagerCredentials
+type SnapshotManagerCredentials struct {
+	// Snapshot Manager username for the region
 	Username string `json:"username"`
-	// Artifact Registry password for the region
-	Password             string `json:"password"`
+	// Snapshot Manager password for the region
+	Password string `json:"password"`
 	AdditionalProperties map[string]interface{}
 }
 
-type _ArtifactRegistryCredentials ArtifactRegistryCredentials
+type _SnapshotManagerCredentials SnapshotManagerCredentials
 
-// NewArtifactRegistryCredentials instantiates a new ArtifactRegistryCredentials object
+// NewSnapshotManagerCredentials instantiates a new SnapshotManagerCredentials object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewArtifactRegistryCredentials(username string, password string) *ArtifactRegistryCredentials {
-	this := ArtifactRegistryCredentials{}
+func NewSnapshotManagerCredentials(username string, password string) *SnapshotManagerCredentials {
+	this := SnapshotManagerCredentials{}
 	this.Username = username
 	this.Password = password
 	return &this
 }
 
-// NewArtifactRegistryCredentialsWithDefaults instantiates a new ArtifactRegistryCredentials object
+// NewSnapshotManagerCredentialsWithDefaults instantiates a new SnapshotManagerCredentials object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewArtifactRegistryCredentialsWithDefaults() *ArtifactRegistryCredentials {
-	this := ArtifactRegistryCredentials{}
+func NewSnapshotManagerCredentialsWithDefaults() *SnapshotManagerCredentials {
+	this := SnapshotManagerCredentials{}
 	return &this
 }
 
 // GetUsername returns the Username field value
-func (o *ArtifactRegistryCredentials) GetUsername() string {
+func (o *SnapshotManagerCredentials) GetUsername() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -61,7 +61,7 @@ func (o *ArtifactRegistryCredentials) GetUsername() string {
 
 // GetUsernameOk returns a tuple with the Username field value
 // and a boolean to check if the value has been set.
-func (o *ArtifactRegistryCredentials) GetUsernameOk() (*string, bool) {
+func (o *SnapshotManagerCredentials) GetUsernameOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -69,12 +69,12 @@ func (o *ArtifactRegistryCredentials) GetUsernameOk() (*string, bool) {
 }
 
 // SetUsername sets field value
-func (o *ArtifactRegistryCredentials) SetUsername(v string) {
+func (o *SnapshotManagerCredentials) SetUsername(v string) {
 	o.Username = v
 }
 
 // GetPassword returns the Password field value
-func (o *ArtifactRegistryCredentials) GetPassword() string {
+func (o *SnapshotManagerCredentials) GetPassword() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -85,7 +85,7 @@ func (o *ArtifactRegistryCredentials) GetPassword() string {
 
 // GetPasswordOk returns a tuple with the Password field value
 // and a boolean to check if the value has been set.
-func (o *ArtifactRegistryCredentials) GetPasswordOk() (*string, bool) {
+func (o *SnapshotManagerCredentials) GetPasswordOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -93,19 +93,19 @@ func (o *ArtifactRegistryCredentials) GetPasswordOk() (*string, bool) {
 }
 
 // SetPassword sets field value
-func (o *ArtifactRegistryCredentials) SetPassword(v string) {
+func (o *SnapshotManagerCredentials) SetPassword(v string) {
 	o.Password = v
 }
 
-func (o ArtifactRegistryCredentials) MarshalJSON() ([]byte, error) {
-	toSerialize, err := o.ToMap()
+func (o SnapshotManagerCredentials) MarshalJSON() ([]byte, error) {
+	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
 	return json.Marshal(toSerialize)
 }
 
-func (o ArtifactRegistryCredentials) ToMap() (map[string]interface{}, error) {
+func (o SnapshotManagerCredentials) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["username"] = o.Username
 	toSerialize["password"] = o.Password
@@ -117,7 +117,7 @@ func (o ArtifactRegistryCredentials) ToMap() (map[string]interface{}, error) {
 	return toSerialize, nil
 }
 
-func (o *ArtifactRegistryCredentials) UnmarshalJSON(data []byte) (err error) {
+func (o *SnapshotManagerCredentials) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -131,24 +131,24 @@ func (o *ArtifactRegistryCredentials) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err
+		return err;
 	}
 
-	for _, requiredProperty := range requiredProperties {
+	for _, requiredProperty := range(requiredProperties) {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
 	}
 
-	varArtifactRegistryCredentials := _ArtifactRegistryCredentials{}
+	varSnapshotManagerCredentials := _SnapshotManagerCredentials{}
 
-	err = json.Unmarshal(data, &varArtifactRegistryCredentials)
+	err = json.Unmarshal(data, &varSnapshotManagerCredentials)
 
 	if err != nil {
 		return err
 	}
 
-	*o = ArtifactRegistryCredentials(varArtifactRegistryCredentials)
+	*o = SnapshotManagerCredentials(varSnapshotManagerCredentials)
 
 	additionalProperties := make(map[string]interface{})
 
@@ -161,38 +161,38 @@ func (o *ArtifactRegistryCredentials) UnmarshalJSON(data []byte) (err error) {
 	return err
 }
 
-type NullableArtifactRegistryCredentials struct {
-	value *ArtifactRegistryCredentials
+type NullableSnapshotManagerCredentials struct {
+	value *SnapshotManagerCredentials
 	isSet bool
 }
 
-func (v NullableArtifactRegistryCredentials) Get() *ArtifactRegistryCredentials {
+func (v NullableSnapshotManagerCredentials) Get() *SnapshotManagerCredentials {
 	return v.value
 }
 
-func (v *NullableArtifactRegistryCredentials) Set(val *ArtifactRegistryCredentials) {
+func (v *NullableSnapshotManagerCredentials) Set(val *SnapshotManagerCredentials) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableArtifactRegistryCredentials) IsSet() bool {
+func (v NullableSnapshotManagerCredentials) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableArtifactRegistryCredentials) Unset() {
+func (v *NullableSnapshotManagerCredentials) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableArtifactRegistryCredentials(val *ArtifactRegistryCredentials) *NullableArtifactRegistryCredentials {
-	return &NullableArtifactRegistryCredentials{value: val, isSet: true}
+func NewNullableSnapshotManagerCredentials(val *SnapshotManagerCredentials) *NullableSnapshotManagerCredentials {
+	return &NullableSnapshotManagerCredentials{value: val, isSet: true}
 }
 
-func (v NullableArtifactRegistryCredentials) MarshalJSON() ([]byte, error) {
+func (v NullableSnapshotManagerCredentials) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableArtifactRegistryCredentials) UnmarshalJSON(src []byte) error {
+func (v *NullableSnapshotManagerCredentials) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

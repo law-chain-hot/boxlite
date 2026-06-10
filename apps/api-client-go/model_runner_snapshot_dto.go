@@ -16,67 +16,67 @@ import (
 	"fmt"
 )
 
-// checks if the RunnerArtifactCacheDto type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &RunnerArtifactCacheDto{}
+// checks if the RunnerSnapshotDto type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &RunnerSnapshotDto{}
 
-// RunnerArtifactCacheDto struct for RunnerArtifactCacheDto
-type RunnerArtifactCacheDto struct {
-	// Runner artifact cache ID
-	RunnerArtifactCacheId string `json:"runnerArtifactCacheId"`
+// RunnerSnapshotDto struct for RunnerSnapshotDto
+type RunnerSnapshotDto struct {
+	// Runner snapshot ID
+	RunnerSnapshotId string `json:"runnerSnapshotId"`
 	// Runner ID
 	RunnerId string `json:"runnerId"`
 	// Runner domain
-	RunnerDomain         *string `json:"runnerDomain,omitempty"`
+	RunnerDomain *string `json:"runnerDomain,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
-type _RunnerArtifactCacheDto RunnerArtifactCacheDto
+type _RunnerSnapshotDto RunnerSnapshotDto
 
-// NewRunnerArtifactCacheDto instantiates a new RunnerArtifactCacheDto object
+// NewRunnerSnapshotDto instantiates a new RunnerSnapshotDto object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRunnerArtifactCacheDto(runnerArtifactCacheId string, runnerId string) *RunnerArtifactCacheDto {
-	this := RunnerArtifactCacheDto{}
-	this.RunnerArtifactCacheId = runnerArtifactCacheId
+func NewRunnerSnapshotDto(runnerSnapshotId string, runnerId string) *RunnerSnapshotDto {
+	this := RunnerSnapshotDto{}
+	this.RunnerSnapshotId = runnerSnapshotId
 	this.RunnerId = runnerId
 	return &this
 }
 
-// NewRunnerArtifactCacheDtoWithDefaults instantiates a new RunnerArtifactCacheDto object
+// NewRunnerSnapshotDtoWithDefaults instantiates a new RunnerSnapshotDto object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewRunnerArtifactCacheDtoWithDefaults() *RunnerArtifactCacheDto {
-	this := RunnerArtifactCacheDto{}
+func NewRunnerSnapshotDtoWithDefaults() *RunnerSnapshotDto {
+	this := RunnerSnapshotDto{}
 	return &this
 }
 
-// GetRunnerArtifactCacheId returns the RunnerArtifactCacheId field value
-func (o *RunnerArtifactCacheDto) GetRunnerArtifactCacheId() string {
+// GetRunnerSnapshotId returns the RunnerSnapshotId field value
+func (o *RunnerSnapshotDto) GetRunnerSnapshotId() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.RunnerArtifactCacheId
+	return o.RunnerSnapshotId
 }
 
-// GetRunnerArtifactCacheIdOk returns a tuple with the RunnerArtifactCacheId field value
+// GetRunnerSnapshotIdOk returns a tuple with the RunnerSnapshotId field value
 // and a boolean to check if the value has been set.
-func (o *RunnerArtifactCacheDto) GetRunnerArtifactCacheIdOk() (*string, bool) {
+func (o *RunnerSnapshotDto) GetRunnerSnapshotIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.RunnerArtifactCacheId, true
+	return &o.RunnerSnapshotId, true
 }
 
-// SetRunnerArtifactCacheId sets field value
-func (o *RunnerArtifactCacheDto) SetRunnerArtifactCacheId(v string) {
-	o.RunnerArtifactCacheId = v
+// SetRunnerSnapshotId sets field value
+func (o *RunnerSnapshotDto) SetRunnerSnapshotId(v string) {
+	o.RunnerSnapshotId = v
 }
 
 // GetRunnerId returns the RunnerId field value
-func (o *RunnerArtifactCacheDto) GetRunnerId() string {
+func (o *RunnerSnapshotDto) GetRunnerId() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -87,7 +87,7 @@ func (o *RunnerArtifactCacheDto) GetRunnerId() string {
 
 // GetRunnerIdOk returns a tuple with the RunnerId field value
 // and a boolean to check if the value has been set.
-func (o *RunnerArtifactCacheDto) GetRunnerIdOk() (*string, bool) {
+func (o *RunnerSnapshotDto) GetRunnerIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -95,12 +95,12 @@ func (o *RunnerArtifactCacheDto) GetRunnerIdOk() (*string, bool) {
 }
 
 // SetRunnerId sets field value
-func (o *RunnerArtifactCacheDto) SetRunnerId(v string) {
+func (o *RunnerSnapshotDto) SetRunnerId(v string) {
 	o.RunnerId = v
 }
 
 // GetRunnerDomain returns the RunnerDomain field value if set, zero value otherwise.
-func (o *RunnerArtifactCacheDto) GetRunnerDomain() string {
+func (o *RunnerSnapshotDto) GetRunnerDomain() string {
 	if o == nil || IsNil(o.RunnerDomain) {
 		var ret string
 		return ret
@@ -110,7 +110,7 @@ func (o *RunnerArtifactCacheDto) GetRunnerDomain() string {
 
 // GetRunnerDomainOk returns a tuple with the RunnerDomain field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *RunnerArtifactCacheDto) GetRunnerDomainOk() (*string, bool) {
+func (o *RunnerSnapshotDto) GetRunnerDomainOk() (*string, bool) {
 	if o == nil || IsNil(o.RunnerDomain) {
 		return nil, false
 	}
@@ -118,7 +118,7 @@ func (o *RunnerArtifactCacheDto) GetRunnerDomainOk() (*string, bool) {
 }
 
 // HasRunnerDomain returns a boolean if a field has been set.
-func (o *RunnerArtifactCacheDto) HasRunnerDomain() bool {
+func (o *RunnerSnapshotDto) HasRunnerDomain() bool {
 	if o != nil && !IsNil(o.RunnerDomain) {
 		return true
 	}
@@ -127,21 +127,21 @@ func (o *RunnerArtifactCacheDto) HasRunnerDomain() bool {
 }
 
 // SetRunnerDomain gets a reference to the given string and assigns it to the RunnerDomain field.
-func (o *RunnerArtifactCacheDto) SetRunnerDomain(v string) {
+func (o *RunnerSnapshotDto) SetRunnerDomain(v string) {
 	o.RunnerDomain = &v
 }
 
-func (o RunnerArtifactCacheDto) MarshalJSON() ([]byte, error) {
-	toSerialize, err := o.ToMap()
+func (o RunnerSnapshotDto) MarshalJSON() ([]byte, error) {
+	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
 	return json.Marshal(toSerialize)
 }
 
-func (o RunnerArtifactCacheDto) ToMap() (map[string]interface{}, error) {
+func (o RunnerSnapshotDto) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["runnerArtifactCacheId"] = o.RunnerArtifactCacheId
+	toSerialize["runnerSnapshotId"] = o.RunnerSnapshotId
 	toSerialize["runnerId"] = o.RunnerId
 	if !IsNil(o.RunnerDomain) {
 		toSerialize["runnerDomain"] = o.RunnerDomain
@@ -154,12 +154,12 @@ func (o RunnerArtifactCacheDto) ToMap() (map[string]interface{}, error) {
 	return toSerialize, nil
 }
 
-func (o *RunnerArtifactCacheDto) UnmarshalJSON(data []byte) (err error) {
+func (o *RunnerSnapshotDto) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"runnerArtifactCacheId",
+		"runnerSnapshotId",
 		"runnerId",
 	}
 
@@ -168,29 +168,29 @@ func (o *RunnerArtifactCacheDto) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err
+		return err;
 	}
 
-	for _, requiredProperty := range requiredProperties {
+	for _, requiredProperty := range(requiredProperties) {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
 	}
 
-	varRunnerArtifactCacheDto := _RunnerArtifactCacheDto{}
+	varRunnerSnapshotDto := _RunnerSnapshotDto{}
 
-	err = json.Unmarshal(data, &varRunnerArtifactCacheDto)
+	err = json.Unmarshal(data, &varRunnerSnapshotDto)
 
 	if err != nil {
 		return err
 	}
 
-	*o = RunnerArtifactCacheDto(varRunnerArtifactCacheDto)
+	*o = RunnerSnapshotDto(varRunnerSnapshotDto)
 
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "runnerArtifactCacheId")
+		delete(additionalProperties, "runnerSnapshotId")
 		delete(additionalProperties, "runnerId")
 		delete(additionalProperties, "runnerDomain")
 		o.AdditionalProperties = additionalProperties
@@ -199,38 +199,38 @@ func (o *RunnerArtifactCacheDto) UnmarshalJSON(data []byte) (err error) {
 	return err
 }
 
-type NullableRunnerArtifactCacheDto struct {
-	value *RunnerArtifactCacheDto
+type NullableRunnerSnapshotDto struct {
+	value *RunnerSnapshotDto
 	isSet bool
 }
 
-func (v NullableRunnerArtifactCacheDto) Get() *RunnerArtifactCacheDto {
+func (v NullableRunnerSnapshotDto) Get() *RunnerSnapshotDto {
 	return v.value
 }
 
-func (v *NullableRunnerArtifactCacheDto) Set(val *RunnerArtifactCacheDto) {
+func (v *NullableRunnerSnapshotDto) Set(val *RunnerSnapshotDto) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableRunnerArtifactCacheDto) IsSet() bool {
+func (v NullableRunnerSnapshotDto) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableRunnerArtifactCacheDto) Unset() {
+func (v *NullableRunnerSnapshotDto) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableRunnerArtifactCacheDto(val *RunnerArtifactCacheDto) *NullableRunnerArtifactCacheDto {
-	return &NullableRunnerArtifactCacheDto{value: val, isSet: true}
+func NewNullableRunnerSnapshotDto(val *RunnerSnapshotDto) *NullableRunnerSnapshotDto {
+	return &NullableRunnerSnapshotDto{value: val, isSet: true}
 }
 
-func (v NullableRunnerArtifactCacheDto) MarshalJSON() ([]byte, error) {
+func (v NullableRunnerSnapshotDto) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableRunnerArtifactCacheDto) UnmarshalJSON(src []byte) error {
+func (v *NullableRunnerSnapshotDto) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

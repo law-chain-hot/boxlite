@@ -24,8 +24,8 @@ type UpdateRegion struct {
 	ProxyUrl NullableString `json:"proxyUrl,omitempty"`
 	// SSH Gateway URL for the region
 	SshGatewayUrl NullableString `json:"sshGatewayUrl,omitempty"`
-	// Artifact Registry URL for the region
-	ArtifactRegistryUrl  NullableString `json:"artifactRegistryUrl,omitempty"`
+	// Snapshot Manager URL for the region
+	SnapshotManagerUrl NullableString `json:"snapshotManagerUrl,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -80,7 +80,6 @@ func (o *UpdateRegion) HasProxyUrl() bool {
 func (o *UpdateRegion) SetProxyUrl(v string) {
 	o.ProxyUrl.Set(&v)
 }
-
 // SetProxyUrlNil sets the value for ProxyUrl to be an explicit nil
 func (o *UpdateRegion) SetProxyUrlNil() {
 	o.ProxyUrl.Set(nil)
@@ -123,7 +122,6 @@ func (o *UpdateRegion) HasSshGatewayUrl() bool {
 func (o *UpdateRegion) SetSshGatewayUrl(v string) {
 	o.SshGatewayUrl.Set(&v)
 }
-
 // SetSshGatewayUrlNil sets the value for SshGatewayUrl to be an explicit nil
 func (o *UpdateRegion) SetSshGatewayUrlNil() {
 	o.SshGatewayUrl.Set(nil)
@@ -134,51 +132,50 @@ func (o *UpdateRegion) UnsetSshGatewayUrl() {
 	o.SshGatewayUrl.Unset()
 }
 
-// GetArtifactRegistryUrl returns the ArtifactRegistryUrl field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *UpdateRegion) GetArtifactRegistryUrl() string {
-	if o == nil || IsNil(o.ArtifactRegistryUrl.Get()) {
+// GetSnapshotManagerUrl returns the SnapshotManagerUrl field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *UpdateRegion) GetSnapshotManagerUrl() string {
+	if o == nil || IsNil(o.SnapshotManagerUrl.Get()) {
 		var ret string
 		return ret
 	}
-	return *o.ArtifactRegistryUrl.Get()
+	return *o.SnapshotManagerUrl.Get()
 }
 
-// GetArtifactRegistryUrlOk returns a tuple with the ArtifactRegistryUrl field value if set, nil otherwise
+// GetSnapshotManagerUrlOk returns a tuple with the SnapshotManagerUrl field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *UpdateRegion) GetArtifactRegistryUrlOk() (*string, bool) {
+func (o *UpdateRegion) GetSnapshotManagerUrlOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return o.ArtifactRegistryUrl.Get(), o.ArtifactRegistryUrl.IsSet()
+	return o.SnapshotManagerUrl.Get(), o.SnapshotManagerUrl.IsSet()
 }
 
-// HasArtifactRegistryUrl returns a boolean if a field has been set.
-func (o *UpdateRegion) HasArtifactRegistryUrl() bool {
-	if o != nil && o.ArtifactRegistryUrl.IsSet() {
+// HasSnapshotManagerUrl returns a boolean if a field has been set.
+func (o *UpdateRegion) HasSnapshotManagerUrl() bool {
+	if o != nil && o.SnapshotManagerUrl.IsSet() {
 		return true
 	}
 
 	return false
 }
 
-// SetArtifactRegistryUrl gets a reference to the given NullableString and assigns it to the ArtifactRegistryUrl field.
-func (o *UpdateRegion) SetArtifactRegistryUrl(v string) {
-	o.ArtifactRegistryUrl.Set(&v)
+// SetSnapshotManagerUrl gets a reference to the given NullableString and assigns it to the SnapshotManagerUrl field.
+func (o *UpdateRegion) SetSnapshotManagerUrl(v string) {
+	o.SnapshotManagerUrl.Set(&v)
+}
+// SetSnapshotManagerUrlNil sets the value for SnapshotManagerUrl to be an explicit nil
+func (o *UpdateRegion) SetSnapshotManagerUrlNil() {
+	o.SnapshotManagerUrl.Set(nil)
 }
 
-// SetArtifactRegistryUrlNil sets the value for ArtifactRegistryUrl to be an explicit nil
-func (o *UpdateRegion) SetArtifactRegistryUrlNil() {
-	o.ArtifactRegistryUrl.Set(nil)
-}
-
-// UnsetArtifactRegistryUrl ensures that no value is present for ArtifactRegistryUrl, not even an explicit nil
-func (o *UpdateRegion) UnsetArtifactRegistryUrl() {
-	o.ArtifactRegistryUrl.Unset()
+// UnsetSnapshotManagerUrl ensures that no value is present for SnapshotManagerUrl, not even an explicit nil
+func (o *UpdateRegion) UnsetSnapshotManagerUrl() {
+	o.SnapshotManagerUrl.Unset()
 }
 
 func (o UpdateRegion) MarshalJSON() ([]byte, error) {
-	toSerialize, err := o.ToMap()
+	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -193,8 +190,8 @@ func (o UpdateRegion) ToMap() (map[string]interface{}, error) {
 	if o.SshGatewayUrl.IsSet() {
 		toSerialize["sshGatewayUrl"] = o.SshGatewayUrl.Get()
 	}
-	if o.ArtifactRegistryUrl.IsSet() {
-		toSerialize["artifactRegistryUrl"] = o.ArtifactRegistryUrl.Get()
+	if o.SnapshotManagerUrl.IsSet() {
+		toSerialize["snapshotManagerUrl"] = o.SnapshotManagerUrl.Get()
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -220,7 +217,7 @@ func (o *UpdateRegion) UnmarshalJSON(data []byte) (err error) {
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "proxyUrl")
 		delete(additionalProperties, "sshGatewayUrl")
-		delete(additionalProperties, "artifactRegistryUrl")
+		delete(additionalProperties, "snapshotManagerUrl")
 		o.AdditionalProperties = additionalProperties
 	}
 

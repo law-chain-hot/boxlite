@@ -13,8 +13,8 @@ package apiclient
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
+	"fmt"
 )
 
 // checks if the BuildInfo type satisfies the MappedNullable interface at compile time
@@ -30,8 +30,8 @@ type BuildInfo struct {
 	CreatedAt time.Time `json:"createdAt"`
 	// The last update timestamp
 	UpdatedAt time.Time `json:"updatedAt"`
-	// The artifact reference
-	ArtifactRef          string `json:"artifactRef"`
+	// The snapshot reference
+	SnapshotRef string `json:"snapshotRef"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -41,11 +41,11 @@ type _BuildInfo BuildInfo
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewBuildInfo(createdAt time.Time, updatedAt time.Time, artifactRef string) *BuildInfo {
+func NewBuildInfo(createdAt time.Time, updatedAt time.Time, snapshotRef string) *BuildInfo {
 	this := BuildInfo{}
 	this.CreatedAt = createdAt
 	this.UpdatedAt = updatedAt
-	this.ArtifactRef = artifactRef
+	this.SnapshotRef = snapshotRef
 	return &this
 }
 
@@ -169,32 +169,32 @@ func (o *BuildInfo) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = v
 }
 
-// GetArtifactRef returns the ArtifactRef field value
-func (o *BuildInfo) GetArtifactRef() string {
+// GetSnapshotRef returns the SnapshotRef field value
+func (o *BuildInfo) GetSnapshotRef() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.ArtifactRef
+	return o.SnapshotRef
 }
 
-// GetArtifactRefOk returns a tuple with the ArtifactRef field value
+// GetSnapshotRefOk returns a tuple with the SnapshotRef field value
 // and a boolean to check if the value has been set.
-func (o *BuildInfo) GetArtifactRefOk() (*string, bool) {
+func (o *BuildInfo) GetSnapshotRefOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.ArtifactRef, true
+	return &o.SnapshotRef, true
 }
 
-// SetArtifactRef sets field value
-func (o *BuildInfo) SetArtifactRef(v string) {
-	o.ArtifactRef = v
+// SetSnapshotRef sets field value
+func (o *BuildInfo) SetSnapshotRef(v string) {
+	o.SnapshotRef = v
 }
 
 func (o BuildInfo) MarshalJSON() ([]byte, error) {
-	toSerialize, err := o.ToMap()
+	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -211,7 +211,7 @@ func (o BuildInfo) ToMap() (map[string]interface{}, error) {
 	}
 	toSerialize["createdAt"] = o.CreatedAt
 	toSerialize["updatedAt"] = o.UpdatedAt
-	toSerialize["artifactRef"] = o.ArtifactRef
+	toSerialize["snapshotRef"] = o.SnapshotRef
 
 	for key, value := range o.AdditionalProperties {
 		toSerialize[key] = value
@@ -227,7 +227,7 @@ func (o *BuildInfo) UnmarshalJSON(data []byte) (err error) {
 	requiredProperties := []string{
 		"createdAt",
 		"updatedAt",
-		"artifactRef",
+		"snapshotRef",
 	}
 
 	allProperties := make(map[string]interface{})
@@ -235,10 +235,10 @@ func (o *BuildInfo) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err
+		return err;
 	}
 
-	for _, requiredProperty := range requiredProperties {
+	for _, requiredProperty := range(requiredProperties) {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -261,7 +261,7 @@ func (o *BuildInfo) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "contextHashes")
 		delete(additionalProperties, "createdAt")
 		delete(additionalProperties, "updatedAt")
-		delete(additionalProperties, "artifactRef")
+		delete(additionalProperties, "snapshotRef")
 		o.AdditionalProperties = additionalProperties
 	}
 

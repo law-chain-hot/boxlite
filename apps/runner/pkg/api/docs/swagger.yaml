@@ -1,52 +1,19 @@
 definitions:
-  ArtifactDigestResponse:
+  BoxInfoResponse:
     properties:
-      hash:
-        example: a7be6198544f09a75b26e6376459b47c5b9972e7351d440e092c4faa9ea064ff
+      backupError:
         type: string
-      sizeGB:
-        example: 0.13
-        type: number
+      backupSnapshot:
+        type: string
+      backupState:
+        $ref: '#/definitions/enums.BackupState'
+      daemonVersion:
+        type: string
+      state:
+        $ref: '#/definitions/enums.BoxState'
     type: object
-  ArtifactExistsResponse:
+  BuildSnapshotRequestDTO:
     properties:
-      exists:
-        example: true
-        type: boolean
-    type: object
-  ArtifactInfoResponse:
-    properties:
-      cmd:
-        example:
-          - '["nginx"'
-          - '"-g"'
-          - '"daemon off;"]'
-        items:
-          type: string
-        type: array
-      entrypoint:
-        example:
-          - '["nginx"'
-          - '"-g"'
-          - '"daemon off;"]'
-        items:
-          type: string
-        type: array
-      hash:
-        example: a7be6198544f09a75b26e6376459b47c5b9972e7351d440e092c4faa9ea064ff
-        type: string
-      name:
-        example: nginx:latest
-        type: string
-      sizeGB:
-        example: 0.13
-        type: number
-    type: object
-  BuildArtifactRequestDTO:
-    properties:
-      artifactRef:
-        description: Artifact ref or the build's hash
-        type: string
       context:
         items:
           type: string
@@ -59,6 +26,9 @@ definitions:
         type: boolean
       registry:
         $ref: '#/definitions/RegistryDTO'
+      snapshot:
+        description: Snapshot ID and tag or the build's hash
+        type: string
       sourceRegistries:
         items:
           $ref: '#/definitions/RegistryDTO'
@@ -79,8 +49,6 @@ definitions:
     type: object
   CreateBoxDTO:
     properties:
-      artifactRef:
-        type: string
       authToken:
         type: string
       cpuQuota:
@@ -125,6 +93,8 @@ definitions:
         $ref: '#/definitions/RegistryDTO'
       skipStart:
         type: boolean
+      snapshot:
+        type: string
       storageQuota:
         minimum: 1
         type: integer
@@ -135,9 +105,9 @@ definitions:
           $ref: '#/definitions/dto.VolumeDTO'
         type: array
     required:
-      - artifactRef
       - id
       - osUser
+      - snapshot
       - userId
     type: object
   ErrorResponse:
@@ -167,15 +137,15 @@ definitions:
       - statusCode
       - timestamp
     type: object
-  InspectArtifactInRegistryRequest:
+  InspectSnapshotInRegistryRequest:
     properties:
-      artifactRef:
-        example: nginx:latest
-        type: string
       registry:
         $ref: '#/definitions/RegistryDTO'
+      snapshot:
+        example: nginx:latest
+        type: string
     required:
-      - artifactRef
+      - snapshot
     type: object
   IsRecoverableDTO:
     properties:
@@ -189,10 +159,8 @@ definitions:
       recoverable:
         type: boolean
     type: object
-  PullArtifactRequestDTO:
+  PullSnapshotRequestDTO:
     properties:
-      artifactRef:
-        type: string
       destinationRef:
         type: string
       destinationRegistry:
@@ -201,8 +169,10 @@ definitions:
         type: string
       registry:
         $ref: '#/definitions/RegistryDTO'
+      snapshot:
+        type: string
     required:
-      - artifactRef
+      - snapshot
     type: object
   RecoverBoxDTO:
     properties:
@@ -294,8 +264,6 @@ definitions:
         type: number
       currentAllocatedMemoryGiB:
         type: number
-      currentArtifactCount:
-        type: integer
       currentCpuLoadAverage:
         type: number
       currentCpuUsagePercentage:
@@ -304,6 +272,8 @@ definitions:
         type: number
       currentMemoryUsagePercentage:
         type: number
+      currentSnapshotCount:
+        type: integer
       currentStartedBoxes:
         type: integer
     type: object
@@ -319,18 +289,48 @@ definitions:
       - healthy
       - serviceName
     type: object
-  BoxInfoResponse:
+  SnapshotDigestResponse:
     properties:
-      backupError:
+      hash:
+        example: a7be6198544f09a75b26e6376459b47c5b9972e7351d440e092c4faa9ea064ff
         type: string
-      backupSnapshot:
+      sizeGB:
+        example: 0.13
+        type: number
+    type: object
+  SnapshotExistsResponse:
+    properties:
+      exists:
+        example: true
+        type: boolean
+    type: object
+  SnapshotInfoResponse:
+    properties:
+      cmd:
+        example:
+          - '["nginx"'
+          - '"-g"'
+          - '"daemon off;"]'
+        items:
+          type: string
+        type: array
+      entrypoint:
+        example:
+          - '["nginx"'
+          - '"-g"'
+          - '"daemon off;"]'
+        items:
+          type: string
+        type: array
+      hash:
+        example: a7be6198544f09a75b26e6376459b47c5b9972e7351d440e092c4faa9ea064ff
         type: string
-      backupState:
-        $ref: '#/definitions/enums.BackupState'
-      daemonVersion:
+      name:
+        example: nginx:latest
         type: string
-      state:
-        $ref: '#/definitions/enums.BoxState'
+      sizeGB:
+        example: 0.13
+        type: number
     type: object
   StartBoxResponse:
     properties:
@@ -397,7 +397,7 @@ definitions:
       - resizing
       - error
       - unknown
-      - pulling_artifact
+      - pulling_snapshot
     type: string
     x-enum-varnames:
       - BoxStateCreating
@@ -411,7 +411,7 @@ definitions:
       - BoxStateResizing
       - BoxStateError
       - BoxStateUnknown
-      - BoxStatePullingArtifact
+      - BoxStatePullingSnapshot
 info:
   contact: {}
   description: BoxLite Runner API
@@ -432,335 +432,6 @@ paths:
               type: string
             type: object
       summary: Health check
-  /artifacts/build:
-    post:
-      description: Build an artifact from a Dockerfile and context hashes. The operation
-        runs asynchronously and returns 202 immediately.
-      operationId: BuildArtifact
-      parameters:
-        - description: Build artifact request
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/BuildArtifactRequestDTO'
-      responses:
-        '202':
-          description: Artifact build started
-          schema:
-            type: string
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Build an artifact
-      tags:
-        - artifacts
-  /artifacts/exists:
-    get:
-      description: Check if a specified artifact exists locally
-      operationId: ArtifactExists
-      parameters:
-        - description: Artifact ref
-          in: query
-          name: artifactRef
-          required: true
-          type: string
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/ArtifactExistsResponse'
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Check if an artifact exists
-      tags:
-        - artifacts
-  /artifacts/info:
-    get:
-      description: Get information about a specified artifact including size and entrypoint.
-        Returns 422 if the last pull/build operation failed, with the error reason
-        in the message.
-      operationId: GetArtifactInfo
-      parameters:
-        - description: Artifact ref
-          in: query
-          name: artifactRef
-          required: true
-          type: string
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/ArtifactInfoResponse'
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '422':
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Get artifact information
-      tags:
-        - artifacts
-  /artifacts/inspect:
-    post:
-      description: Inspect a specified artifact in a registry
-      operationId: InspectArtifactInRegistry
-      parameters:
-        - description: Inspect artifact in registry request
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/InspectArtifactInRegistryRequest'
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/ArtifactDigestResponse'
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Inspect an artifact in a registry
-      tags:
-        - artifacts
-  /artifacts/logs:
-    get:
-      description: Stream build logs
-      operationId: GetBuildLogs
-      parameters:
-        - description: Runtime artifact ref
-          in: query
-          name: artifactRef
-          required: true
-          type: string
-        - description: Whether to follow the log output
-          in: query
-          name: follow
-          type: boolean
-      responses:
-        '200':
-          description: Build logs stream
-          schema:
-            type: string
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Get build logs
-      tags:
-        - artifacts
-  /artifacts/pull:
-    post:
-      description: Pull an artifact from a registry and optionally push to another
-        registry. The operation runs asynchronously and returns 202 immediately.
-      operationId: PullArtifact
-      parameters:
-        - description: Pull artifact
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/PullArtifactRequestDTO'
-      responses:
-        '202':
-          description: Artifact pull started
-          schema:
-            type: string
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Pull an artifact
-      tags:
-        - artifacts
-  /artifacts/remove:
-    post:
-      description: Remove a specified artifact from the local system
-      operationId: RemoveArtifact
-      parameters:
-        - description: Artifact ref
-          in: query
-          name: artifactRef
-          required: true
-          type: string
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: Artifact successfully removed
-          schema:
-            type: string
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Remove an artifact
-      tags:
-        - artifacts
-  /artifacts/tag:
-    post:
-      deprecated: true
-      description: Tag an existing local image with a new target reference
-      operationId: TagImage
-      parameters:
-        - description: Tag image request
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/TagImageRequestDTO'
-      responses:
-        '200':
-          description: Image successfully tagged
-          schema:
-            type: string
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '409':
-          description: Conflict
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Tag an image
-      tags:
-        - artifacts
-  /info:
-    get:
-      description: Runner info with system metrics
-      operationId: RunnerInfo
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/RunnerInfoResponseDTO'
-      summary: Runner info
   /boxes:
     post:
       description: Create a box
@@ -932,7 +603,7 @@ paths:
     post:
       consumes:
         - application/json
-      description: Check if the sandbox's error reason indicates a recoverable error
+      description: Check if the box's error reason indicates a recoverable error
       operationId: IsRecoverable
       parameters:
         - description: Box ID
@@ -1233,6 +904,335 @@ paths:
       summary: Stop box
       tags:
         - box
+  /info:
+    get:
+      description: Runner info with system metrics
+      operationId: RunnerInfo
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RunnerInfoResponseDTO'
+      summary: Runner info
+  /snapshots/build:
+    post:
+      description: Build a snapshot from a Dockerfile and context hashes. The operation
+        runs asynchronously and returns 202 immediately.
+      operationId: BuildSnapshot
+      parameters:
+        - description: Build snapshot request
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/BuildSnapshotRequestDTO'
+      responses:
+        '202':
+          description: Snapshot build started
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Build a snapshot
+      tags:
+        - snapshots
+  /snapshots/exists:
+    get:
+      description: Check if a specified snapshot exists locally
+      operationId: SnapshotExists
+      parameters:
+        - description: Snapshot name and tag
+          in: query
+          name: snapshot
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SnapshotExistsResponse'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Check if a snapshot exists
+      tags:
+        - snapshots
+  /snapshots/info:
+    get:
+      description: Get information about a specified snapshot including size and entrypoint.
+        Returns 422 if the last pull/build operation failed, with the error reason
+        in the message.
+      operationId: GetSnapshotInfo
+      parameters:
+        - description: Snapshot name and tag
+          in: query
+          name: snapshot
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SnapshotInfoResponse'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get snapshot information
+      tags:
+        - snapshots
+  /snapshots/inspect:
+    post:
+      description: Inspect a specified snapshot in a registry
+      operationId: InspectSnapshotInRegistry
+      parameters:
+        - description: Inspect snapshot in registry request
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/InspectSnapshotInRegistryRequest'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SnapshotDigestResponse'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Inspect a snapshot in a registry
+      tags:
+        - snapshots
+  /snapshots/logs:
+    get:
+      description: Stream build logs
+      operationId: GetBuildLogs
+      parameters:
+        - description: Snapshot ref
+          in: query
+          name: snapshotRef
+          required: true
+          type: string
+        - description: Whether to follow the log output
+          in: query
+          name: follow
+          type: boolean
+      responses:
+        '200':
+          description: Build logs stream
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get build logs
+      tags:
+        - snapshots
+  /snapshots/pull:
+    post:
+      description: Pull a snapshot from a registry and optionally push to another
+        registry. The operation runs asynchronously and returns 202 immediately.
+      operationId: PullSnapshot
+      parameters:
+        - description: Pull snapshot
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/PullSnapshotRequestDTO'
+      responses:
+        '202':
+          description: Snapshot pull started
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Pull a snapshot
+      tags:
+        - snapshots
+  /snapshots/remove:
+    post:
+      description: Remove a specified snapshot from the local system
+      operationId: RemoveSnapshot
+      parameters:
+        - description: Snapshot name and tag
+          in: query
+          name: snapshot
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Snapshot successfully removed
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Remove a snapshot
+      tags:
+        - snapshots
+  /snapshots/tag:
+    post:
+      deprecated: true
+      description: Tag an existing local image with a new target reference
+      operationId: TagImage
+      parameters:
+        - description: Tag image request
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/TagImageRequestDTO'
+      responses:
+        '200':
+          description: Image successfully tagged
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Tag an image
+      tags:
+        - snapshots
   /v1/boxes/{boxId}/executions/{execId}/attach:
     get:
       parameters:

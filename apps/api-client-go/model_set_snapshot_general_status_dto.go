@@ -16,38 +16,38 @@ import (
 	"fmt"
 )
 
-// checks if the SetBoxTemplateGeneralStatus type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &SetBoxTemplateGeneralStatus{}
+// checks if the SetSnapshotGeneralStatusDto type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &SetSnapshotGeneralStatusDto{}
 
-// SetBoxTemplateGeneralStatus struct for SetBoxTemplateGeneralStatus
-type SetBoxTemplateGeneralStatus struct {
-	// Whether the template is general
-	General              bool `json:"general"`
+// SetSnapshotGeneralStatusDto struct for SetSnapshotGeneralStatusDto
+type SetSnapshotGeneralStatusDto struct {
+	// Whether the snapshot is general
+	General bool `json:"general"`
 	AdditionalProperties map[string]interface{}
 }
 
-type _SetBoxTemplateGeneralStatus SetBoxTemplateGeneralStatus
+type _SetSnapshotGeneralStatusDto SetSnapshotGeneralStatusDto
 
-// NewSetBoxTemplateGeneralStatus instantiates a new SetBoxTemplateGeneralStatus object
+// NewSetSnapshotGeneralStatusDto instantiates a new SetSnapshotGeneralStatusDto object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSetBoxTemplateGeneralStatus(general bool) *SetBoxTemplateGeneralStatus {
-	this := SetBoxTemplateGeneralStatus{}
+func NewSetSnapshotGeneralStatusDto(general bool) *SetSnapshotGeneralStatusDto {
+	this := SetSnapshotGeneralStatusDto{}
 	this.General = general
 	return &this
 }
 
-// NewSetBoxTemplateGeneralStatusWithDefaults instantiates a new SetBoxTemplateGeneralStatus object
+// NewSetSnapshotGeneralStatusDtoWithDefaults instantiates a new SetSnapshotGeneralStatusDto object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewSetBoxTemplateGeneralStatusWithDefaults() *SetBoxTemplateGeneralStatus {
-	this := SetBoxTemplateGeneralStatus{}
+func NewSetSnapshotGeneralStatusDtoWithDefaults() *SetSnapshotGeneralStatusDto {
+	this := SetSnapshotGeneralStatusDto{}
 	return &this
 }
 
 // GetGeneral returns the General field value
-func (o *SetBoxTemplateGeneralStatus) GetGeneral() bool {
+func (o *SetSnapshotGeneralStatusDto) GetGeneral() bool {
 	if o == nil {
 		var ret bool
 		return ret
@@ -58,7 +58,7 @@ func (o *SetBoxTemplateGeneralStatus) GetGeneral() bool {
 
 // GetGeneralOk returns a tuple with the General field value
 // and a boolean to check if the value has been set.
-func (o *SetBoxTemplateGeneralStatus) GetGeneralOk() (*bool, bool) {
+func (o *SetSnapshotGeneralStatusDto) GetGeneralOk() (*bool, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -66,19 +66,19 @@ func (o *SetBoxTemplateGeneralStatus) GetGeneralOk() (*bool, bool) {
 }
 
 // SetGeneral sets field value
-func (o *SetBoxTemplateGeneralStatus) SetGeneral(v bool) {
+func (o *SetSnapshotGeneralStatusDto) SetGeneral(v bool) {
 	o.General = v
 }
 
-func (o SetBoxTemplateGeneralStatus) MarshalJSON() ([]byte, error) {
-	toSerialize, err := o.ToMap()
+func (o SetSnapshotGeneralStatusDto) MarshalJSON() ([]byte, error) {
+	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
 	return json.Marshal(toSerialize)
 }
 
-func (o SetBoxTemplateGeneralStatus) ToMap() (map[string]interface{}, error) {
+func (o SetSnapshotGeneralStatusDto) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["general"] = o.General
 
@@ -89,7 +89,7 @@ func (o SetBoxTemplateGeneralStatus) ToMap() (map[string]interface{}, error) {
 	return toSerialize, nil
 }
 
-func (o *SetBoxTemplateGeneralStatus) UnmarshalJSON(data []byte) (err error) {
+func (o *SetSnapshotGeneralStatusDto) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -102,24 +102,24 @@ func (o *SetBoxTemplateGeneralStatus) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err
+		return err;
 	}
 
-	for _, requiredProperty := range requiredProperties {
+	for _, requiredProperty := range(requiredProperties) {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
 	}
 
-	varSetBoxTemplateGeneralStatus := _SetBoxTemplateGeneralStatus{}
+	varSetSnapshotGeneralStatusDto := _SetSnapshotGeneralStatusDto{}
 
-	err = json.Unmarshal(data, &varSetBoxTemplateGeneralStatus)
+	err = json.Unmarshal(data, &varSetSnapshotGeneralStatusDto)
 
 	if err != nil {
 		return err
 	}
 
-	*o = SetBoxTemplateGeneralStatus(varSetBoxTemplateGeneralStatus)
+	*o = SetSnapshotGeneralStatusDto(varSetSnapshotGeneralStatusDto)
 
 	additionalProperties := make(map[string]interface{})
 
@@ -131,38 +131,38 @@ func (o *SetBoxTemplateGeneralStatus) UnmarshalJSON(data []byte) (err error) {
 	return err
 }
 
-type NullableSetBoxTemplateGeneralStatus struct {
-	value *SetBoxTemplateGeneralStatus
+type NullableSetSnapshotGeneralStatusDto struct {
+	value *SetSnapshotGeneralStatusDto
 	isSet bool
 }
 
-func (v NullableSetBoxTemplateGeneralStatus) Get() *SetBoxTemplateGeneralStatus {
+func (v NullableSetSnapshotGeneralStatusDto) Get() *SetSnapshotGeneralStatusDto {
 	return v.value
 }
 
-func (v *NullableSetBoxTemplateGeneralStatus) Set(val *SetBoxTemplateGeneralStatus) {
+func (v *NullableSetSnapshotGeneralStatusDto) Set(val *SetSnapshotGeneralStatusDto) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableSetBoxTemplateGeneralStatus) IsSet() bool {
+func (v NullableSetSnapshotGeneralStatusDto) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableSetBoxTemplateGeneralStatus) Unset() {
+func (v *NullableSetSnapshotGeneralStatusDto) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableSetBoxTemplateGeneralStatus(val *SetBoxTemplateGeneralStatus) *NullableSetBoxTemplateGeneralStatus {
-	return &NullableSetBoxTemplateGeneralStatus{value: val, isSet: true}
+func NewNullableSetSnapshotGeneralStatusDto(val *SetSnapshotGeneralStatusDto) *NullableSetSnapshotGeneralStatusDto {
+	return &NullableSetSnapshotGeneralStatusDto{value: val, isSet: true}
 }
 
-func (v NullableSetBoxTemplateGeneralStatus) MarshalJSON() ([]byte, error) {
+func (v NullableSetSnapshotGeneralStatusDto) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableSetBoxTemplateGeneralStatus) UnmarshalJSON(src []byte) error {
+func (v *NullableSetSnapshotGeneralStatusDto) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

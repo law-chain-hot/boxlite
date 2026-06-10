@@ -12,16 +12,16 @@
  * Do not edit the class manually.
  */
 
-/**
- *
- * @export
- * @interface UpdateOrganizationName
- */
-export interface UpdateOrganizationName {
-  /**
-   * The public name of the organization
-   * @type {string}
-   * @memberof UpdateOrganizationName
-   */
-  name: string
+
+
+export interface SnapshotManagerCredentials {
+    /**
+     * Snapshot Manager username for the region
+     */
+    'username': string;
+    /**
+     * Snapshot Manager password for the region
+     */
+    'password': string;
 }
+
