@@ -19,6 +19,9 @@ export class MetricSeriesDto {
   @ApiProperty({ description: 'Name of the metric' })
   metricName: string
 
+  @ApiProperty({ required: false, description: 'BoxLite telemetry layer for this series' })
+  layer?: string
+
   @ApiProperty({ type: [MetricDataPointDto], description: 'Data points for this metric' })
   dataPoints: MetricDataPointDto[]
 }

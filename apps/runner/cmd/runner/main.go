@@ -54,19 +54,19 @@ func run() int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	runnerTelemetryConfig := telemetry.Config{
+		Endpoint:       cfg.OtelEndpoint,
+		Headers:        cfg.GetOtelHeaders(),
+		ServiceName:    "boxlite-runner",
+		ServiceVersion: internal.Version,
+		Environment:    cfg.Environment,
+		ExtraLabels:    cfg.GetTelemetryLabels("runner"),
+	}
 
 	if cfg.OtelLoggingEnabled && cfg.OtelEndpoint != "" {
 		logger.Info("OpenTelemetry logging is enabled")
 
-		telemetryConfig := telemetry.Config{
-			Endpoint:       cfg.OtelEndpoint,
-			Headers:        cfg.GetOtelHeaders(),
-			ServiceName:    "boxlite-runner",
-			ServiceVersion: internal.Version,
-			Environment:    cfg.Environment,
-		}
-
-		newLogger, lp, err := telemetry.InitLogger(ctx, logger, telemetryConfig)
+		newLogger, lp, err := telemetry.InitLogger(ctx, logger, runnerTelemetryConfig)
 		if err != nil {
 			logger.ErrorContext(ctx, "Failed to initialize logger", "error", err)
 			return 2
@@ -80,20 +80,23 @@ func run() int {
 	if cfg.OtelTracingEnabled && cfg.OtelEndpoint != "" {
 		logger.Info("OpenTelemetry tracing is enabled")
 
-		telemetryConfig := telemetry.Config{
-			Endpoint:       cfg.OtelEndpoint,
-			Headers:        cfg.GetOtelHeaders(),
-			ServiceName:    "boxlite-runner",
-			ServiceVersion: internal.Version,
-			Environment:    cfg.Environment,
-		}
-
-		tp, err := telemetry.InitTracer(ctx, telemetryConfig, &filters.NotFoundExporterFilter{})
+		tp, err := telemetry.InitTracer(ctx, runnerTelemetryConfig, &filters.NotFoundExporterFilter{})
 		if err != nil {
 			logger.ErrorContext(ctx, "Failed to initialize tracer", "error", err)
 			return 2
 		}
 		defer telemetry.ShutdownTracer(logger, tp)
+	}
+
+	if cfg.OtelMetricsEnabled && cfg.OtelEndpoint != "" {
+		logger.Info("OpenTelemetry metrics are enabled")
+
+		mp, err := telemetry.InitMetrics(ctx, runnerTelemetryConfig, "boxlite.runner")
+		if err != nil {
+			logger.ErrorContext(ctx, "Failed to initialize metrics", "error", err)
+			return 2
+		}
+		defer telemetry.ShutdownMeter(logger, mp)
 	}
 
 	// Initialize BoxLite runtime

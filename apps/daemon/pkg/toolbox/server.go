@@ -56,6 +56,9 @@ type ServerConfig struct {
 	ConfigDir             string
 	ComputerUse           computeruse.IComputerUse
 	SandboxId             string
+	BoxId                 *string
+	AuthToken             *string
+	TelemetryLayer        string
 	OtelEndpoint          *string
 	SessionService        *session_svc.SessionService
 	RecordingService      *recording.RecordingService
@@ -65,10 +68,18 @@ type ServerConfig struct {
 }
 
 func NewServer(config ServerConfig) *server {
+	authToken := ""
+	if config.AuthToken != nil {
+		authToken = *config.AuthToken
+	}
+
 	return &server{
 		logger:                config.Logger.With(slog.String("component", "toolbox_server")),
 		WorkDir:               config.WorkDir,
 		SandboxId:             config.SandboxId,
+		boxId:                 config.BoxId,
+		authToken:             authToken,
+		telemetryLayer:        config.TelemetryLayer,
 		otelEndpoint:          config.OtelEndpoint,
 		telemetry:             Telemetry{},
 		sessionService:        config.SessionService,
@@ -84,6 +95,8 @@ type server struct {
 	WorkDir               string
 	ComputerUse           computeruse.IComputerUse
 	SandboxId             string
+	boxId                 *string
+	telemetryLayer        string
 	logger                *slog.Logger
 	otelEndpoint          *string
 	authToken             string
@@ -121,6 +134,11 @@ func (s *server) Start() error {
 	}
 
 	otelServiceName := fmt.Sprintf("sandbox-%s", s.SandboxId)
+	if s.otelEndpoint != nil && *s.otelEndpoint != "" {
+		if err := s.initTelemetry(s.ctx, otelServiceName, s.entrypointLogFilePath); err != nil {
+			s.logger.ErrorContext(s.ctx, "Failed to initialize startup telemetry", "error", err)
+		}
+	}
 
 	r := gin.New()
 	r.Use(common_errors.Recovery())
@@ -152,7 +170,7 @@ func (s *server) Start() error {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 
-	r.POST("/init", s.Initialize(otelServiceName, s.entrypointLogFilePath, s.organizationId, s.regionId))
+	r.POST("/init", s.Initialize(otelServiceName, s.entrypointLogFilePath))
 
 	r.GET("/version", s.GetVersion)
 

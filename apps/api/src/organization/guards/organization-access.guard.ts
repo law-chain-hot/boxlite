@@ -13,6 +13,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis'
 import Redis from 'ioredis'
 import { Organization } from '../entities/organization.entity'
 import { OrganizationUser } from '../entities/organization-user.entity'
+import { CustomHeaders } from '../../common/constants/header.constants'
 
 @Injectable()
 export class OrganizationAccessGuard implements CanActivate {
@@ -39,6 +40,9 @@ export class OrganizationAccessGuard implements CanActivate {
       request.params.organizationId || request.params.orgId || request.params.prefix,
       authContext,
     )
+    const adminOrganizationId =
+      authContext.role === SystemRole.ADMIN ? this.resolveOrganizationIdHeader(request) || authContext.organizationId : undefined
+    const authOrganizationId = adminOrganizationId || authContext.organizationId
 
     if (
       authContext.role !== 'ssh-gateway' &&
@@ -47,7 +51,7 @@ export class OrganizationAccessGuard implements CanActivate {
       authContext.role !== 'region-proxy' &&
       authContext.role !== 'region-ssh-gateway' &&
       !organizationIdParam &&
-      !authContext.organizationId
+      !authOrganizationId
     ) {
       this.logger.warn('Organization ID missing from the request context.')
       return false
@@ -66,7 +70,7 @@ export class OrganizationAccessGuard implements CanActivate {
       return false
     }
 
-    const organizationId = organizationIdParam || authContext.organizationId
+    const organizationId = organizationIdParam || authOrganizationId
     if (!organizationId) {
       this.logger.warn('Organization ID missing from the request context.')
       return false
@@ -114,6 +118,17 @@ export class OrganizationAccessGuard implements CanActivate {
     }
 
     return organizationIdParam
+  }
+
+  private resolveOrganizationIdHeader(request: {
+    get?: (name: string) => string | undefined
+    headers?: Record<string, string | string[] | undefined>
+  }): string | undefined {
+    const rawValue =
+      request.get?.(CustomHeaders.ORGANIZATION_ID.name) ||
+      request.headers?.[CustomHeaders.ORGANIZATION_ID.name] ||
+      request.headers?.[CustomHeaders.ORGANIZATION_ID.name.toLowerCase()]
+    return Array.isArray(rawValue) ? rawValue[0] : rawValue
   }
 
   private async getCachedOrganization(organizationId: string): Promise<Organization | null> {

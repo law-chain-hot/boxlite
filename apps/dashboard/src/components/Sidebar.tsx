@@ -21,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { BOXLITE_DOCS_URL, BOXLITE_SLACK_URL } from '@/constants/ExternalLinks'
 import { Theme, useTheme } from '@/contexts/ThemeContext'
 import { RoutePath } from '@/enums/RoutePath'
+import { useAdminObservabilityStatus } from '@/hooks/useAdminObservability'
 import { useIsCompactScreen } from '@/hooks/use-mobile'
 import {
   ONBOARDING_OPEN_EVENT,
@@ -32,6 +33,7 @@ import {
 } from '@/lib/onboarding-progress'
 import { cn, getMetaKey } from '@/lib/utils'
 import {
+  Activity,
   ArrowRightIcon,
   BookOpen,
   ChevronDown,
@@ -136,6 +138,10 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
   const userId = user?.profile.sub
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const { isSuccess: canAccessAdminObservability } = useAdminObservabilityStatus({
+    retry: false,
+    staleTime: 60_000,
+  })
   const [highlightOnboardingEntry, setHighlightOnboardingEntry] = useState(false)
   const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress>(() => readOnboardingProgress(userId))
 
@@ -166,7 +172,7 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
   }, [])
 
   const primaryItems = useMemo<SidebarItem[]>(() => {
-    return [
+    const items: SidebarItem[] = [
       {
         icon: <Container size={16} strokeWidth={1.5} />,
         label: 'Boxes',
@@ -178,7 +184,17 @@ export function Sidebar({ isBannerVisible }: SidebarProps) {
         path: RoutePath.BILLING,
       },
     ]
-  }, [])
+
+    if (canAccessAdminObservability) {
+      items.push({
+        icon: <Activity size={16} strokeWidth={1.5} />,
+        label: 'Observability',
+        path: RoutePath.ADMIN_OBSERVABILITY,
+      })
+    }
+
+    return items
+  }, [canAccessAdminObservability])
 
   const secondaryGroups: SidebarGroup[] = useMemo(() => [], [])
 

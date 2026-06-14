@@ -45,6 +45,30 @@ function createGuard() {
 }
 
 describe('OrganizationAccessGuard', () => {
+  it('allows system admins to supply organization context with the organization header', async () => {
+    const { guard, mocks } = createGuard()
+    const request = {
+      params: {},
+      headers: {
+        'x-boxlite-organization-id': 'org-123',
+      },
+      user: {
+        userId: 'admin-1',
+        email: 'admin@example.com',
+        role: SystemRole.ADMIN,
+      },
+    }
+
+    await expect(guard.canActivate(httpContext(request))).resolves.toBe(true)
+
+    expect(mocks.organizationService.findOne).toHaveBeenCalledWith('org-123')
+    expect(mocks.organizationUserService.findOne).not.toHaveBeenCalled()
+    expect(request.user).toMatchObject({
+      organizationId: 'org-123',
+      organization: { id: 'org-123' },
+    })
+  })
+
   it('resolves the legacy REST default prefix to the authenticated API-key organization', async () => {
     const { guard, mocks } = createGuard()
     const request = {

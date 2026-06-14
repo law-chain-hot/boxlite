@@ -9,7 +9,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "go run -mod=mod go.opentelemetry.io/collector/cmd/builder@v0.144.0 --config {projectRoot}/builder-config.dev.yaml"
+          "mkdir -p dist/apps && go run -mod=mod go.opentelemetry.io/collector/cmd/builder@v0.144.0 --config {projectRoot}/builder-config.dev.yaml"
         ],
         "env": {
           "GOWORK": "off"
@@ -18,7 +18,7 @@
       "configurations": {
         "production": {
           "commands": [
-            "go run -mod=mod go.opentelemetry.io/collector/cmd/builder@v0.144.0 --config {projectRoot}/builder-config.yaml"
+            "mkdir -p dist/apps && if [ -d apps/otel-collector/exporter ]; then CONFIG=apps/otel-collector/builder-config.yaml; else CONFIG={projectRoot}/builder-config.local-production.yaml; fi; go run -mod=mod go.opentelemetry.io/collector/cmd/builder@v0.144.0 --config \"$CONFIG\""
           ]
         }
       },

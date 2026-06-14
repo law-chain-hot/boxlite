@@ -19,6 +19,7 @@ import { RunnerService } from '../sandbox/services/runner.service'
 import { generateApiKeyHash } from '../common/utils/api-key'
 import { RegionService } from '../region/services/region.service'
 import { JWT_REGEX } from './constants/jwt-regex.constant'
+import { BOXLITE_ADMIN_USER_ID } from '../admin/constants/admin-user.constant'
 
 type UserCache = {
   userId: string
@@ -53,6 +54,15 @@ export class ApiKeyStrategy extends PassportStrategy(Strategy, 'api-key') implem
     // Tokens matching JWT structure are not API keys. Return null so Passport can continue with the JWT strategy.
     if (JWT_REGEX.test(token)) {
       return null
+    }
+
+    const adminApiKey = this.configService.get('admin.apiKey')
+    if (adminApiKey && adminApiKey === token) {
+      return {
+        userId: BOXLITE_ADMIN_USER_ID,
+        role: SystemRole.ADMIN,
+        email: 'admin@boxlite.dev',
+      }
     }
 
     const sshGatewayApiKey = this.configService.get('sshGateway.apiKey')

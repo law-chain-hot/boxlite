@@ -12,6 +12,8 @@ jest.mock('../region/services/region.service', () => ({
 }))
 
 import { ApiKeyStrategy } from './api-key.strategy'
+import { BOXLITE_ADMIN_USER_ID } from '../admin/constants/admin-user.constant'
+import { SystemRole } from '../user/enums/system-role.enum'
 
 const jwtToken = 'eyJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJib3hsaXRlIn0.signature'
 
@@ -69,9 +71,23 @@ describe('ApiKeyStrategy', () => {
 
     await expect(strategy.validate('unknown-api-key')).resolves.toBeNull()
 
+    expect(mocks.configService.get).toHaveBeenCalledWith('admin.apiKey')
     expect(mocks.configService.get).toHaveBeenCalledWith('sshGateway.apiKey')
     expect(mocks.configService.get).toHaveBeenCalledWith('proxy.apiKey')
     expect(mocks.configService.getOrThrow).not.toHaveBeenCalled()
     expect(mocks.apiKeyService.getApiKeyByValue).toHaveBeenCalledWith('unknown-api-key')
+  })
+
+  it('accepts the configured admin API key as a system admin bootstrap credential', async () => {
+    const { strategy, mocks } = createStrategy()
+    mocks.configService.get.mockImplementation((key: string) => (key === 'admin.apiKey' ? 'admin-secret' : undefined))
+
+    await expect(strategy.validate('admin-secret')).resolves.toEqual({
+      userId: BOXLITE_ADMIN_USER_ID,
+      role: SystemRole.ADMIN,
+      email: 'admin@boxlite.dev',
+    })
+
+    expect(mocks.apiKeyService.getApiKeyByValue).not.toHaveBeenCalled()
   })
 })

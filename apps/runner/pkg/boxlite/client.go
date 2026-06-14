@@ -182,6 +182,9 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 	for k, v := range sandboxDto.Env {
 		opts = append(opts, boxlite.WithEnv(k, v))
 	}
+	for k, v := range daemonTelemetryEnv(sandboxDto) {
+		opts = append(opts, boxlite.WithEnv(k, v))
+	}
 
 	if len(sandboxDto.Entrypoint) > 0 {
 		opts = append(opts, boxlite.WithEntrypoint(sandboxDto.Entrypoint...))
@@ -245,6 +248,9 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 		if err := bx.Start(ctx); err != nil {
 			return bx.ID(), "", fmt.Errorf("failed to start box: %w", err)
 		}
+		if err := c.startSandboxDaemon(ctx, bx, sandboxDto.Id, toolboxHostPort); err != nil {
+			return bx.ID(), "", fmt.Errorf("failed to start sandbox daemon: %w", err)
+		}
 	}
 
 	return bx.ID(), "boxlite", nil
@@ -262,6 +268,13 @@ func (c *Client) Start(ctx context.Context, sandboxId string, authToken *string,
 	}
 	if err := bx.Start(ctx); err != nil {
 		return "", err
+	}
+	if toolboxHostPort, err := c.ToolboxHostPort(sandboxId); err == nil {
+		if err := c.startSandboxDaemon(ctx, bx, sandboxId, toolboxHostPort); err != nil {
+			return "", fmt.Errorf("failed to start sandbox daemon: %w", err)
+		}
+	} else {
+		c.logger.WarnContext(ctx, "sandbox toolbox host port not found; daemon bootstrap skipped", "sandbox", sandboxId, "error", err)
 	}
 	return "boxlite", nil
 }

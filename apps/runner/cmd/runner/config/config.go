@@ -25,8 +25,11 @@ type Config struct {
 	EnableTLS                          bool          `envconfig:"ENABLE_TLS"`
 	OtelLoggingEnabled                 bool          `envconfig:"OTEL_LOGGING_ENABLED"`
 	OtelTracingEnabled                 bool          `envconfig:"OTEL_TRACING_ENABLED"`
+	OtelMetricsEnabled                 bool          `envconfig:"OTEL_METRICS_ENABLED"`
 	OtelEndpoint                       string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT"`
 	OtelHeaders                        string        `envconfig:"OTEL_EXPORTER_OTLP_HEADERS"`
+	RunnerId                           string        `envconfig:"BOXLITE_RUNNER_ID"`
+	MachineId                          string        `envconfig:"BOXLITE_MACHINE_ID"`
 	BackupInfoCacheRetention           time.Duration `envconfig:"BACKUP_INFO_CACHE_RETENTION" default:"168h" validate:"min=5m"`
 	Environment                        string        `envconfig:"ENVIRONMENT"`
 	ContainerRuntime                   string        `envconfig:"CONTAINER_RUNTIME"`
@@ -138,6 +141,24 @@ func (c *Config) GetOtelHeaders() map[string]string {
 	}
 
 	return headers
+}
+
+func (c *Config) GetTelemetryLabels(layer string) map[string]string {
+	labels := map[string]string{
+		"boxlite.layer": layer,
+	}
+
+	if c.RunnerId != "" {
+		labels["boxlite.runner_id"] = c.RunnerId
+	}
+	if c.MachineId != "" {
+		labels["boxlite.machine_id"] = c.MachineId
+	}
+	if c.AWSRegion != "" {
+		labels["boxlite.region_id"] = c.AWSRegion
+	}
+
+	return labels
 }
 
 func GetContainerRuntime() string {

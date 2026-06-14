@@ -37,6 +37,7 @@ import LandingPage from './pages/LandingPage'
 import Logout from './pages/Logout'
 import NotFound from './pages/NotFound'
 import Billing from './pages/Billing'
+import AdminObservability from './pages/AdminObservability'
 import Sandboxes from './pages/Sandboxes'
 import { SandboxDetails, SandboxTerminalFullscreen, SandboxVncFullscreen } from './components/sandboxes'
 import { ApiProvider } from './providers/ApiProvider'
@@ -208,6 +209,7 @@ function App() {
         <Route path={getRouteSubPath(RoutePath.KEYS)} element={<Keys />} />
         <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Sandboxes />} />
         <Route path={getRouteSubPath(RoutePath.BILLING)} element={<Billing />} />
+        <Route path={getRouteSubPath(RoutePath.ADMIN_OBSERVABILITY)} element={<AdminObservability />} />
         <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Navigate to={RoutePath.BILLING} replace />} />
         <Route path={getRouteSubPath(RoutePath.LEGACY_SANDBOXES)} element={<Navigate to={boxesRedirect} replace />} />
         <Route

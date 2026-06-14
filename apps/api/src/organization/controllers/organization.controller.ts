@@ -10,12 +10,14 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Headers,
   HttpCode,
   NotFoundException,
   Param,
   Patch,
   Post,
   Put,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
@@ -624,7 +626,32 @@ export class OrganizationController {
   async getOtelConfigBySandboxAuthToken(@Param('authToken') authToken: string): Promise<OtelConfigDto> {
     const otelConfigDto = await this.organizationService.getOtelConfigBySandboxAuthToken(authToken)
     if (!otelConfigDto) {
-      throw new NotFoundException(`Organization OTEL config with sandbox auth token ${authToken} not found`)
+      throw new NotFoundException('Organization OTEL config for sandbox auth token not found')
+    }
+
+    return otelConfigDto
+  }
+
+  @Get('/otel-config/by-sandbox-auth-token')
+  @ApiOperation({
+    summary: 'Get organization OTEL config by sandbox auth token header',
+    operationId: 'getOrganizationOtelConfigBySandboxAuthTokenHeader',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OTEL Config',
+    type: OtelConfigDto,
+  })
+  @RequiredApiRole([SystemRole.ADMIN, 'otel-collector'])
+  @UseGuards(CombinedAuthGuard, OrGuard([SystemActionGuard, OtelCollectorGuard]))
+  async getOtelConfigBySandboxAuthTokenHeader(@Headers('sandbox-auth-token') authToken?: string): Promise<OtelConfigDto> {
+    if (!authToken) {
+      throw new UnauthorizedException('sandbox-auth-token header is required')
+    }
+
+    const otelConfigDto = await this.organizationService.getOtelConfigBySandboxAuthToken(authToken)
+    if (!otelConfigDto) {
+      throw new NotFoundException('Organization OTEL config for sandbox auth token not found')
     }
 
     return otelConfigDto
@@ -683,7 +710,7 @@ export class OrganizationController {
       additionalProperties: true,
       example: {
         otel: {
-          endpoint: 'http://otel-collector:4317',
+          endpoint: 'http://otel-collector:4318',
           headers: {
             'api-key': 'XXX',
           },

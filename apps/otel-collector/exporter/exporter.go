@@ -14,7 +14,6 @@ import (
 	apiclient "github.com/boxlite-ai/boxlite/libs/api-client-go"
 	"github.com/boxlite-ai/otel-collector/exporter/internal/config"
 	"go.opentelemetry.io/collector/client"
-	"go.opentelemetry.io/collector/consumer/consumererror"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric"
@@ -94,7 +93,8 @@ func (e *Exporter[T]) push(ctx context.Context, data T) error {
 	// Extract sandbox token from context metadata
 	sandboxToken, err := e.extractSandboxToken(ctx)
 	if err != nil {
-		return consumererror.NewPermanent(fmt.Errorf("failed to extract sandbox token: %w", err))
+		e.logger.Debug("Skipping per-organization export for telemetry without sandbox token", zap.Error(err))
+		return nil
 	}
 
 	// Get endpoint configuration

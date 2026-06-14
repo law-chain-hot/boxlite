@@ -11,12 +11,12 @@
 // Top of file: constants + helpers + the runner user-data builder.
 // Inside `run()`, resources are created in deploy order:
 //
-//   1. secrets (auto-generated)     7. edge services (Proxy, SshGateway)
-//   2. platform (VPC/DB/Redis/S3)   8. observability (Jaeger, OtelCollector)
-//   3. IAM                          9. admin UIs (PgAdmin/RegistryUI/MailDev)
-//   4. auth (Dex)                  10. CDN (CloudFront)
+//   1. secrets (auto-generated)      7. API
+//   2. platform (VPC/DB/Redis/S3)    8. edge services (Proxy, SshGateway)
+//   3. IAM                           9. admin UIs (PgAdmin/RegistryUI/MailDev)
+//   4. auth (Dex)                   10. CDN (CloudFront)
 //   5. registry (ArtifactRegistry)  11. runner (EC2 + nested KVM)
-//   6. API
+//   6. observability ingest (OTel)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const REGION = "ap-southeast-1";
@@ -124,6 +124,15 @@ export default $config({
     const stripTrailingSlash = (url: $util.Output<string>) =>
       url.apply((u) => (u.endsWith("/") ? u.slice(0, -1) : u));
 
+    const clickHouseWriterEndpoint =
+      process.env.CLICKHOUSE_WRITER_ENDPOINT ||
+      process.env.CLICKHOUSE_ENDPOINT ||
+      process.env.CLICKHOUSE_OTEL_ENDPOINT;
+    const clickHouseWriterPassword = process.env.CLICKHOUSE_WRITER_PASSWORD || process.env.CLICKHOUSE_PASSWORD;
+    const clickHouseReaderHost = process.env.CLICKHOUSE_READER_HOST || process.env.CLICKHOUSE_HOST;
+    const clickHouseExporterEnabled = Boolean(clickHouseWriterEndpoint && clickHouseWriterPassword);
+    const collectorExporters = clickHouseExporterEnabled ? "[boxlite_exporter,clickhouse]" : "[boxlite_exporter]";
+
     // HTTPS everywhere: the Router CloudFront Function deletes customOriginConfig
     // for http origins and CF then falls back to match-viewer (→ tries HTTPS on a
     // port-80-only ALB → 502). We side-step that by giving Api and Dex ALBs
@@ -225,7 +234,60 @@ export default $config({
     });
     const registry = artifactRegistry; // API uses this URL for both transient + internal registries
 
-    // ─── 6. API (NestJS control plane) ───────────────────────────────────────
+    // ─── 6. OBSERVABILITY INGEST ─────────────────────────────────────────────
+    // Created before Api so API, runner, host, and box can all emit OTLP to the
+    // same Collector. Downstream ClickHouse stays opt-in through env vars.
+    new sst.aws.Service("Jaeger", {
+      cluster,
+      image: IMAGES.jaeger,
+      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.JAEGER_UI}/http` }] },
+      environment: { COLLECTOR_OTLP_ENABLED: "true" },
+    });
+
+    const otelCollector = new sst.aws.Service("OtelCollector", {
+      cluster,
+      image: { context: "../..", dockerfile: "apps/otel-collector/Dockerfile", cache: false },
+      command: [
+        "--config",
+        "/otelcol/collector-config.yaml",
+        "--set",
+        `service::pipelines::traces::exporters=${collectorExporters}`,
+        "--set",
+        `service::pipelines::metrics::exporters=${collectorExporters}`,
+        "--set",
+        `service::pipelines::logs::exporters=${collectorExporters}`,
+      ],
+      loadBalancer: {
+        rules: [
+          { listen: `${PORTS.OTLP_HTTP}/http`, forward: `${PORTS.OTLP_HTTP}/http` },
+          { listen: "80/http", forward: `${PORTS.OTEL_HEALTH}/http` },
+        ],
+        health: {
+          // The OTLP HTTP receiver returns a client-error status for a bare
+          // health-check GET, which still proves the receiver is listening.
+          [`${PORTS.OTLP_HTTP}/http`]: httpHealth("/", { successCodes: "200-499" }),
+          [`${PORTS.OTEL_HEALTH}/http`]: httpHealth("/health/status"),
+        },
+      },
+      environment: {
+        CLICKHOUSE_ENDPOINT: clickHouseWriterEndpoint || "tcp://localhost:9000",
+        CLICKHOUSE_DATABASE: envOr("CLICKHOUSE_WRITER_DATABASE", envOr("CLICKHOUSE_DATABASE", "otel")),
+        CLICKHOUSE_USERNAME: envOr("CLICKHOUSE_WRITER_USERNAME", envOr("CLICKHOUSE_USERNAME", "default")),
+        CLICKHOUSE_PASSWORD: clickHouseWriterPassword || "unused",
+        CLICKHOUSE_CREATE_SCHEMA: envOr("CLICKHOUSE_CREATE_SCHEMA", "false"),
+        CLICKHOUSE_COMPRESS: envOr("CLICKHOUSE_COMPRESS", "none"),
+        BOXLITE_API_URL: envOr("BOXLITE_API_URL", `https://api.${stackDomain}/api`),
+        BOXLITE_API_KEY: envOr(
+          "BOXLITE_API_KEY",
+          envOr("OTEL_COLLECTOR_API_KEY", envOr("ADMIN_API_KEY", adminApiKey.result)),
+        ),
+      },
+    });
+    const otelCollectorOtlpHttpUrl = stripTrailingSlash(otelCollector.url).apply(
+      (url) => `${url}:${PORTS.OTLP_HTTP}`,
+    );
+
+    // ─── 7. API (NestJS control plane) ───────────────────────────────────────
     const api = new sst.aws.Service("Api", {
       cluster,
       image: {
@@ -328,6 +390,27 @@ export default $config({
 
         // Admin
         ADMIN_API_KEY: envOr("ADMIN_API_KEY", adminApiKey.result),
+        OTEL_COLLECTOR_API_KEY: envOr("OTEL_COLLECTOR_API_KEY", envOr("BOXLITE_API_KEY", adminApiKey.result)),
+
+        // Observability read path. These stay server-side; never expose them to
+        // the dashboard bundle.
+        OTEL_ENABLED: envOr("OTEL_ENABLED", "true"),
+        OTEL_EXPORTER_OTLP_ENDPOINT: envOr("OTEL_EXPORTER_OTLP_ENDPOINT", otelCollectorOtlpHttpUrl),
+        ...(process.env.OTEL_EXPORTER_OTLP_HEADERS && {
+          OTEL_EXPORTER_OTLP_HEADERS: process.env.OTEL_EXPORTER_OTLP_HEADERS,
+        }),
+        ...(clickHouseReaderHost && {
+          CLICKHOUSE_HOST: clickHouseReaderHost,
+          CLICKHOUSE_PORT: envOr("CLICKHOUSE_READER_PORT", envOr("CLICKHOUSE_PORT", "443")),
+          CLICKHOUSE_DATABASE: envOr("CLICKHOUSE_READER_DATABASE", envOr("CLICKHOUSE_DATABASE", "otel")),
+          CLICKHOUSE_USERNAME: envOr("CLICKHOUSE_READER_USERNAME", envOr("CLICKHOUSE_USERNAME", "default")),
+          CLICKHOUSE_PASSWORD: envOr("CLICKHOUSE_READER_PASSWORD", envOr("CLICKHOUSE_PASSWORD", "")),
+          CLICKHOUSE_PROTOCOL: envOr("CLICKHOUSE_READER_PROTOCOL", envOr("CLICKHOUSE_PROTOCOL", "https")),
+        }),
+        SANDBOX_OTEL_ENDPOINT_URL: envOr(
+          "SANDBOX_OTEL_ENDPOINT_URL",
+          envOr("OTEL_EXPORTER_OTLP_ENDPOINT", otelCollectorOtlpHttpUrl),
+        ),
 
         // Dashboard — point its API client at the direct `api.<stackDomain>`
         // ALB hostname so long-lived /attach WS, build-log SSE, and file
@@ -365,7 +448,7 @@ export default $config({
       },
     });
 
-    // ─── 7. EDGE SERVICES ────────────────────────────────────────────────────
+    // ─── 8. EDGE SERVICES ────────────────────────────────────────────────────
     // Proxy: routes `<port>-<sandboxid>.proxy.<stack>` to the sandbox port.
     // Wildcard cert covers *.proxy.<stack>; Cloudflare serves wildcard DNS.
     const proxyDomain = `proxy.${stackDomain}`;
@@ -429,45 +512,6 @@ export default $config({
       },
       {},
     );
-
-    // ─── 8. OBSERVABILITY ────────────────────────────────────────────────────
-    new sst.aws.Service("Jaeger", {
-      cluster,
-      image: IMAGES.jaeger,
-      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.JAEGER_UI}/http` }] },
-      environment: { COLLECTOR_OTLP_ENABLED: "true" },
-    });
-
-    // OtelCollector — BoxLite's custom ocb build. The ClickHouse exporter is
-    // compiled in but dropped at runtime via --set (dev has no ClickHouse).
-    // Placeholder CLICKHOUSE_* env vars keep config.yaml parsing clean.
-    new sst.aws.Service("OtelCollector", {
-      cluster,
-      image: { context: "../..", dockerfile: "apps/otel-collector/Dockerfile", cache: false },
-      command: [
-        "--config", "/otelcol/collector-config.yaml",
-        "--set", "service::pipelines::traces::exporters=[boxlite_exporter]",
-        "--set", "service::pipelines::metrics::exporters=[boxlite_exporter]",
-        "--set", "service::pipelines::logs::exporters=[boxlite_exporter]",
-      ],
-      loadBalancer: {
-        rules: [
-          { listen: `${PORTS.OTLP_HTTP}/http`, forward: `${PORTS.OTLP_HTTP}/http` },
-          { listen: "80/http", forward: `${PORTS.OTEL_HEALTH}/http` },
-        ],
-        health: {
-          // The OTLP HTTP receiver returns a client-error status for a bare
-          // health-check GET, which still proves the receiver is listening.
-          [`${PORTS.OTLP_HTTP}/http`]: httpHealth("/", { successCodes: "200-499" }),
-          [`${PORTS.OTEL_HEALTH}/http`]: httpHealth("/health/status"),
-        },
-      },
-      environment: {
-        CLICKHOUSE_ENDPOINT: "tcp://localhost:9000",
-        CLICKHOUSE_PASSWORD: "unused",
-        BOXLITE_API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
-      },
-    });
 
     // ─── 9. ADMIN UIs ────────────────────────────────────────────────────────
     new sst.aws.Service("PgAdmin", {
@@ -547,8 +591,8 @@ export default $config({
     });
     const runnerInstanceProfile = new aws.iam.InstanceProfile("RunnerProfile", { role: runnerRole.name });
 
-    const runnerUserData = $resolve([api.url, defaultRunnerApiKey.result, registry.url]).apply(
-      ([apiUrl, token, registryUrl]) => buildRunnerUserData({ apiUrl, token, registryUrl }),
+    const runnerUserData = $resolve([api.url, defaultRunnerApiKey.result, registry.url, otelCollectorOtlpHttpUrl]).apply(
+      ([apiUrl, token, registryUrl, otelEndpoint]) => buildRunnerUserData({ apiUrl, token, registryUrl, otelEndpoint }),
     );
 
     // Runner holds load-bearing sandbox state (/var/lib/boxlite + in-memory
@@ -589,6 +633,7 @@ async function buildRunnerUserData(input: {
   apiUrl: string;
   token: string;
   registryUrl: string;
+  otelEndpoint: string;
 }): Promise<string> {
   const { readFileSync } = await import("fs");
   const { resolve } = await import("path");
@@ -598,6 +643,7 @@ async function buildRunnerUserData(input: {
     .match(/^version\s*=\s*"(.+?)"/m)![1];
 
   const registryHost = input.registryUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const otelEndpoint = input.otelEndpoint.replace(/\/$/, "");
 
   const script = `#!/bin/bash
 exec > /var/log/runner-setup.log 2>&1
@@ -619,9 +665,190 @@ rm -f /tmp/mount-s3.deb
 curl -fsSL "https://github.com/boxlite-ai/boxlite/releases/download/v${RUNNER_VERSION}/boxlite-runner-v${RUNNER_VERSION}-linux-amd64.tar.gz" | tar xz -C /usr/local/bin/
 chmod +x /usr/local/bin/boxlite-runner
 
-# Get host IP via IMDSv2
+# Get host identity via IMDSv2
 IMDS_TOKEN=\$(curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
 HOST_IP=\$(curl -s -H "X-aws-ec2-metadata-token: \$IMDS_TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4)
+INSTANCE_ID=\$(curl -s -H "X-aws-ec2-metadata-token: \$IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+
+# Optional EC2 host observability agent. This is intentionally ClickHouse-free:
+# it emits host logs/metrics to the OtelCollector, which owns downstream routing.
+if [ -n "${otelEndpoint}" ]; then
+  OTELCOL_VERSION=0.128.0
+  curl -fsSL "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v\${OTELCOL_VERSION}/otelcol-contrib_\${OTELCOL_VERSION}_linux_amd64.tar.gz" | tar xz -C /usr/local/bin/ otelcol-contrib
+  chmod +x /usr/local/bin/otelcol-contrib
+
+  cat > /etc/otelcol-runner-host.yaml << YAML
+receivers:
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      load:
+      memory:
+      disk:
+      filesystem:
+      network:
+      processes:
+  filelog:
+    include:
+      - /var/log/runner-setup.log
+      - /var/log/syslog
+    start_at: end
+processors:
+  resource/boxlite:
+    attributes:
+      - key: service.name
+        value: boxlite-runner-host
+        action: upsert
+      - key: boxlite.layer
+        value: ec2_host
+        action: upsert
+      - key: boxlite.machine_id
+        value: \$INSTANCE_ID
+        action: upsert
+      - key: boxlite.region_id
+        value: ${REGION}
+        action: upsert
+  batch:
+exporters:
+  otlphttp:
+    endpoint: ${otelEndpoint}
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics]
+      processors: [resource/boxlite, batch]
+      exporters: [otlphttp]
+    logs:
+      receivers: [filelog]
+      processors: [resource/boxlite, batch]
+      exporters: [otlphttp]
+YAML
+
+  cat > /etc/systemd/system/otelcol-runner-host.service << UNIT
+[Unit]
+Description=BoxLite Runner Host OpenTelemetry Collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/otelcol-contrib --config /etc/otelcol-runner-host.yaml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+  cat > /usr/local/bin/boxlite-host-otel-heartbeat << 'HEARTBEAT'
+#!/bin/bash
+set -u
+
+OTEL_ENDPOINT="__OTEL_ENDPOINT__"
+MACHINE_ID="__MACHINE_ID__"
+REGION_ID="__REGION_ID__"
+NOW_NS="$(date +%s%N)"
+TRACE_ID="$(tr -d '-' </proc/sys/kernel/random/uuid)"
+SPAN_ID="\${TRACE_ID:0:16}"
+
+send_otlp() {
+  local signal="$1"
+  local payload="$2"
+  curl -fsS -X POST "$OTEL_ENDPOINT/v1/$signal" \
+    -H 'Content-Type: application/json' \
+    --data-binary "$payload" >/dev/null
+}
+
+send_otlp logs "$(cat <<JSON
+{
+  "resourceLogs": [{
+    "resource": {
+      "attributes": [
+        {"key":"service.name","value":{"stringValue":"boxlite-runner-host"}},
+        {"key":"boxlite.layer","value":{"stringValue":"ec2_host"}},
+        {"key":"boxlite.machine_id","value":{"stringValue":"$MACHINE_ID"}},
+        {"key":"boxlite.region_id","value":{"stringValue":"$REGION_ID"}}
+      ]
+    },
+    "scopeLogs": [{
+      "scope": {"name":"boxlite-host-heartbeat"},
+      "logRecords": [{
+        "timeUnixNano":"$NOW_NS",
+        "severityNumber":9,
+        "severityText":"INFO",
+        "body":{"stringValue":"boxlite host heartbeat"},
+        "attributes":[{"key":"boxlite.signal","value":{"stringValue":"host_heartbeat"}}],
+        "traceId":"$TRACE_ID",
+        "spanId":"$SPAN_ID"
+      }]
+    }]
+  }]
+}
+JSON
+)"
+
+send_otlp traces "$(cat <<JSON
+{
+  "resourceSpans": [{
+    "resource": {
+      "attributes": [
+        {"key":"service.name","value":{"stringValue":"boxlite-runner-host"}},
+        {"key":"boxlite.layer","value":{"stringValue":"ec2_host"}},
+        {"key":"boxlite.machine_id","value":{"stringValue":"$MACHINE_ID"}},
+        {"key":"boxlite.region_id","value":{"stringValue":"$REGION_ID"}}
+      ]
+    },
+    "scopeSpans": [{
+      "scope": {"name":"boxlite-host-heartbeat"},
+      "spans": [{
+        "traceId":"$TRACE_ID",
+        "spanId":"$SPAN_ID",
+        "name":"boxlite.host.heartbeat",
+        "kind":1,
+        "startTimeUnixNano":"$NOW_NS",
+        "endTimeUnixNano":"$NOW_NS",
+        "attributes":[{"key":"boxlite.signal","value":{"stringValue":"host_heartbeat"}}],
+        "status":{"code":1}
+      }]
+    }]
+  }]
+}
+JSON
+)"
+HEARTBEAT
+  sed -i \
+    -e "s#__OTEL_ENDPOINT__#${otelEndpoint}#g" \
+    -e "s#__MACHINE_ID__#\$INSTANCE_ID#g" \
+    -e "s#__REGION_ID__#${REGION}#g" \
+    /usr/local/bin/boxlite-host-otel-heartbeat
+  chmod +x /usr/local/bin/boxlite-host-otel-heartbeat
+
+  cat > /etc/systemd/system/boxlite-host-otel-heartbeat.service << UNIT
+[Unit]
+Description=BoxLite Runner Host OpenTelemetry heartbeat
+After=network-online.target otelcol-runner-host.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/boxlite-host-otel-heartbeat
+UNIT
+
+  cat > /etc/systemd/system/boxlite-host-otel-heartbeat.timer << UNIT
+[Unit]
+Description=Run BoxLite Runner Host OpenTelemetry heartbeat
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=10s
+Unit=boxlite-host-otel-heartbeat.service
+
+[Install]
+WantedBy=timers.target
+UNIT
+fi
 
 # Create systemd service for the BoxLite runner
 cat > /etc/systemd/system/boxlite-runner.service << UNIT
@@ -646,6 +873,13 @@ Environment=RUNNER_DOMAIN=\$HOST_IP
 Environment=BOXLITE_HOME_DIR=/var/lib/boxlite
 Environment=INSECURE_REGISTRIES=${registryHost}
 Environment=AWS_REGION=${REGION}
+Environment=ENVIRONMENT=production
+Environment=OTEL_LOGGING_ENABLED=true
+Environment=OTEL_TRACING_ENABLED=true
+Environment=OTEL_METRICS_ENABLED=true
+Environment=OTEL_EXPORTER_OTLP_ENDPOINT=${otelEndpoint}
+Environment=BOXLITE_RUNNER_ID=default
+Environment=BOXLITE_MACHINE_ID=\$INSTANCE_ID
 
 [Install]
 WantedBy=multi-user.target
@@ -653,6 +887,13 @@ UNIT
 
 mkdir -p /var/lib/boxlite
 systemctl daemon-reload
+if [ -n "${otelEndpoint}" ]; then
+  systemctl enable otelcol-runner-host
+  systemctl start otelcol-runner-host
+  systemctl enable boxlite-host-otel-heartbeat.timer
+  systemctl start boxlite-host-otel-heartbeat.timer
+  /usr/local/bin/boxlite-host-otel-heartbeat || true
+fi
 systemctl enable boxlite-runner
 systemctl start boxlite-runner
 

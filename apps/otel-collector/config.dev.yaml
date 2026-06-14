@@ -35,6 +35,15 @@ exporters:
       port: '${env:REDIS_PORT:-6379}'
       password: '${env:REDIS_PASSWORD:-}'
 
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: ${env:OTEL_MEMORY_LIMIT_MIB:-512}
+    spike_limit_mib: ${env:OTEL_MEMORY_SPIKE_LIMIT_MIB:-128}
+  batch:
+    timeout: 5s
+    send_batch_size: ${env:OTEL_BATCH_SIZE:-8192}
+
 extensions:
   healthcheckv2:
     use_v2: true
@@ -59,10 +68,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [boxlite_exporter]
     metrics:
       receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [boxlite_exporter]
     logs:
       receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [boxlite_exporter]

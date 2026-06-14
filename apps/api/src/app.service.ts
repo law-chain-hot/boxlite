@@ -22,8 +22,7 @@ import { RunnerAdapterFactory } from './sandbox/runner-adapter/runnerAdapter'
 import { RegionType } from './region/enums/region-type.enum'
 import { RunnerState } from './sandbox/enums/runner-state.enum'
 import { SYSTEM_TEMPLATES } from './sandbox/constants/system-templates'
-
-export const BOXLITE_ADMIN_USER_ID = 'boxlite-admin'
+import { BOXLITE_ADMIN_USER_ID } from './admin/constants/admin-user.constant'
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap, OnApplicationShutdown {

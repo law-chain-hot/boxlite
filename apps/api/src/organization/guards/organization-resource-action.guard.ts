@@ -13,6 +13,7 @@ import { OrganizationService } from '../services/organization.service'
 import { OrganizationUserService } from '../services/organization-user.service'
 import { OrganizationAuthContext } from '../../common/interfaces/auth-context.interface'
 import { SystemRole } from '../../user/enums/system-role.enum'
+import { isRunnerContext } from '../../common/interfaces/runner-context.interface'
 
 @Injectable()
 export class OrganizationResourceActionGuard extends OrganizationAccessGuard {
@@ -26,9 +27,13 @@ export class OrganizationResourceActionGuard extends OrganizationAccessGuard {
     super(organizationService, organizationUserService)
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest()
+    if (isRunnerContext(request.user)) {
+      return true
+    }
+
     const canActivate = await super.canActivate(context)
 
-    const request = context.switchToHttp().getRequest()
     // TODO: initialize authContext safely
     const authContext: OrganizationAuthContext = request.user
 
