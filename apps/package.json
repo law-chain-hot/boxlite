@@ -3,6 +3,9 @@
   "version": "0.0.0-dev",
   "license": "SEE LICENSE IN NOTICE",
   "private": true,
+  "resolutions": {
+    "@types/express-serve-static-core": "5.1.0"
+  },
   "scripts": {
     "postinstall": "is-ci || husky",
     "format": "nx run-many --target=format --all --parallel=$(getconf _NPROCESSORS_ONLN) && prettier --write \"*.{ts,js,json,yaml}\"",

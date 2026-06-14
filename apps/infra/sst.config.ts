@@ -108,7 +108,7 @@ export default $config({
       home: "aws",
       providers: {
         aws: { region: REGION, profile: envOr("AWS_PROFILE", "default") },
-        cloudflare: "6.14.0",
+        cloudflare: "6.15.0",
         random: "4.16.6",
       },
     };
@@ -325,6 +325,12 @@ export default $config({
 
         // Admin
         ADMIN_API_KEY: envOr("ADMIN_API_KEY", adminApiKey.result),
+        // POL-14 internal admin allowlist: emails promoted to SystemRole.ADMIN
+        // on login (read by configuration.ts -> JwtStrategy). Unset = empty
+        // allowlist = no one auto-promoted (admin overview stays 403).
+        ...(process.env.INTERNAL_ADMIN_EMAILS && {
+          INTERNAL_ADMIN_EMAILS: process.env.INTERNAL_ADMIN_EMAILS,
+        }),
 
         // Dashboard — point its API client at the direct `api.<stackDomain>`
         // ALB hostname so long-lived /attach WS, build-log SSE, and file
