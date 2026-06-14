@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { Sandbox, Region } from '@boxlite-ai/api-client'
+import { Sandbox } from '@boxlite-ai/api-client'
 import {
   useReactTable,
   getCoreRowModel,
@@ -14,7 +14,6 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 import { useMemo, useState, useEffect } from 'react'
-import { FacetedFilterOption } from './types'
 import { getColumns } from './columns'
 import {
   convertApiSortingToTableSorting,
@@ -25,7 +24,6 @@ import {
 import { SandboxFilters, SandboxSorting } from '@/hooks/useSandboxes'
 import { LocalStorageKey } from '@/enums/LocalStorageKey'
 import { getLocalStorageItem, setLocalStorageItem } from '@/lib/local-storage'
-import { getRegionFullDisplayName } from '@/lib/utils'
 
 interface UseSandboxTableProps {
   data: Sandbox[]
@@ -51,9 +49,7 @@ interface UseSandboxTableProps {
   onSortingChange: (sorting: SandboxSorting) => void
   filters: SandboxFilters
   onFiltersChange: (filters: SandboxFilters) => void
-  regionsData: Region[]
   handleRecover: (id: string) => void
-  getRegionName: (regionId: string) => string | undefined
 }
 
 export function useSandboxTable({
@@ -77,9 +73,7 @@ export function useSandboxTable({
   onSortingChange,
   filters,
   onFiltersChange,
-  regionsData,
   handleRecover,
-  getRegionName,
 }: UseSandboxTableProps) {
   // Column visibility state management with persistence
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
@@ -102,13 +96,6 @@ export function useSandboxTable({
   const tableSorting = useMemo(() => convertApiSortingToTableSorting(sorting), [sorting])
   const tableFilters = useMemo(() => convertApiFiltersToTableFilters(filters), [filters])
 
-  const regionOptions: FacetedFilterOption[] = useMemo(() => {
-    return regionsData.map((region) => ({
-      label: getRegionFullDisplayName(region),
-      value: region.id,
-    }))
-  }, [regionsData])
-
   const columns = useMemo(
     () =>
       getColumns({
@@ -124,7 +111,6 @@ export function useSandboxTable({
         handleCreateSshAccess,
         handleRevokeSshAccess,
         handleRecover,
-        getRegionName,
         handleScreenRecordings,
       }),
     [
@@ -140,7 +126,6 @@ export function useSandboxTable({
       handleCreateSshAccess,
       handleRevokeSshAccess,
       handleRecover,
-      getRegionName,
       handleScreenRecordings,
     ],
   )
@@ -189,6 +174,5 @@ export function useSandboxTable({
 
   return {
     table,
-    regionOptions,
   }
 }

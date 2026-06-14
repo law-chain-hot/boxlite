@@ -65,13 +65,13 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
       ...(p.config.createSandboxParamsExist
         ? [
             p.config.useAutoStopInterval
-              ? `${ind}autoStopInterval: ${p.state['createSandboxBaseParams']['autoStopInterval']}, // ${p.state['createSandboxBaseParams']['autoStopInterval'] == 0 ? 'Disables the auto-stop feature' : `Sandbox will be stopped after ${p.state['createSandboxBaseParams']['autoStopInterval']} minute${(p.state['createSandboxBaseParams']['autoStopInterval'] as number) > 1 ? 's' : ''}`}`
+              ? `${ind}autoStopInterval: ${p.state['createSandboxBaseParams']['autoStopInterval']}, // ${p.state['createSandboxBaseParams']['autoStopInterval'] == 0 ? 'Disables the auto-stop feature' : `Box will be stopped after ${p.state['createSandboxBaseParams']['autoStopInterval']} minute${(p.state['createSandboxBaseParams']['autoStopInterval'] as number) > 1 ? 's' : ''}`}`
               : '',
             p.config.useAutoArchiveInterval
-              ? `${ind}autoArchiveInterval: ${p.state['createSandboxBaseParams']['autoArchiveInterval']}, // Auto-archive after a Sandbox has been stopped for ${p.state['createSandboxBaseParams']['autoArchiveInterval'] == 0 ? '30 days' : `${p.state['createSandboxBaseParams']['autoArchiveInterval']} minutes`}`
+              ? `${ind}autoArchiveInterval: ${p.state['createSandboxBaseParams']['autoArchiveInterval']}, // Auto-archive after a Box has been stopped for ${p.state['createSandboxBaseParams']['autoArchiveInterval'] == 0 ? '30 days' : `${p.state['createSandboxBaseParams']['autoArchiveInterval']} minutes`}`
               : '',
             p.config.useAutoDeleteInterval
-              ? `${ind}autoDeleteInterval: ${p.state['createSandboxBaseParams']['autoDeleteInterval']}, // ${p.state['createSandboxBaseParams']['autoDeleteInterval'] == 0 ? 'Sandbox will be deleted immediately after stopping' : p.state['createSandboxBaseParams']['autoDeleteInterval'] == -1 ? 'Auto-delete functionality disabled' : `Auto-delete after a Sandbox has been stopped for ${p.state['createSandboxBaseParams']['autoDeleteInterval']} minutes`}`
+              ? `${ind}autoDeleteInterval: ${p.state['createSandboxBaseParams']['autoDeleteInterval']}, // ${p.state['createSandboxBaseParams']['autoDeleteInterval'] == 0 ? 'Box will be deleted immediately after stopping' : p.state['createSandboxBaseParams']['autoDeleteInterval'] == -1 ? 'Auto-delete functionality disabled' : `Auto-delete after a Box has been stopped for ${p.state['createSandboxBaseParams']['autoDeleteInterval']} minutes`}`
               : '',
           ]
         : []),
@@ -83,7 +83,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
 
   getSandboxCreate(p) {
     return [
-      '\t\t// Create the Sandbox instance',
+      '\t\t// Create the Box instance',
       `\t\tconst sandbox = await boxlite.create(${p.config.useSandboxCreateParams ? this.getSandboxParams(p) : ''})`,
     ].join('\n')
   },
@@ -92,7 +92,7 @@ export const TypeScriptSnippetGenerator: CodeSnippetGenerator = {
     if (!p.actions.codeToRunExists) return ''
     const ind = '\t\t'
     return [
-      `\n\n${ind}// Run code securely inside the Sandbox`,
+      `\n\n${ind}// Run code securely inside the Box`,
       `${ind}const codeRunResponse = await sandbox.process.codeRun(\``,
       `${(p.state['codeRunParams'].languageCode ?? '').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')}`, // Escape backticks and ${ to prevent breaking the template literal
       `${ind}\`)`,
@@ -224,7 +224,7 @@ ${client}
 \ttry {
 ${create}${fsOps}${gitOps}${codeRun}${shell}
 \t} catch (error) {
-\t\tconsole.error("Sandbox flow error:", error)
+\t\tconsole.error("Box flow error:", error)
 \t}
 }
 main().catch(console.error)`

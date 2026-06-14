@@ -54,9 +54,6 @@ export function SandboxTable({
   snapshotsDataIsLoading,
   snapshotsDataHasMore,
   onChangeSnapshotSearchValue,
-  regionsData,
-  regionsDataIsLoading,
-  getRegionName,
   handleStart,
   handleStop,
   handleDelete,
@@ -90,7 +87,7 @@ export function SandboxTable({
   const writePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.WRITE_SANDBOXES)
   const deletePermitted = authenticatedUserHasPermission(OrganizationRolePermissionsEnum.DELETE_SANDBOXES)
 
-  const { table, regionOptions } = useSandboxTable({
+  const { table } = useSandboxTable({
     data,
     sandboxIsLoading,
     writePermitted,
@@ -111,9 +108,7 @@ export function SandboxTable({
     onSortingChange,
     filters,
     onFiltersChange,
-    regionsData,
     handleRecover,
-    getRegionName,
   })
 
   const [pendingBulkAction, setPendingBulkAction] = useState<BulkAction | null>(null)
@@ -209,8 +204,6 @@ export function SandboxTable({
     <>
       <SandboxTableHeader
         table={table}
-        regionOptions={regionOptions}
-        regionsDataIsLoading={regionsDataIsLoading}
         snapshots={snapshots}
         snapshotsDataIsLoading={snapshotsDataIsLoading}
         snapshotsDataHasMore={snapshotsDataHasMore}
@@ -227,7 +220,6 @@ export function SandboxTable({
             {table.getRowModel().rows.map((row) => {
               const sandbox = row.original
               const lastEvent = getSandboxLastEvent(sandbox)
-              const regionName = getRegionName(sandbox.target) ?? sandbox.target
 
               return (
                 <div
@@ -263,9 +255,8 @@ export function SandboxTable({
                         <div className="truncate text-xs text-muted-foreground">{sandbox.id}</div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs md:grid-cols-4 md:gap-x-4">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs md:grid-cols-3 md:gap-x-4">
                         <CompactSandboxMeta label="Snapshot">{sandbox.snapshot || '-'}</CompactSandboxMeta>
-                        <CompactSandboxMeta label="Region">{regionName}</CompactSandboxMeta>
                         <CompactSandboxMeta label="Resources">
                           {sandbox.cpu} vCPU • {sandbox.memory} GiB • {sandbox.disk} GiB
                         </CompactSandboxMeta>
@@ -306,7 +297,7 @@ export function SandboxTable({
         ) : (
           <div className="flex min-h-56 flex-col items-center justify-center rounded-sm border border-dashed border-border px-6 py-10 text-center">
             <Container className="mb-4 h-8 w-8 text-muted-foreground" />
-            <div className="text-sm font-medium">No Sandboxes yet.</div>
+            <div className="text-sm font-medium">No Boxes yet.</div>
             <div className="mt-2 max-w-sm text-sm text-muted-foreground">{emptyStateDescription}</div>
           </div>
         )
@@ -392,7 +383,7 @@ export function SandboxTable({
       )}
 
       <div className="flex items-center justify-end relative">
-        <Pagination className="pb-2 pt-4" table={table} entityName="Sandboxes" totalItems={totalItems} />
+        <Pagination className="pb-2 pt-4" table={table} entityName="Boxes" totalItems={totalItems} />
 
         <AnimatePresence>
           {!useCompactList && hasSelection && (

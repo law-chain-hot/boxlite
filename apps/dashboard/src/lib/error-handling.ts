@@ -12,12 +12,24 @@ interface HandleApiErrorOptions {
   toastId?: string
 }
 
+export function getErrorDescription(error: unknown) {
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  if (typeof error === 'string') {
+    return error
+  }
+
+  return 'Please try again or check the console for more details'
+}
+
 export function handleApiError(error: unknown, message: string, options?: HandleApiErrorOptions) {
   const isBoxliteError = error instanceof BoxliteError
 
   toast.error(message, {
     ...(options?.toastId ? { id: options.toastId } : {}),
-    description: isBoxliteError ? error.message : 'Please try again or check the console for more details',
+    description: getErrorDescription(error),
     action: options?.action,
   })
 

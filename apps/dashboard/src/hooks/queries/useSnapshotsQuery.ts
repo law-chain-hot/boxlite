@@ -29,6 +29,7 @@ export interface SnapshotQueryParams {
   pageSize: number
   filters?: SnapshotFilters
   sorting?: SnapshotSorting
+  enabled?: boolean
 }
 
 export function useSnapshotsQuery(params: SnapshotQueryParams) {
@@ -55,7 +56,7 @@ export function useSnapshotsQuery(params: SnapshotQueryParams) {
 
       return response.data
     },
-    enabled: !!selectedOrganization,
+    enabled: !!selectedOrganization && (params.enabled ?? true),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 10,
     gcTime: 1000 * 60 * 5,

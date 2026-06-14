@@ -306,9 +306,8 @@ const Sandboxes: React.FC = () => {
     }
   }, [snapshotsDataError])
 
-  // Region Filter
-
-  const { availableRegions: regionsData, loadingAvailableRegions: regionsDataIsLoading, getRegionName } = useRegions()
+  // Region names are still needed for the details sheet, but the table no longer exposes region controls.
+  const { getRegionName } = useRegions()
 
   // Subscribe to Sandbox Events
 
@@ -968,8 +967,6 @@ const Sandboxes: React.FC = () => {
           snapshotsDataIsLoading={snapshotsDataIsLoading}
           snapshotsDataHasMore={snapshotsDataHasMore}
           onChangeSnapshotSearchValue={(name?: string) => handleSnapshotFiltersChange({ name })}
-          regionsData={regionsData || []}
-          regionsDataIsLoading={regionsDataIsLoading}
           onRowClick={(sandbox: Sandbox) => {
             setSelectedSandbox(sandbox)
             setShowSandboxDetails(true)
@@ -986,7 +983,6 @@ const Sandboxes: React.FC = () => {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           handleRecover={handleRecover}
-          getRegionName={getRegionName}
           handleScreenRecordings={handleScreenRecordings}
         />
 

@@ -12,6 +12,7 @@ import { InMemoryWebStorage, WebStorageStateStore } from 'oidc-client-ts'
 import { ReactNode, useMemo } from 'react'
 import { AuthProvider, AuthProviderProps } from 'react-oidc-context'
 import { ConfigContext } from '../contexts/ConfigContext'
+import { shouldPersistOidcState } from './oidcStateStore'
 
 const apiUrl = (import.meta.env.VITE_BASE_API_URL ?? window.location.origin) + '/api'
 
@@ -32,8 +33,9 @@ export function ConfigProvider(props: Props) {
   })
 
   const oidcConfig: AuthProviderProps = useMemo(() => {
-    const isLocalhost = window.location.hostname === 'localhost'
-    const stateStore = isLocalhost ? window.sessionStorage : new InMemoryWebStorage()
+    const stateStore = shouldPersistOidcState(window.location.hostname, import.meta.env.DEV)
+      ? window.sessionStorage
+      : new InMemoryWebStorage()
 
     return {
       authority: config.oidc.issuer,

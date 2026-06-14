@@ -22,7 +22,7 @@ import { PRODUCT } from '@/constants/product'
 import { useTheme } from '@/contexts/ThemeContext'
 import { FeatureFlags } from '@/enums/FeatureFlags'
 import { RoutePath } from '@/enums/RoutePath'
-import { useIsCompactScreen } from '@/hooks/use-mobile'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useWebhookAppPortalAccessQuery } from '@/hooks/queries/useWebhookAppPortalAccessQuery'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { useUserOrganizationInvitations } from '@/hooks/useUserOrganizationInvitations'
@@ -103,7 +103,7 @@ const useNavCommands = (items: { label: string; path: RoutePath | string; onClic
 }
 
 export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: SidebarProps) {
-  const isCompactScreen = useIsCompactScreen()
+  const isMobileNav = useIsMobile()
   const posthog = usePostHog()
   const { theme, setTheme } = useTheme()
   const { user, signoutRedirect } = useAuth()
@@ -351,7 +351,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
             <LogoText />
           </Link>
 
-          {!isCompactScreen && (
+          {!isMobileNav && (
             <nav className="flex h-14 items-stretch gap-1">
               {primaryItems.map((item) => {
                 const isActive = pathname.startsWith(item.path)
@@ -390,7 +390,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          {!isCompactScreen && (
+          {!isMobileNav && (
             <Button
               variant="outline"
               size="sm"
@@ -407,7 +407,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
             <OrganizationPicker variant="header" />
           </div>
 
-          {!isCompactScreen && secondaryGroups.length > 0 && (
+          {!isMobileNav && secondaryGroups.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="hidden md:inline-flex">
@@ -436,7 +436,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
                 size="sm"
                 className={cn(
                   'inline-flex min-w-0 px-2',
-                  isCompactScreen ? 'justify-center' : 'sm:min-w-[8.5rem] sm:justify-between',
+                  isMobileNav ? 'justify-center' : 'sm:min-w-[8.5rem] sm:justify-between',
                 )}
               >
                 <span className="flex min-w-0 items-center gap-2">
@@ -449,7 +449,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
                   ) : (
                     <SquareUserRound className="size-4" />
                   )}
-                  <span className={cn('truncate', isCompactScreen ? 'hidden' : 'hidden sm:block')}>
+                  <span className={cn('truncate', isMobileNav ? 'hidden' : 'hidden sm:block')}>
                     {user?.profile.name || 'Profile'}
                   </span>
                 </span>
@@ -512,7 +512,7 @@ export function Sidebar({ isBannerVisible, billingEnabled, version: _version }: 
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {isCompactScreen && (
+          {isMobileNav && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-sm">

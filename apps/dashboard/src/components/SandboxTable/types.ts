@@ -9,7 +9,6 @@ import {
   ListSandboxesPaginatedOrderEnum,
   ListSandboxesPaginatedSortEnum,
   ListSandboxesPaginatedStatesEnum,
-  Region,
   Sandbox,
   SandboxState,
   SnapshotDto,
@@ -25,9 +24,6 @@ export interface SandboxTableProps {
   snapshotsDataIsLoading: boolean
   snapshotsDataHasMore?: boolean
   onChangeSnapshotSearchValue: (name?: string) => void
-  regionsData: Region[]
-  regionsDataIsLoading: boolean
-  getRegionName: (regionId: string) => string | undefined
   handleStart: (id: string) => void
   handleStop: (id: string) => void
   handleDelete: (id: string) => void
@@ -78,8 +74,6 @@ export interface SandboxTableActionsProps {
 
 export interface SandboxTableHeaderProps {
   table: Table<Sandbox>
-  regionOptions: FacetedFilterOption[]
-  regionsDataIsLoading: boolean
   snapshots: SnapshotDto[]
   snapshotsDataIsLoading: boolean
   snapshotsDataHasMore?: boolean
@@ -111,10 +105,6 @@ export const convertTableSortingToApiSorting = (sorting: SortingState): SandboxS
       break
     case 'snapshot':
       field = ListSandboxesPaginatedSortEnum.SNAPSHOT
-      break
-    case 'region':
-    case 'target':
-      field = ListSandboxesPaginatedSortEnum.REGION
       break
     case 'lastEvent':
     case 'updatedAt':
@@ -150,12 +140,6 @@ export const convertTableFiltersToApiFilters = (columnFilters: ColumnFiltersStat
       case 'snapshot':
         if (Array.isArray(filter.value) && filter.value.length > 0) {
           filters.snapshots = filter.value as string[]
-        }
-        break
-      case 'region':
-      case 'target':
-        if (Array.isArray(filter.value) && filter.value.length > 0) {
-          filters.regions = filter.value as string[]
         }
         break
       case 'labels':
@@ -233,9 +217,6 @@ export const convertApiSortingToTableSorting = (sorting: SandboxSorting): Sortin
     case ListSandboxesPaginatedSortEnum.SNAPSHOT:
       id = 'snapshot'
       break
-    case ListSandboxesPaginatedSortEnum.REGION:
-      id = 'region'
-      break
     case ListSandboxesPaginatedSortEnum.UPDATED_AT:
       id = 'lastEvent'
       break
@@ -261,10 +242,6 @@ export const convertApiFiltersToTableFilters = (filters: SandboxFilters): Column
 
   if (filters.snapshots && filters.snapshots.length > 0) {
     columnFilters.push({ id: 'snapshot', value: filters.snapshots })
-  }
-
-  if (filters.regions && filters.regions.length > 0) {
-    columnFilters.push({ id: 'region', value: filters.regions })
   }
 
   if (filters.labels && Object.keys(filters.labels).length > 0) {
