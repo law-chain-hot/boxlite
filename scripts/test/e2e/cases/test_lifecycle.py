@@ -30,9 +30,9 @@ async def test_create_generates_unique_ids(rt, image):
     b = await rt.create(boxlite.BoxOptions(image=image, auto_remove=True))
     try:
         assert a.id != b.id
-        # uuid v4 format check
-        assert len(a.id.split("-")) == 5
-        assert len(b.id.split("-")) == 5
+        # Box ids are 12-character Base62 strings (engine BoxIDMint format).
+        assert len(a.id) == 12 and a.id.isalnum()
+        assert len(b.id) == 12 and b.id.isalnum()
     finally:
         await rt.remove(a.id, force=True)
         await rt.remove(b.id, force=True)

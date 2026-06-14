@@ -13,7 +13,7 @@ import {
   ListBoxesPaginatedStatesEnum,
   PaginatedBoxes,
 } from '@boxlite-ai/api-client'
-import { isValidUUID } from '@/lib/utils'
+import { isValidBoxId } from '@/lib/utils'
 
 export interface BoxFilters {
   idOrName?: string
@@ -105,8 +105,8 @@ export function useBoxes(queryKey: QueryKey, params: BoxQueryParams) {
       let paginatedData = listResponse.data
 
       // TODO: this will be obsolete once we introduce the search API
-      if (filters.idOrName && isValidUUID(filters.idOrName) && page === 1) {
-        // Attempt to fetch box by ID if the search value is a valid UUID
+      if (filters.idOrName && isValidBoxId(filters.idOrName) && page === 1) {
+        // Attempt to fetch box by ID if the search value looks like a box id
         try {
           const box = (await boxApi.getBox(filters.idOrName, selectedOrganization.id)).data
           const existsInPaginatedData = paginatedData.items.some((item) => item.id === box.id)
@@ -114,7 +114,7 @@ export function useBoxes(queryKey: QueryKey, params: BoxQueryParams) {
           if (!existsInPaginatedData) {
             paginatedData = {
               ...paginatedData,
-              // This is an exact UUID match, ignore sorting
+              // This is an exact box id match, ignore sorting
               items: [box, ...paginatedData.items],
               total: paginatedData.total + 1,
             }

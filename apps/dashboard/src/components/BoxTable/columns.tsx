@@ -144,7 +144,7 @@ export function getColumns({
       enableSorting: false,
       enableHiding: true,
       header: () => {
-        return <span>UUID</span>
+        return <span>Box ID</span>
       },
       accessorKey: 'id',
       cell: ({ row }) => {

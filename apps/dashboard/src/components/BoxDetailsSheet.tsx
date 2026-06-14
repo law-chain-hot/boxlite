@@ -210,10 +210,10 @@ const BoxDetailsSheet: React.FC<BoxDetailsSheetProps> = ({
                 </div>
               </div>
               <div>
-                <h3 className="text-sm text-muted-foreground">UUID</h3>
+                <h3 className="text-sm text-muted-foreground">Box ID</h3>
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-sm font-medium truncate">{box.id}</p>
-                  <CopyButton value={box.id} tooltipText="Copy UUID" size="icon-xs" />
+                  <CopyButton value={box.id} tooltipText="Copy box ID" size="icon-xs" />
                 </div>
               </div>
             </div>

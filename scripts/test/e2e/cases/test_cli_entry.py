@@ -30,9 +30,9 @@ from path_verification import runner_journal_seek, runner_hits_for_box
 
 BOXLITE_BIN = os.environ.get("BOXLITE_E2E_CLI", shutil.which("boxlite"))
 IMAGE = os.environ.get("BOXLITE_E2E_IMAGE", "alpine:3.23")
-UUID_RE = re.compile(
-    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-)
+# `boxlite run -d` prints the bare box id on its own line. Box ids are
+# 12-character Base62 strings (see the API Box entity / engine BoxIDMint).
+BOX_ID_RE = re.compile(r"(?m)^[0-9A-Za-z]{12}$")
 
 
 @pytest.fixture(scope="module")
@@ -86,8 +86,8 @@ def test_cli_run_exec_chain(cli):
 
     # 1. detach run prints the box id on stdout
     r_run = run(cli, "run", "-d", IMAGE, "--", "sleep", "300", timeout=120)
-    m = UUID_RE.search(r_run.stdout)
-    assert m, f"`boxlite run -d` did not print a uuid: {r_run.stdout!r}"
+    m = BOX_ID_RE.search(r_run.stdout)
+    assert m, f"`boxlite run -d` did not print a box id: {r_run.stdout!r}"
     box_id = m.group(0)
 
     try:
@@ -126,7 +126,7 @@ def test_cli_exec_exit_code_propagates(cli):
     CLI's own exit code. This is the CLI behaviour layer, not just the
     SDK — argv parsing + exit-code mapping is CLI-specific."""
     r_run = run(cli, "run", "-d", IMAGE, "--", "sleep", "300", timeout=120)
-    m = UUID_RE.search(r_run.stdout)
+    m = BOX_ID_RE.search(r_run.stdout)
     assert m
     box_id = m.group(0)
 

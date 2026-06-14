@@ -80,9 +80,9 @@ export function BoxHeader({
               <CopyButton value={box.name || box.id} tooltipText="Copy name" size="icon-xs" />
             </div>
             <div className="hidden sm:flex items-center gap-1 min-w-0">
-              <span className="text-xs text-muted-foreground shrink-0">UUID</span>
+              <span className="text-xs text-muted-foreground shrink-0">Box ID</span>
               <span className="text-sm text-muted-foreground font-mono truncate">{box.id}</span>
-              <CopyButton value={box.id} tooltipText="Copy ID" size="icon-xs" />
+              <CopyButton value={box.id} tooltipText="Copy box ID" size="icon-xs" />
             </div>
           </div>
         ) : null}

@@ -20,11 +20,19 @@ import { BoxState } from '../enums/box-state.enum'
 import { BoxDesiredState } from '../enums/box-desired-state.enum'
 import { BoxClass } from '../enums/box-class.enum'
 import { BackupState } from '../enums/backup-state.enum'
-import { v4 as uuidv4 } from 'uuid'
 import { BoxVolume } from '../dto/box.dto'
 import { BuildInfo } from './build-info.entity'
-import { nanoid } from 'nanoid'
+import { customAlphabet, nanoid } from 'nanoid'
 import { BoxLastActivity } from './box-last-activity.entity'
+
+// Box ids are opaque 12-character Base62 strings, the same format the engine
+// mints for local boxes (BoxIDMint in src/boxlite/src/runtime/id.rs — keep the
+// alphabet and length in sync). Issuing this format server-side means an SDK
+// user sees one box id shape regardless of whether the box runs locally or in
+// the cloud, instead of a 12-char id locally and a UUID from the API.
+const BOX_ID_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+const BOX_ID_LENGTH = 12
+const mintBoxId = customAlphabet(BOX_ID_ALPHABET, BOX_ID_LENGTH)
 
 @Entity('box')
 @Unique(['organizationId', 'name'])
@@ -50,7 +58,7 @@ import { BoxLastActivity } from './box-last-activity.entity'
 @Index('box_labels_gin_full_idx', { synchronize: false })
 @Index('idx_box_volumes_gin', { synchronize: false })
 export class Box {
-  @PrimaryColumn({ default: () => 'uuid_generate_v4()' })
+  @PrimaryColumn()
   id: string
 
   @Column({
@@ -222,7 +230,7 @@ export class Box {
   daemonVersion?: string
 
   constructor(region: string, name?: string) {
-    this.id = uuidv4()
+    this.id = mintBoxId()
     // Set name - use provided name or fallback to ID
     this.name = name || this.id
     this.region = region

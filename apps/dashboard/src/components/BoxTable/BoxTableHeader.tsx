@@ -103,7 +103,7 @@ export function BoxTableHeader({
         <DebouncedInput
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(value) => table.getColumn('name')?.setFilterValue(value)}
-          placeholder="Search by Name or UUID"
+          placeholder="Search by Name or Box ID"
           className={cn('min-w-0', {
             'w-full': isMobile,
             'min-w-[16rem] flex-1': !isMobile && isCompactScreen,
@@ -138,7 +138,7 @@ export function BoxTableHeader({
                     case 'name':
                       return 'Name'
                     case 'id':
-                      return 'UUID'
+                      return 'Box ID'
                     case 'labels':
                       return 'Labels'
                     default:

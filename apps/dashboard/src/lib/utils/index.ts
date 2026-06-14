@@ -98,9 +98,9 @@ export function pluralize(count: number, singular: string, plural: string): stri
   return count === 1 ? `${count} ${singular}` : `${count} ${plural}`
 }
 
-export function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
+export function isValidBoxId(str: string): boolean {
+  // Box ids are 12-character Base62 strings (see the Box entity / engine BoxIDMint).
+  return /^[0-9A-Za-z]{12}$/.test(str)
 }
 
 export function formatTimestamp(timestamp: string | Date | undefined | null): string {
