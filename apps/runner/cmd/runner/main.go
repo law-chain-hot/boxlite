@@ -58,14 +58,7 @@ func run() int {
 	if cfg.OtelLoggingEnabled && cfg.OtelEndpoint != "" {
 		logger.Info("OpenTelemetry logging is enabled")
 
-		telemetryConfig := telemetry.Config{
-			Endpoint:       cfg.OtelEndpoint,
-			Headers:        cfg.GetOtelHeaders(),
-			ServiceName:    "boxlite-runner",
-			ServiceVersion: internal.Version,
-			Environment:    cfg.Environment,
-		}
-
+		telemetryConfig := runnerTelemetryConfig(cfg)
 		newLogger, lp, err := telemetry.InitLogger(ctx, logger, telemetryConfig)
 		if err != nil {
 			logger.ErrorContext(ctx, "Failed to initialize logger", "error", err)
@@ -80,14 +73,7 @@ func run() int {
 	if cfg.OtelTracingEnabled && cfg.OtelEndpoint != "" {
 		logger.Info("OpenTelemetry tracing is enabled")
 
-		telemetryConfig := telemetry.Config{
-			Endpoint:       cfg.OtelEndpoint,
-			Headers:        cfg.GetOtelHeaders(),
-			ServiceName:    "boxlite-runner",
-			ServiceVersion: internal.Version,
-			Environment:    cfg.Environment,
-		}
-
+		telemetryConfig := runnerTelemetryConfig(cfg)
 		tp, err := telemetry.InitTracer(ctx, telemetryConfig, &filters.NotFoundExporterFilter{})
 		if err != nil {
 			logger.ErrorContext(ctx, "Failed to initialize tracer", "error", err)
@@ -159,6 +145,17 @@ func run() int {
 		AllocatedResourcesSnapshotInterval: cfg.AllocatedResourcesSnapshotInterval,
 	})
 	metricsCollector.Start(ctx)
+
+	if cfg.OtelEndpoint != "" {
+		logger.Info("OpenTelemetry metrics is enabled")
+
+		mp, err := telemetry.InitMetrics(ctx, runnerTelemetryConfig(cfg), "boxlite.runner")
+		if err != nil {
+			logger.ErrorContext(ctx, "Failed to initialize metrics", "error", err)
+			return 2
+		}
+		defer telemetry.ShutdownMeter(logger, mp)
+	}
 
 	_, err = runner.GetInstance(&runner.RunnerInstanceConfig{
 		Logger:             logger,
@@ -268,5 +265,19 @@ func run() int {
 		apiServer.Stop()
 		logger.Info("Shutdown complete")
 		return 143
+	}
+}
+
+func runnerTelemetryConfig(cfg *config.Config) telemetry.Config {
+	return telemetry.Config{
+		Endpoint:       cfg.OtelEndpoint,
+		Headers:        cfg.GetOtelHeaders(),
+		ServiceName:    "boxlite-runner",
+		ServiceVersion: internal.Version,
+		Environment:    cfg.Environment,
+		ExtraLabels: map[string]string{
+			"boxlite.layer":         "runner",
+			"boxlite.runner_domain": cfg.Domain,
+		},
 	}
 }

@@ -81,6 +81,9 @@ func daemonSandboxEnv(sandboxDto dto.CreateSandboxDTO) map[string]string {
 	env := map[string]string{
 		"BOXLITE_SANDBOX_ID": sandboxDto.Id,
 	}
+	if sandboxDto.BoxId != "" {
+		env["BOXLITE_BOX_ID"] = sandboxDto.BoxId
+	}
 	if sandboxDto.OtelEndpoint != nil && *sandboxDto.OtelEndpoint != "" {
 		env["BOXLITE_OTEL_ENDPOINT"] = *sandboxDto.OtelEndpoint
 	}
@@ -272,7 +275,7 @@ func (c *Client) Create(ctx context.Context, sandboxDto dto.CreateSandboxDTO) (s
 		if err := bx.Start(ctx); err != nil {
 			return bx.ID(), "", fmt.Errorf("failed to start box: %w", err)
 		}
-		if err := c.waitForToolboxReady(ctx, sandboxDto.Id); err != nil {
+		if err := c.waitForToolboxReadyAndInitialize(ctx, sandboxDto.Id, sandboxDto.AuthToken); err != nil {
 			return bx.ID(), "", err
 		}
 	}
@@ -293,7 +296,7 @@ func (c *Client) Start(ctx context.Context, sandboxId string, authToken *string,
 	if err := bx.Start(ctx); err != nil {
 		return "", err
 	}
-	if err := c.waitForToolboxReady(ctx, sandboxId); err != nil {
+	if err := c.waitForToolboxReadyAndInitialize(ctx, sandboxId, authToken); err != nil {
 		return "", err
 	}
 	return "boxlite", nil

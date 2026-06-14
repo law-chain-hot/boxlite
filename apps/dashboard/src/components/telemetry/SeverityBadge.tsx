@@ -30,5 +30,5 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity }) => {
     }
   }
 
-  return <Badge variant={getSeverityVariant(severity)}>{severity}</Badge>
+  return <Badge variant={getSeverityVariant(severity)}>{severity.toUpperCase()}</Badge>
 }

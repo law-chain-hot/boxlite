@@ -4,6 +4,7 @@
 package boxlite
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -109,6 +110,51 @@ func (c *Client) waitForToolboxReady(ctx context.Context, sandboxID string) erro
 		case <-ticker.C:
 		}
 	}
+}
+
+func (c *Client) waitForToolboxReadyAndInitialize(ctx context.Context, sandboxID string, authToken *string) error {
+	if err := c.waitForToolboxReady(ctx, sandboxID); err != nil {
+		return err
+	}
+	if authToken == nil || strings.TrimSpace(*authToken) == "" {
+		c.logger.WarnContext(ctx, "sandbox toolbox ready but auth token is not available; telemetry initialization skipped", "sandbox", sandboxID)
+		return nil
+	}
+	return c.initializeToolbox(ctx, sandboxID, *authToken)
+}
+
+func (c *Client) initializeToolbox(ctx context.Context, sandboxID string, authToken string) error {
+	hostPort, err := c.ToolboxHostPort(sandboxID)
+	if err != nil {
+		return fmt.Errorf("toolbox host port not available for sandbox %s: %w", sandboxID, err)
+	}
+
+	body, err := json.Marshal(map[string]string{"token": authToken})
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/init", hostPort)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("initialize sandbox toolbox telemetry: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		responseBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		return fmt.Errorf("initialize sandbox toolbox telemetry: unexpected status %d from %s: %s", resp.StatusCode, url, strings.TrimSpace(string(responseBody)))
+	}
+
+	c.logger.InfoContext(ctx, "sandbox toolbox telemetry initialized", "sandbox", sandboxID, "hostPort", hostPort)
+	return nil
 }
 
 func (c *Client) removeToolboxPortRecord(ctx context.Context, sandboxID string) error {

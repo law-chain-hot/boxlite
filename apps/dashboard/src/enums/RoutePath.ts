@@ -21,6 +21,8 @@ export enum RoutePath {
   BOXES = '/dashboard/boxes',
   BILLING = '/dashboard/billing',
   PRICING = '/dashboard/pricing',
+  ADMIN = '/dashboard/admin',
+  ADMIN_OBSERVABILITY = '/dashboard/admin/observability',
   IMAGES = '/dashboard/images',
   REGISTRIES = '/dashboard/registries',
   VOLUMES = '/dashboard/volumes',

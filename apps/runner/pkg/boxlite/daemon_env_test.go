@@ -16,6 +16,7 @@ func TestDaemonSandboxEnvIncludesRequiredSandboxIdentity(t *testing.T) {
 
 	got := daemonSandboxEnv(dto.CreateSandboxDTO{
 		Id:             "sandbox-1",
+		BoxId:          "public-box-1",
 		OrganizationId: &organizationID,
 		RegionId:       &regionID,
 		OtelEndpoint:   &otelEndpoint,
@@ -23,6 +24,7 @@ func TestDaemonSandboxEnvIncludesRequiredSandboxIdentity(t *testing.T) {
 
 	want := map[string]string{
 		"BOXLITE_SANDBOX_ID":      "sandbox-1",
+		"BOXLITE_BOX_ID":          "public-box-1",
 		"BOXLITE_ORGANIZATION_ID": "org-1",
 		"BOXLITE_REGION_ID":       "region-1",
 		"BOXLITE_OTEL_ENDPOINT":   "http://otel.local:4318",

@@ -40,10 +40,12 @@ exporters:
 
   clickhouse:
     endpoint: ${env:CLICKHOUSE_ENDPOINT}
-    database: otel
+    database: ${env:CLICKHOUSE_DATABASE:-otel}
     ttl: ${env:CLICKHOUSE_TTL:-72h}
-    username: default
+    username: ${env:CLICKHOUSE_USERNAME:-default}
     password: ${env:CLICKHOUSE_PASSWORD}
+    create_schema: ${env:CLICKHOUSE_CREATE_SCHEMA:-true}
+    compress: ${env:CLICKHOUSE_COMPRESS:-true}
 
     sending_queue:
       queue_size: ${env:CLICKHOUSE_EXPORTER_SENDING_QUEUE_SIZE:-1000}
@@ -53,6 +55,15 @@ exporters:
       initial_interval: 5s
       max_interval: 30s
       max_elapsed_time: 300s
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: ${env:OTEL_MEMORY_LIMIT_MIB:-512}
+    spike_limit_mib: ${env:OTEL_MEMORY_SPIKE_LIMIT_MIB:-128}
+  batch:
+    timeout: 5s
+    send_batch_size: ${env:OTEL_BATCH_SIZE:-8192}
 
 extensions:
   healthcheckv2:
@@ -78,10 +89,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [boxlite_exporter, clickhouse]
     metrics:
       receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [boxlite_exporter, clickhouse]
     logs:
       receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [boxlite_exporter, clickhouse]

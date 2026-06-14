@@ -7,6 +7,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
+import { adminTelemetryPaths, buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
 import { MetricsResponse } from '@boxlite-ai/api-client'
 
 export interface MetricsQueryParams {
@@ -18,49 +19,43 @@ export interface MetricsQueryParams {
 export function useSandboxMetrics(
   sandboxId: string | undefined,
   params: MetricsQueryParams,
-  options?: Omit<UseQueryOptions<MetricsResponse>, 'queryKey' | 'queryFn'>,
+  options?: Omit<UseQueryOptions<MetricsResponse>, 'queryKey' | 'queryFn'> & { scope?: TelemetryScope },
 ) {
   const api = useApi()
   const { selectedOrganization } = useSelectedOrganization()
+  const { scope = 'sandbox', ...queryOptions } = options ?? {}
+  const isAdminPlatform = scope === 'admin-platform'
 
   return useQuery<MetricsResponse>({
-    queryKey: queryKeys.telemetry.metrics(sandboxId ?? '', params),
+    queryKey: isAdminPlatform
+      ? queryKeys.telemetry.adminMetrics(params)
+      : queryKeys.telemetry.metrics(sandboxId ?? '', params),
     queryFn: async () => {
-      if (!selectedOrganization || !sandboxId || !api.analyticsTelemetryApi) {
+      if (isAdminPlatform) {
+        const response = await api.axiosInstance.get(adminTelemetryPaths.metrics, {
+          params: buildTelemetrySearchParams(params),
+        })
+        return response.data
+      }
+
+      if (!selectedOrganization || !sandboxId || !api.sandboxApi) {
         throw new Error('Missing required parameters')
       }
-      const metricNames = params.metricNames?.length ? params.metricNames.join(',') : undefined
 
-      const response = await api.analyticsTelemetryApi.organizationOrganizationIdSandboxSandboxIdTelemetryMetricsGet(
-        selectedOrganization.id,
+      const response = await api.sandboxApi.getSandboxMetrics(
         sandboxId,
-        params.from.toISOString(),
-        params.to.toISOString(),
-        metricNames,
+        params.from,
+        params.to,
+        selectedOrganization.id,
+        params.metricNames,
       )
 
-      // Group flat ModelsMetricPoint[] into MetricSeries[]
-      const seriesMap = new Map<string, { timestamp: string; value: number }[]>()
-      for (const point of response.data ?? []) {
-        const name = point.metricName ?? ''
-        if (!seriesMap.has(name)) {
-          seriesMap.set(name, [])
-        }
-        seriesMap.get(name)!.push({
-          timestamp: point.timestamp ?? '',
-          value: point.value ?? 0,
-        })
-      }
-
-      const series = Array.from(seriesMap.entries()).map(([metricName, dataPoints]) => ({
-        metricName,
-        dataPoints,
-      }))
-
-      return { series }
+      return response.data
     },
-    enabled: !!sandboxId && !!selectedOrganization && !!api.analyticsTelemetryApi && !!params.from && !!params.to,
+    enabled: isAdminPlatform
+      ? !!api.axiosInstance && !!params.from && !!params.to
+      : !!sandboxId && !!selectedOrganization && !!api.sandboxApi && !!params.from && !!params.to,
     staleTime: 10_000,
-    ...options,
+    ...queryOptions,
   })
 }

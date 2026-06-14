@@ -124,6 +124,15 @@ export default $config({
     const stripTrailingSlash = (url: $util.Output<string>) =>
       url.apply((u) => (u.endsWith("/") ? u.slice(0, -1) : u));
 
+    const clickHouseWriterEndpoint =
+      process.env.CLICKHOUSE_WRITER_ENDPOINT ||
+      process.env.CLICKHOUSE_ENDPOINT ||
+      process.env.CLICKHOUSE_OTEL_ENDPOINT;
+    const clickHouseWriterPassword = process.env.CLICKHOUSE_WRITER_PASSWORD || process.env.CLICKHOUSE_PASSWORD;
+    const clickHouseReaderHost = process.env.CLICKHOUSE_READER_HOST || process.env.CLICKHOUSE_HOST;
+    const clickHouseExporterEnabled = Boolean(clickHouseWriterEndpoint && clickHouseWriterPassword);
+    const collectorExporters = clickHouseExporterEnabled ? "[boxlite_exporter,clickhouse]" : "[boxlite_exporter]";
+
     // HTTPS everywhere: the Router CloudFront Function deletes customOriginConfig
     // for http origins and CF then falls back to match-viewer (→ tries HTTPS on a
     // port-80-only ALB → 502). We side-step that by giving Api and Dex ALBs
@@ -225,7 +234,60 @@ export default $config({
     });
     const registry = artifactRegistry; // API uses this URL for both transient + internal registries
 
-    // ─── 6. API (NestJS control plane) ───────────────────────────────────────
+    // ─── 6. OBSERVABILITY INGEST ─────────────────────────────────────────────
+    // Created before Api so API, runner, host, and box can all emit OTLP to the
+    // same Collector. Downstream ClickHouse stays opt-in through env vars.
+    new sst.aws.Service("Jaeger", {
+      cluster,
+      image: IMAGES.jaeger,
+      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.JAEGER_UI}/http` }] },
+      environment: { COLLECTOR_OTLP_ENABLED: "true" },
+    });
+
+    const otelCollector = new sst.aws.Service("OtelCollector", {
+      cluster,
+      image: { context: "../..", dockerfile: "apps/otel-collector/Dockerfile", cache: false },
+      command: [
+        "--config",
+        "/otelcol/collector-config.yaml",
+        "--set",
+        `service::pipelines::traces::exporters=${collectorExporters}`,
+        "--set",
+        `service::pipelines::metrics::exporters=${collectorExporters}`,
+        "--set",
+        `service::pipelines::logs::exporters=${collectorExporters}`,
+      ],
+      loadBalancer: {
+        rules: [
+          { listen: `${PORTS.OTLP_HTTP}/http`, forward: `${PORTS.OTLP_HTTP}/http` },
+          { listen: "80/http", forward: `${PORTS.OTEL_HEALTH}/http` },
+        ],
+        health: {
+          // The OTLP HTTP receiver returns a client-error status for a bare
+          // health-check GET, which still proves the receiver is listening.
+          [`${PORTS.OTLP_HTTP}/http`]: httpHealth("/", { successCodes: "200-499" }),
+          [`${PORTS.OTEL_HEALTH}/http`]: httpHealth("/health/status"),
+        },
+      },
+      environment: {
+        CLICKHOUSE_ENDPOINT: clickHouseWriterEndpoint || "tcp://localhost:9000",
+        CLICKHOUSE_DATABASE: envOr("CLICKHOUSE_WRITER_DATABASE", envOr("CLICKHOUSE_DATABASE", "otel")),
+        CLICKHOUSE_USERNAME: envOr("CLICKHOUSE_WRITER_USERNAME", envOr("CLICKHOUSE_USERNAME", "default")),
+        CLICKHOUSE_PASSWORD: clickHouseWriterPassword || "unused",
+        CLICKHOUSE_CREATE_SCHEMA: envOr("CLICKHOUSE_CREATE_SCHEMA", "false"),
+        CLICKHOUSE_COMPRESS: envOr("CLICKHOUSE_COMPRESS", "none"),
+        BOXLITE_API_URL: envOr("BOXLITE_API_URL", `https://api.${stackDomain}/api`),
+        BOXLITE_API_KEY: envOr(
+          "BOXLITE_API_KEY",
+          envOr("OTEL_COLLECTOR_API_KEY", envOr("ADMIN_API_KEY", adminApiKey.result)),
+        ),
+      },
+    });
+    const otelCollectorOtlpHttpUrl = stripTrailingSlash(otelCollector.url).apply(
+      (url) => `${url}:${PORTS.OTLP_HTTP}`,
+    );
+
+    // ─── 7. API (NestJS control plane) ───────────────────────────────────────
     const api = new sst.aws.Service("Api", {
       cluster,
       image: {
@@ -250,6 +312,19 @@ export default $config({
         },
       },
       link: [db, redis, storage],
+      permissions: [
+        {
+          actions: ["logs:DescribeLogGroups"],
+          resources: ["*"],
+        },
+        {
+          actions: ["logs:FilterLogEvents"],
+          resources: [
+            $interpolate`arn:aws:logs:${REGION}:${aws.getCallerIdentityOutput().accountId}:log-group:/sst/cluster/${cluster.nodes.cluster.name}/*`,
+            $interpolate`arn:aws:logs:${REGION}:${aws.getCallerIdentityOutput().accountId}:log-group:/sst/cluster/${cluster.nodes.cluster.name}/*:*`,
+          ],
+        },
+      ],
       scaling: { min: 1, max: 4 },
       environment: {
         // Core
@@ -351,6 +426,41 @@ export default $config({
 
         // Admin
         ADMIN_API_KEY: envOr("ADMIN_API_KEY", adminApiKey.result),
+        OTEL_COLLECTOR_API_KEY: envOr("OTEL_COLLECTOR_API_KEY", envOr("BOXLITE_API_KEY", adminApiKey.result)),
+
+        // Observability read/write path. These stay server-side; never expose
+        // ClickHouse credentials to the dashboard bundle.
+        OTEL_ENABLED: envOr("OTEL_ENABLED", "true"),
+        OTEL_EXPORTER_OTLP_ENDPOINT: envOr("OTEL_EXPORTER_OTLP_ENDPOINT", otelCollectorOtlpHttpUrl),
+        ...(process.env.OTEL_EXPORTER_OTLP_HEADERS && {
+          OTEL_EXPORTER_OTLP_HEADERS: process.env.OTEL_EXPORTER_OTLP_HEADERS,
+        }),
+        ...(clickHouseReaderHost && {
+          CLICKHOUSE_HOST: clickHouseReaderHost,
+          CLICKHOUSE_PORT: envOr("CLICKHOUSE_READER_PORT", envOr("CLICKHOUSE_PORT", "443")),
+          CLICKHOUSE_DATABASE: envOr("CLICKHOUSE_READER_DATABASE", envOr("CLICKHOUSE_DATABASE", "otel")),
+          CLICKHOUSE_USERNAME: envOr("CLICKHOUSE_READER_USERNAME", envOr("CLICKHOUSE_USERNAME", "default")),
+          CLICKHOUSE_PASSWORD: envOr("CLICKHOUSE_READER_PASSWORD", envOr("CLICKHOUSE_PASSWORD", "")),
+          CLICKHOUSE_PROTOCOL: envOr("CLICKHOUSE_READER_PROTOCOL", envOr("CLICKHOUSE_PROTOCOL", "https")),
+        }),
+        SANDBOX_OTEL_ENDPOINT_URL: envOr(
+          "SANDBOX_OTEL_ENDPOINT_URL",
+          envOr("OTEL_EXPORTER_OTLP_ENDPOINT", otelCollectorOtlpHttpUrl),
+        ),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_REGION: envOr("ADMIN_OBSERVABILITY_CLOUDWATCH_REGION", REGION),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUPS: envOr("ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUPS", ""),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUP_PREFIX: envOr(
+          "ADMIN_OBSERVABILITY_CLOUDWATCH_LOG_GROUP_PREFIX",
+          $interpolate`/sst/cluster/${cluster.nodes.cluster.name}/`,
+        ),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_LIMIT_PER_GROUP: envOr(
+          "ADMIN_OBSERVABILITY_CLOUDWATCH_LIMIT_PER_GROUP",
+          "25",
+        ),
+        ADMIN_OBSERVABILITY_CLOUDWATCH_MAX_LOG_GROUPS: envOr("ADMIN_OBSERVABILITY_CLOUDWATCH_MAX_LOG_GROUPS", "20"),
+        ADMIN_OBSERVABILITY_S3_REGION: envOr("ADMIN_OBSERVABILITY_S3_REGION", REGION),
+        ADMIN_OBSERVABILITY_S3_BUCKETS: envOr("ADMIN_OBSERVABILITY_S3_BUCKETS", storage.name),
+        ADMIN_OBSERVABILITY_S3_MAX_OBJECTS: envOr("ADMIN_OBSERVABILITY_S3_MAX_OBJECTS", "25"),
 
         // Dashboard — point its API client at the direct `api.<stackDomain>`
         // ALB hostname so long-lived /attach WS, build-log SSE, and file
@@ -452,45 +562,6 @@ export default $config({
       },
       {},
     );
-
-    // ─── 8. OBSERVABILITY ────────────────────────────────────────────────────
-    new sst.aws.Service("Jaeger", {
-      cluster,
-      image: IMAGES.jaeger,
-      loadBalancer: { rules: [{ listen: "80/http", forward: `${PORTS.JAEGER_UI}/http` }] },
-      environment: { COLLECTOR_OTLP_ENABLED: "true" },
-    });
-
-    // OtelCollector — BoxLite's custom ocb build. The ClickHouse exporter is
-    // compiled in but dropped at runtime via --set (dev has no ClickHouse).
-    // Placeholder CLICKHOUSE_* env vars keep config.yaml parsing clean.
-    new sst.aws.Service("OtelCollector", {
-      cluster,
-      image: { context: "../..", dockerfile: "apps/otel-collector/Dockerfile", cache: false },
-      command: [
-        "--config", "/otelcol/collector-config.yaml",
-        "--set", "service::pipelines::traces::exporters=[boxlite_exporter]",
-        "--set", "service::pipelines::metrics::exporters=[boxlite_exporter]",
-        "--set", "service::pipelines::logs::exporters=[boxlite_exporter]",
-      ],
-      loadBalancer: {
-        rules: [
-          { listen: `${PORTS.OTLP_HTTP}/http`, forward: `${PORTS.OTLP_HTTP}/http` },
-          { listen: "80/http", forward: `${PORTS.OTEL_HEALTH}/http` },
-        ],
-        health: {
-          // The OTLP HTTP receiver returns a client-error status for a bare
-          // health-check GET, which still proves the receiver is listening.
-          [`${PORTS.OTLP_HTTP}/http`]: httpHealth("/", { successCodes: "200-499" }),
-          [`${PORTS.OTEL_HEALTH}/http`]: httpHealth("/health/status"),
-        },
-      },
-      environment: {
-        CLICKHOUSE_ENDPOINT: "tcp://localhost:9000",
-        CLICKHOUSE_PASSWORD: "unused",
-        BOXLITE_API_URL: $interpolate`${stripTrailingSlash(api.url)}/api`,
-      },
-    });
 
     // ─── 9. ADMIN UIs ────────────────────────────────────────────────────────
     new sst.aws.Service("PgAdmin", {

@@ -174,6 +174,7 @@ func run() int {
 		ConfigDir:             configDir,
 		OtelEndpoint:          c.OtelEndpoint,
 		SandboxId:             c.SandboxId,
+		BoxId:                 c.BoxId,
 		SessionService:        sessionService,
 		RecordingService:      recordingService,
 		OrganizationId:        c.OrganizationId,

@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/boxlite-ai/boxlite/cli/cmd"
+	"github.com/boxlite-ai/boxlite/cli/cmd/admin"
 	"github.com/boxlite-ai/boxlite/cli/cmd/auth"
 	"github.com/boxlite-ai/boxlite/cli/cmd/mcp"
 	"github.com/boxlite-ai/boxlite/cli/cmd/organization"
@@ -36,6 +37,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddGroup(&cobra.Group{ID: internal.USER_GROUP, Title: "User"})
 	rootCmd.AddGroup(&cobra.Group{ID: internal.SANDBOX_GROUP, Title: "Sandbox"})
+	rootCmd.AddGroup(&cobra.Group{ID: internal.ADMIN_GROUP, Title: "Admin"})
 
 	rootCmd.AddCommand(auth.LoginCmd)
 	rootCmd.AddCommand(auth.LogoutCmd)
@@ -43,6 +45,7 @@ func init() {
 	rootCmd.AddCommand(snapshot.TemplatesCmd)
 	rootCmd.AddCommand(volume.VolumeCmd)
 	rootCmd.AddCommand(organization.OrganizationCmd)
+	rootCmd.AddCommand(admin.AdminCmd)
 	rootCmd.AddCommand(mcp.MCPCmd)
 	rootCmd.AddCommand(cmd.DocsCmd)
 	rootCmd.AddCommand(cmd.AutoCompleteCmd)

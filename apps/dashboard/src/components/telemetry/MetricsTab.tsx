@@ -5,20 +5,24 @@
 
 import React, { useState, useCallback } from 'react'
 import { useSandboxMetrics, MetricsQueryParams } from '@/hooks/useSandboxMetrics'
+import { TelemetryScope } from '@/hooks/telemetryScope'
 import { TimeRangeSelector } from './TimeRangeSelector'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts'
-import { RefreshCw, BarChart3 } from 'lucide-react'
+import { RefreshCw, BarChart3, AlertCircle } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { format } from 'date-fns'
 import { subHours } from 'date-fns'
 import { MetricSeries } from '@boxlite-ai/api-client'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { getMetricDisplayName, groupPlatformMetricSeries } from './platformMetrics'
 
 interface MetricsTabProps {
-  sandboxId: string
+  sandboxId?: string
+  scope?: TelemetryScope
 }
 
 const CHART_COLORS = [
@@ -73,7 +77,7 @@ function buildChartConfig(series: MetricSeries[]): ChartConfig {
   const config: ChartConfig = {}
   series.forEach((s, index) => {
     config[s.metricName] = {
-      label: s.metricName.replace(/^boxlite\.sandbox\./, ''),
+      label: getMetricDisplayName(s.metricName.replace(/^boxlite\.sandbox\./, '')),
       color: CHART_COLORS[index % CHART_COLORS.length],
     }
   })
@@ -94,6 +98,8 @@ interface MetricGroupChartProps {
   convertToGiB: boolean
   viewMode?: ViewMode
   onViewModeChange?: (mode: ViewMode) => void
+  description?: string
+  watchFirst?: boolean
 }
 
 const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
@@ -102,6 +108,8 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
   convertToGiB,
   viewMode,
   onViewModeChange,
+  description,
+  watchFirst,
 }) => {
   const chartData = React.useMemo(() => buildChartData(series, convertToGiB), [series, convertToGiB])
   const chartConfig = React.useMemo(() => buildChartConfig(series), [series])
@@ -109,9 +117,19 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
   const displayTitle = viewMode ? `${title} (${viewMode})` : title
 
   return (
-    <div className="min-h-[250px]">
-      <div className="flex items-center gap-2 mb-2">
-        <h3 className="text-sm font-medium">{displayTitle}</h3>
+    <div className="min-h-[250px] rounded-md border border-border bg-background/50 p-3">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-medium">{displayTitle}</h3>
+            {watchFirst && (
+              <Badge variant="secondary" className="text-[10px] font-normal">
+                Watch first
+              </Badge>
+            )}
+          </div>
+          {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+        </div>
         {viewMode && onViewModeChange && (
           <ToggleGroup
             type="single"
@@ -166,6 +184,7 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
                 key={s.metricName}
                 type="monotone"
                 dataKey={s.metricName}
+                name={getMetricDisplayName(s.metricName.replace(/^boxlite\.sandbox\./, ''))}
                 stroke={CHART_COLORS[index % CHART_COLORS.length]}
                 strokeWidth={2}
                 dot={false}
@@ -179,7 +198,7 @@ const MetricGroupChart: React.FC<MetricGroupChartProps> = ({
   )
 }
 
-export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId }) => {
+export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId, scope = 'sandbox' }) => {
   const [timeRange, setTimeRange] = useState(() => {
     const now = new Date()
     return { from: subHours(now, 1), to: now }
@@ -190,7 +209,8 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId }) => {
     to: timeRange.to,
   }
 
-  const { data, isLoading, refetch } = useSandboxMetrics(sandboxId, queryParams)
+  const { data, isLoading, isError, refetch } = useSandboxMetrics(sandboxId, queryParams, { scope })
+  const targetLabel = scope === 'admin-platform' ? 'platform' : 'this box'
 
   const [viewModes, setViewModes] = useState<Record<string, ViewMode>>({
     memory: '%',
@@ -230,6 +250,13 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId }) => {
     }).filter((group) => group.series.length > 0)
   }, [data, viewModes])
 
+  // Platform telemetry needs operational groups; sandbox telemetry keeps the
+  // original CPU/memory/filesystem grouping.
+  const platformMetricGroups = React.useMemo(() => {
+    if (scope !== 'admin-platform' || !data?.series?.length) return []
+    return groupPlatformMetricSeries(data.series)
+  }, [data, scope])
+
   return (
     <div className="flex flex-col h-full gap-4 p-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -245,6 +272,11 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId }) => {
           <div className="flex items-center justify-center h-full min-h-[400px]">
             <Spinner className="w-6 h-6" />
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground gap-2">
+            <AlertCircle className="w-8 h-8" />
+            <span className="text-sm">Unable to load metrics for {targetLabel}.</span>
+          </div>
         ) : !data?.series?.length ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground gap-2">
             <BarChart3 className="w-8 h-8" />
@@ -252,16 +284,27 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ sandboxId }) => {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {groupedSeries.map((group) => (
-              <MetricGroupChart
-                key={group.key}
-                title={group.title}
-                series={group.series}
-                convertToGiB={group.convertToGiB}
-                viewMode={group.hasToggle ? group.viewMode : undefined}
-                onViewModeChange={group.hasToggle ? (mode) => handleViewModeChange(group.key, mode) : undefined}
-              />
-            ))}
+            {scope === 'admin-platform'
+              ? platformMetricGroups.map((group) => (
+                  <MetricGroupChart
+                    key={group.key}
+                    title={group.title}
+                    description={group.description}
+                    watchFirst={group.watchFirst}
+                    series={group.series}
+                    convertToGiB={group.convertToGiB}
+                  />
+                ))
+              : groupedSeries.map((group) => (
+                  <MetricGroupChart
+                    key={group.key}
+                    title={group.title}
+                    series={group.series}
+                    convertToGiB={group.convertToGiB}
+                    viewMode={group.hasToggle ? group.viewMode : undefined}
+                    onViewModeChange={group.hasToggle ? (mode) => handleViewModeChange(group.key, mode) : undefined}
+                  />
+                ))}
           </div>
         )}
       </ScrollArea>

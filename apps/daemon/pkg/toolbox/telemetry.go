@@ -13,7 +13,7 @@ import (
 	"github.com/boxlite-ai/daemon/internal"
 )
 
-func (s *server) initTelemetry(ctx context.Context, serviceName, entrypointLogFilePath string, organizationId, regionId *string) error {
+func (s *server) initTelemetry(ctx context.Context, serviceName, entrypointLogFilePath string, organizationId, regionId, boxId *string) error {
 	if s.otelEndpoint == nil {
 		s.logger.InfoContext(ctx, "Otel endpoint not provided, skipping telemetry initialization")
 		return nil
@@ -47,11 +47,18 @@ func (s *server) initTelemetry(ctx context.Context, serviceName, entrypointLogFi
 	}
 
 	extraLabels := make(map[string]string)
+	extraLabels["boxlite.layer"] = "box"
+	extraLabels["boxlite.sandbox_id"] = s.SandboxId
+	if boxId != nil && *boxId != "" {
+		extraLabels["boxlite.box_id"] = *boxId
+	}
 	if organizationId != nil && *organizationId != "" {
+		extraLabels["boxlite.org_id"] = *organizationId
 		extraLabels["boxlite_organization_id"] = *organizationId
 	}
 
 	if regionId != nil && *regionId != "" {
+		extraLabels["boxlite.region_id"] = *regionId
 		extraLabels["boxlite_region_id"] = *regionId
 	}
 

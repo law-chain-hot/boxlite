@@ -56,6 +56,7 @@ type ServerConfig struct {
 	ConfigDir             string
 	ComputerUse           computeruse.IComputerUse
 	SandboxId             string
+	BoxId                 *string
 	OtelEndpoint          *string
 	SessionService        *session_svc.SessionService
 	RecordingService      *recording.RecordingService
@@ -69,6 +70,7 @@ func NewServer(config ServerConfig) *server {
 		logger:                config.Logger.With(slog.String("component", "toolbox_server")),
 		WorkDir:               config.WorkDir,
 		SandboxId:             config.SandboxId,
+		boxId:                 config.BoxId,
 		otelEndpoint:          config.OtelEndpoint,
 		telemetry:             Telemetry{},
 		sessionService:        config.SessionService,
@@ -84,6 +86,7 @@ type server struct {
 	WorkDir               string
 	ComputerUse           computeruse.IComputerUse
 	SandboxId             string
+	boxId                 *string
 	logger                *slog.Logger
 	otelEndpoint          *string
 	authToken             string
@@ -152,7 +155,7 @@ func (s *server) Start() error {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 
-	r.POST("/init", s.Initialize(otelServiceName, s.entrypointLogFilePath, s.organizationId, s.regionId))
+	r.POST("/init", s.Initialize(otelServiceName, s.entrypointLogFilePath, s.organizationId, s.regionId, s.boxId))
 
 	r.GET("/version", s.GetVersion)
 

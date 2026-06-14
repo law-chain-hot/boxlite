@@ -5,6 +5,7 @@
 
 import React, { useState, useCallback } from 'react'
 import { useSandboxLogs, LogsQueryParams } from '@/hooks/useSandboxLogs'
+import { TelemetryScope } from '@/hooks/telemetryScope'
 import { TimeRangeSelector } from './TimeRangeSelector'
 import { SeverityBadge } from './SeverityBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -12,19 +13,34 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ChevronLeft, ChevronRight, Search, FileText, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  FileText,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+} from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { format } from 'date-fns'
 import { subHours } from 'date-fns'
 import { LogEntry } from '@boxlite-ai/api-client'
 
 interface LogsTabProps {
-  sandboxId: string
+  sandboxId?: string
+  scope?: TelemetryScope
 }
 
-const SEVERITY_OPTIONS = ['DEBUG', 'INFO', 'WARN', 'ERROR']
+const SEVERITY_OPTIONS = [
+  { label: 'DEBUG', value: 'debug' },
+  { label: 'INFO', value: 'info' },
+  { label: 'WARN', value: 'warn' },
+  { label: 'ERROR', value: 'error' },
+]
 
-export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId }) => {
+export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }) => {
   const [timeRange, setTimeRange] = useState(() => {
     const now = new Date()
     return { from: subHours(now, 1), to: now }
@@ -45,7 +61,14 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId }) => {
     search: search || undefined,
   }
 
-  const { data, isLoading, refetch } = useSandboxLogs(sandboxId, queryParams)
+  const { data, isLoading, isError, refetch } = useSandboxLogs(sandboxId, queryParams, { scope })
+  const targetLabel = scope === 'admin-platform' ? 'platform' : 'this box'
+  const selectedSeverityLabel = selectedSeverities.length === 1 ? selectedSeverities[0].toUpperCase() : undefined
+  const emptyStateText = selectedSeverityLabel
+    ? `No ${selectedSeverityLabel} logs found`
+    : search
+      ? 'No logs match the current search'
+      : 'No logs found'
 
   const handleTimeRangeChange = useCallback((from: Date, to: Date) => {
     setTimeRange({ from, to })
@@ -54,13 +77,6 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId }) => {
 
   const handleSearch = () => {
     setSearch(searchInput)
-    setPage(1)
-  }
-
-  const handleSeverityChange = (severity: string) => {
-    setSelectedSeverities((prev) =>
-      prev.includes(severity) ? prev.filter((s) => s !== severity) : [...prev, severity],
-    )
     setPage(1)
   }
 
@@ -95,9 +111,9 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId }) => {
         </div>
 
         <Select
-          value={selectedSeverities.length === 1 ? selectedSeverities[0] : ''}
+          value={selectedSeverities.length === 1 ? selectedSeverities[0] : 'all'}
           onValueChange={(value) => {
-            if (value) {
+            if (value && value !== 'all') {
               setSelectedSeverities([value])
             } else {
               setSelectedSeverities([])
@@ -110,9 +126,9 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId }) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
-            {SEVERITY_OPTIONS.map((sev) => (
-              <SelectItem key={sev} value={sev}>
-                {sev}
+            {SEVERITY_OPTIONS.map((severity) => (
+              <SelectItem key={severity.value} value={severity.value}>
+                {severity.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -128,10 +144,15 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId }) => {
           <div className="flex items-center justify-center h-40">
             <Spinner className="w-6 h-6" />
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground gap-2">
+            <AlertCircle className="w-8 h-8" />
+            <span className="text-sm">Unable to load logs for {targetLabel}.</span>
+          </div>
         ) : !data?.items?.length ? (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground gap-2">
             <FileText className="w-8 h-8" />
-            <span className="text-sm">No logs found</span>
+            <span className="text-sm">{emptyStateText}</span>
           </div>
         ) : (
           <Table>

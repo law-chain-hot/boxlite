@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"log/slog"
 	"strings"
 	"sync"
 	"syscall"
@@ -355,6 +356,32 @@ func TestStreamBusFansOutToMultipleSubscribers(t *testing.T) {
 			}
 		case <-time.After(time.Second):
 			t.Fatalf("sub%s: timed out waiting for fan-out chunk", label)
+		}
+	}
+}
+
+func TestStreamBusLogsExecutionOutputWithCorrelation(t *testing.T) {
+	var logOut bytes.Buffer
+	bus := newObservedStreamBus(64*1024, streamBusObservability{
+		logger:      slog.New(slog.NewJSONHandler(&logOut, nil)),
+		executionID: "exec-1",
+		boxID:       "box-1",
+		stream:      "stdout",
+	})
+
+	_, _ = bus.Write([]byte("hello from exec\n"))
+
+	got := logOut.String()
+	for _, want := range []string{
+		`"msg":"boxlite exec output"`,
+		`"boxlite.execution_id":"exec-1"`,
+		`"boxlite.box_id":"box-1"`,
+		`"boxlite.stream":"stdout"`,
+		`"boxlite.output":"hello from exec\n"`,
+		`"boxlite.bytes":16`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected log to contain %s, got %s", want, got)
 		}
 	}
 }

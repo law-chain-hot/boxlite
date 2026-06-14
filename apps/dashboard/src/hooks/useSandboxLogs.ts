@@ -7,6 +7,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
+import { adminTelemetryPaths, buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
 import { PaginatedLogs } from '@boxlite-ai/api-client'
 
 export interface LogsQueryParams {
@@ -21,54 +22,49 @@ export interface LogsQueryParams {
 export function useSandboxLogs(
   sandboxId: string | undefined,
   params: LogsQueryParams,
-  options?: Omit<UseQueryOptions<PaginatedLogs>, 'queryKey' | 'queryFn'>,
+  options?: Omit<UseQueryOptions<PaginatedLogs>, 'queryKey' | 'queryFn'> & { scope?: TelemetryScope },
 ) {
   const api = useApi()
   const { selectedOrganization } = useSelectedOrganization()
+  const { scope = 'sandbox', ...queryOptions } = options ?? {}
+  const isAdminPlatform = scope === 'admin-platform'
 
   return useQuery<PaginatedLogs>({
-    queryKey: queryKeys.telemetry.logs(sandboxId ?? '', params),
+    queryKey: isAdminPlatform
+      ? queryKeys.telemetry.adminLogs(params)
+      : queryKeys.telemetry.logs(sandboxId ?? '', params),
     queryFn: async () => {
-      if (!selectedOrganization || !sandboxId || !api.analyticsTelemetryApi) {
-        throw new Error('Missing required parameters')
-      }
       const limit = params.limit ?? 50
       const page = params.page ?? 1
-      const offset = (page - 1) * limit
-      const severity = params.severities?.length ? params.severities.join(',') : undefined
 
-      const response = await api.analyticsTelemetryApi.organizationOrganizationIdSandboxSandboxIdTelemetryLogsGet(
-        selectedOrganization.id,
+      if (isAdminPlatform) {
+        const response = await api.axiosInstance.get(adminTelemetryPaths.logs, {
+          params: buildTelemetrySearchParams({ ...params, page, limit }),
+        })
+        return response.data
+      }
+
+      if (!selectedOrganization || !sandboxId || !api.sandboxApi) {
+        throw new Error('Missing required parameters')
+      }
+
+      const response = await api.sandboxApi.getSandboxLogs(
         sandboxId,
-        params.from.toISOString(),
-        params.to.toISOString(),
-        severity,
-        params.search,
+        params.from,
+        params.to,
+        selectedOrganization.id,
+        page,
         limit,
-        offset,
+        params.severities,
+        params.search,
       )
 
-      const items = (response.data ?? []).map((entry) => ({
-        timestamp: entry.timestamp ?? '',
-        body: entry.body ?? '',
-        severityText: entry.severityText ?? '',
-        severityNumber: entry.severityNumber,
-        serviceName: entry.serviceName ?? '',
-        resourceAttributes: entry.resourceAttributes ?? {},
-        logAttributes: entry.logAttributes ?? {},
-        traceId: entry.traceId,
-        spanId: entry.spanId,
-      }))
-
-      return {
-        items,
-        total: items.length < limit ? offset + items.length : offset + items.length + 1,
-        page,
-        totalPages: items.length < limit ? page : page + 1,
-      }
+      return response.data
     },
-    enabled: !!sandboxId && !!selectedOrganization && !!api.analyticsTelemetryApi && !!params.from && !!params.to,
+    enabled: isAdminPlatform
+      ? !!api.axiosInstance && !!params.from && !!params.to
+      : !!sandboxId && !!selectedOrganization && !!api.sandboxApi && !!params.from && !!params.to,
     staleTime: 10_000,
-    ...options,
+    ...queryOptions,
   })
 }

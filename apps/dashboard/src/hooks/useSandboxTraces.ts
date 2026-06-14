@@ -7,6 +7,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
+import { adminTelemetryPaths, buildTelemetrySearchParams, TelemetryScope } from '@/hooks/telemetryScope'
 import { PaginatedTraces } from '@boxlite-ai/api-client'
 
 export interface TracesQueryParams {
@@ -19,49 +20,47 @@ export interface TracesQueryParams {
 export function useSandboxTraces(
   sandboxId: string | undefined,
   params: TracesQueryParams,
-  options?: Omit<UseQueryOptions<PaginatedTraces>, 'queryKey' | 'queryFn'>,
+  options?: Omit<UseQueryOptions<PaginatedTraces>, 'queryKey' | 'queryFn'> & { scope?: TelemetryScope },
 ) {
   const api = useApi()
   const { selectedOrganization } = useSelectedOrganization()
+  const { scope = 'sandbox', ...queryOptions } = options ?? {}
+  const isAdminPlatform = scope === 'admin-platform'
 
   return useQuery<PaginatedTraces>({
-    queryKey: queryKeys.telemetry.traces(sandboxId ?? '', params),
+    queryKey: isAdminPlatform
+      ? queryKeys.telemetry.adminTraces(params)
+      : queryKeys.telemetry.traces(sandboxId ?? '', params),
     queryFn: async () => {
-      if (!selectedOrganization || !sandboxId || !api.analyticsTelemetryApi) {
-        throw new Error('Missing required parameters')
-      }
       const limit = params.limit ?? 50
       const page = params.page ?? 1
-      const offset = (page - 1) * limit
 
-      const response = await api.analyticsTelemetryApi.organizationOrganizationIdSandboxSandboxIdTelemetryTracesGet(
-        selectedOrganization.id,
+      if (isAdminPlatform) {
+        const response = await api.axiosInstance.get(adminTelemetryPaths.traces, {
+          params: buildTelemetrySearchParams({ ...params, page, limit }),
+        })
+        return response.data
+      }
+
+      if (!selectedOrganization || !sandboxId || !api.sandboxApi) {
+        throw new Error('Missing required parameters')
+      }
+
+      const response = await api.sandboxApi.getSandboxTraces(
         sandboxId,
-        params.from.toISOString(),
-        params.to.toISOString(),
+        params.from,
+        params.to,
+        selectedOrganization.id,
+        page,
         limit,
-        offset,
       )
 
-      const items = (response.data ?? []).map((trace) => ({
-        traceId: trace.traceId ?? '',
-        rootSpanName: trace.rootSpanName ?? '',
-        startTime: trace.startTime ?? '',
-        endTime: trace.endTime ?? '',
-        durationMs: trace.totalDurationMs ?? 0,
-        spanCount: trace.spanCount ?? 0,
-        statusCode: trace.statusCode,
-      }))
-
-      return {
-        items,
-        total: items.length < limit ? offset + items.length : offset + items.length + 1,
-        page,
-        totalPages: items.length < limit ? page : page + 1,
-      }
+      return response.data
     },
-    enabled: !!sandboxId && !!selectedOrganization && !!api.analyticsTelemetryApi && !!params.from && !!params.to,
+    enabled: isAdminPlatform
+      ? !!api.axiosInstance && !!params.from && !!params.to
+      : !!sandboxId && !!selectedOrganization && !!api.sandboxApi && !!params.from && !!params.to,
     staleTime: 10_000,
-    ...options,
+    ...queryOptions,
   })
 }

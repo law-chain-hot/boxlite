@@ -157,6 +157,15 @@ type streamBus struct {
 	cap     int
 	subs    []*streamSub
 	closed  bool // wait task signalled EOF
+
+	observability streamBusObservability
+}
+
+type streamBusObservability struct {
+	logger      *slog.Logger
+	executionID string
+	boxID       string
+	stream      string
 }
 
 func newStreamBus(cap int) *streamBus {
@@ -164,6 +173,12 @@ func newStreamBus(cap int) *streamBus {
 		cap = streamBusBacklogCap
 	}
 	return &streamBus{cap: cap}
+}
+
+func newObservedStreamBus(cap int, observability streamBusObservability) *streamBus {
+	bus := newStreamBus(cap)
+	bus.observability = observability
+	return bus
 }
 
 // streamSub is the read side of one subscriber. Bounded channel; on
@@ -209,7 +224,38 @@ func (b *streamBus) Write(p []byte) (int, error) {
 		}
 	}
 	b.mu.Unlock()
+	b.logExecutionOutput(chunk)
 	return len(p), nil
+}
+
+const streamBusLogChunkLimit = 4096
+
+func (b *streamBus) logExecutionOutput(chunk []byte) {
+	obs := b.observability
+	if obs.executionID == "" || obs.boxID == "" || obs.stream == "" {
+		return
+	}
+	logger := obs.logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	output := chunk
+	truncated := false
+	if len(output) > streamBusLogChunkLimit {
+		output = output[:streamBusLogChunkLimit]
+		truncated = true
+	}
+
+	logger.Info("boxlite exec output",
+		"boxlite.layer", "runner",
+		"boxlite.execution_id", obs.executionID,
+		"boxlite.box_id", obs.boxID,
+		"boxlite.stream", obs.stream,
+		"boxlite.output", string(output),
+		"boxlite.bytes", len(chunk),
+		"boxlite.truncated", truncated,
+	)
 }
 
 // Subscribe registers a new fan-out subscriber. The returned channel
@@ -350,13 +396,21 @@ func (m *ExecManager) Start(ctx context.Context, bx *boxlite.Box, boxID string, 
 
 	now := time.Now()
 	exec := &ManagedExec{
-		ID:        id,
-		BoxID:     boxID,
-		stdoutBus: newStreamBus(streamBusBacklogCap),
-		stderrBus: newStreamBus(streamBusBacklogCap),
-		Done:      make(chan struct{}),
-		TTY:       opts.TTY,
-		created:   now,
+		ID:    id,
+		BoxID: boxID,
+		stdoutBus: newObservedStreamBus(streamBusBacklogCap, streamBusObservability{
+			executionID: id,
+			boxID:       boxID,
+			stream:      "stdout",
+		}),
+		stderrBus: newObservedStreamBus(streamBusBacklogCap, streamBusObservability{
+			executionID: id,
+			boxID:       boxID,
+			stream:      "stderr",
+		}),
+		Done:    make(chan struct{}),
+		TTY:     opts.TTY,
+		created: now,
 		// Start the reap clock from creation so a client that never
 		// calls /attach still escalates through SIGHUP→SIGTERM→SIGKILL
 		// at the reconnect_grace boundary. The first successful

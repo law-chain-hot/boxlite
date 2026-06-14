@@ -7,43 +7,43 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { useApi } from '@/hooks/useApi'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
 import { queryKeys } from '@/hooks/queries/queryKeys'
+import { adminTelemetryPaths, TelemetryScope } from '@/hooks/telemetryScope'
 import { TraceSpan } from '@boxlite-ai/api-client'
 
 export function useSandboxTraceSpans(
   sandboxId: string | undefined,
   traceId: string | undefined,
-  options?: Omit<UseQueryOptions<TraceSpan[]>, 'queryKey' | 'queryFn'>,
+  options?: Omit<UseQueryOptions<TraceSpan[]>, 'queryKey' | 'queryFn'> & { scope?: TelemetryScope },
 ) {
   const api = useApi()
   const { selectedOrganization } = useSelectedOrganization()
+  const { scope = 'sandbox', ...queryOptions } = options ?? {}
+  const isAdminPlatform = scope === 'admin-platform'
 
   return useQuery<TraceSpan[]>({
-    queryKey: queryKeys.telemetry.traceSpans(sandboxId ?? '', traceId ?? ''),
+    queryKey: isAdminPlatform
+      ? queryKeys.telemetry.adminTraceSpans(traceId ?? '')
+      : queryKeys.telemetry.traceSpans(sandboxId ?? '', traceId ?? ''),
     queryFn: async () => {
-      if (!selectedOrganization || !sandboxId || !traceId || !api.analyticsTelemetryApi) {
+      if (isAdminPlatform) {
+        if (!traceId) {
+          throw new Error('Missing required parameters')
+        }
+        const response = await api.axiosInstance.get(adminTelemetryPaths.traceSpans(traceId))
+        return response.data
+      }
+
+      if (!selectedOrganization || !sandboxId || !traceId || !api.sandboxApi) {
         throw new Error('Missing required parameters')
       }
-      const response =
-        await api.analyticsTelemetryApi.organizationOrganizationIdSandboxSandboxIdTelemetryTracesTraceIdGet(
-          selectedOrganization.id,
-          sandboxId,
-          traceId,
-        )
+      const response = await api.sandboxApi.getSandboxTraceSpans(sandboxId, traceId, selectedOrganization.id)
 
-      return (response.data ?? []).map((span) => ({
-        traceId: span.traceId ?? '',
-        spanId: span.spanId ?? '',
-        parentSpanId: span.parentSpanId,
-        spanName: span.spanName ?? '',
-        timestamp: span.timestamp ?? '',
-        durationNs: (span.durationMs ?? 0) * 1_000_000,
-        spanAttributes: span.spanAttributes ?? {},
-        statusCode: span.statusCode,
-        statusMessage: span.statusMessage,
-      }))
+      return response.data
     },
-    enabled: !!sandboxId && !!traceId && !!selectedOrganization && !!api.analyticsTelemetryApi,
+    enabled: isAdminPlatform
+      ? !!traceId && !!api.axiosInstance
+      : !!sandboxId && !!traceId && !!selectedOrganization && !!api.sandboxApi,
     staleTime: 30_000,
-    ...options,
+    ...queryOptions,
   })
 }
