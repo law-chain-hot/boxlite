@@ -50,7 +50,7 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
             </Button>
           </div>
           <SheetDescription className="mt-2 text-xs text-muted-foreground">
-            <span className="font-mono">{box.id}</span>
+            <span>{box.id}</span>
           </SheetDescription>
         </SheetHeader>
 
@@ -62,7 +62,7 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
               {box.runnerId ? (
                 <button
                   type="button"
-                  className="block max-w-full truncate font-mono text-xs text-primary hover:underline"
+                  className="block max-w-full truncate text-xs text-primary hover:underline"
                   onClick={() => onJumpToRunner?.(box.runnerId as string)}
                 >
                   {box.runnerId}
@@ -72,7 +72,7 @@ const AdminTelemetryDrawer: React.FC<AdminTelemetryDrawerProps> = ({
               )}
             </MetaRow>
             <MetaRow k="specs">
-              <span className="font-mono text-xs">
+              <span className="text-xs tabular-nums">
                 {box.cpu}c / {box.memoryGiB}G
               </span>
             </MetaRow>

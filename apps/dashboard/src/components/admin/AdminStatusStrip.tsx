@@ -14,12 +14,26 @@ function KpiCard({ children }: { children: React.ReactNode }) {
   return <Card className="p-0">{children}</Card>
 }
 
+function formatCpuPercent(cpuUtil: number): string {
+  const percent = Math.max(cpuUtil * 100, 0)
+  if (percent === 0) return '0%'
+  if (percent > 0 && percent < 0.1) return '<0.1%'
+  return `${percent.toFixed(1)}%`
+}
+
+function cpuBarWidthPercent(cpuUtil: number): number {
+  const percent = Math.min(Math.max(cpuUtil * 100, 0), 100)
+  if (percent === 0) return 0
+  return Math.max(percent, 3)
+}
+
 const AdminStatusStrip: React.FC = () => {
   const overviewQuery = useAdminOverview()
   const boxesQuery = useAdminBoxes()
   const boxes = boxesQuery.data ?? []
   const breakdown = useMemo(() => getBoxBreakdown(boxes), [boxes])
   const overview = overviewQuery.data
+  const clusterCpuBarWidth = overview ? cpuBarWidthPercent(overview.cluster.cpuUtil) : 0
 
   if (overviewQuery.isPending || !overview) {
     return (
@@ -81,15 +95,19 @@ const AdminStatusStrip: React.FC = () => {
           <CardTitle className="text-xs font-medium text-muted-foreground">Cluster CPU</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-medium tabular-nums">{(overview.cluster.cpuUtil * 100).toFixed(1)}%</p>
+          <p className="text-3xl font-medium tabular-nums">{formatCpuPercent(overview.cluster.cpuUtil)}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {overview.cluster.oversell.toFixed(1)}x oversell · online runners
           </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/40">
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.min(overview.cluster.cpuUtil * 100, 100)}%` }}
+              className="h-full rounded-full bg-primary transition-[width]"
+              style={{ width: `${clusterCpuBarWidth}%` }}
             />
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] tabular-nums text-muted-foreground">
+            <span>0</span>
+            <span>100%</span>
           </div>
         </CardContent>
       </KpiCard>

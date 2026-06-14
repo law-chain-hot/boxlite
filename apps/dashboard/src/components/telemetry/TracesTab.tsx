@@ -8,6 +8,7 @@ import { useSandboxTraces, TracesQueryParams } from '@/hooks/useSandboxTraces'
 import { useSandboxTraceSpans } from '@/hooks/useSandboxTraceSpans'
 import { TelemetryScope } from '@/hooks/telemetryScope'
 import { TimeRangeSelector } from './TimeRangeSelector'
+import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -19,7 +20,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { subHours } from 'date-fns'
 import { TraceSummary } from '@boxlite-ai/api-client'
-import { buildTraceWaterfallRows, resolveSelectedTraceId, TraceWaterfallRow } from './traceWaterfall'
+import { buildTraceWaterfallRows, TraceWaterfallRow } from './traceWaterfall'
 
 interface TracesTabProps {
   sandboxId?: string
@@ -40,7 +41,7 @@ function formatDuration(durationMs: number) {
     return `${(durationMs * 1000).toFixed(2)}us`
   }
   if (durationMs < 1000) {
-    return `${durationMs.toFixed(2)}ms`
+    return `${durationMs < 10 ? durationMs.toFixed(2) : durationMs.toFixed(0)}ms`
   }
   return `${(durationMs / 1000).toFixed(2)}s`
 }
@@ -50,6 +51,26 @@ function truncateTraceId(traceId: string) {
     return `${traceId.slice(0, 8)}...${traceId.slice(-8)}`
   }
   return traceId
+}
+
+type TraceDurationTone = 'ok' | 'watch' | 'slow'
+
+function getTraceDurationTone(durationMs: number, maxDurationMs: number): TraceDurationTone {
+  if (durationMs >= 1000 || (maxDurationMs >= 250 && durationMs >= maxDurationMs * 0.75)) return 'slow'
+  if (durationMs >= 250 || (maxDurationMs >= 250 && durationMs >= maxDurationMs * 0.45)) return 'watch'
+  return 'ok'
+}
+
+function getTraceDurationBarClass(tone: TraceDurationTone): string {
+  if (tone === 'slow') return 'bg-destructive'
+  if (tone === 'watch') return 'bg-amber-500'
+  return 'bg-emerald-500'
+}
+
+function getTraceDurationBadgeClass(tone: TraceDurationTone): string {
+  if (tone === 'slow') return 'border-destructive/40 bg-destructive/10 text-destructive'
+  if (tone === 'watch') return 'border-amber-500/40 bg-amber-500/10 text-amber-700'
+  return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700'
 }
 
 function TraceWaterfallPanel({
@@ -69,7 +90,7 @@ function TraceWaterfallPanel({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
             <h3 className="text-sm font-medium">Trace waterfall</h3>
-            <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
+            <p className="mt-1 truncate text-xs text-muted-foreground">
               {traceId ?? 'Select a trace to inspect spans'}
             </p>
           </div>
@@ -83,11 +104,11 @@ function TraceWaterfallPanel({
             </div>
             <div>
               <p className="text-muted-foreground">duration</p>
-              <p className="font-mono">{formatDuration(trace.durationMs)}</p>
+              <p className="tabular-nums">{formatDuration(trace.durationMs)}</p>
             </div>
             <div>
               <p className="text-muted-foreground">spans</p>
-              <p className="font-mono">{trace.spanCount}</p>
+              <p className="tabular-nums">{trace.spanCount}</p>
             </div>
           </div>
         )}
@@ -118,7 +139,7 @@ function TraceWaterfallPanel({
                         }}
                       />
                     </div>
-                    <div className="w-20 shrink-0 text-right font-mono text-xs text-muted-foreground">
+                    <div className="w-20 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
                       {formatDuration(span.durationMs)}
                     </div>
                   </div>
@@ -128,12 +149,12 @@ function TraceWaterfallPanel({
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div>
                       <span className="text-muted-foreground">Span ID:</span>
-                      <code className="ml-1 font-mono">{span.spanId}</code>
+                      <span className="ml-1 break-all text-foreground">{span.spanId}</span>
                     </div>
                     {span.parentSpanId && (
                       <div>
                         <span className="text-muted-foreground">Parent:</span>
-                        <code className="ml-1 font-mono">{span.parentSpanId}</code>
+                        <span className="ml-1 break-all text-foreground">{span.parentSpanId}</span>
                       </div>
                     )}
                     {span.statusCode && (
@@ -182,18 +203,22 @@ export const TracesTab: React.FC<TracesTabProps> = ({ sandboxId, getTraceHref, s
   const targetLabel = scope === 'admin-platform' ? 'platform' : 'this box'
 
   useEffect(() => {
-    const nextTraceId = resolveSelectedTraceId(data?.items ?? [], selectedTraceId)
-    if (nextTraceId !== selectedTraceId) {
-      setSelectedTraceId(nextTraceId)
+    if (selectedTraceId && !data?.items?.some((trace) => trace.traceId === selectedTraceId)) {
+      setSelectedTraceId(null)
     }
   }, [data?.items, selectedTraceId])
 
   const selectedTrace = data?.items?.find((trace) => trace.traceId === selectedTraceId)
   const spanRows = useMemo(() => buildTraceWaterfallRows(spans), [spans])
+  const maxDurationMs = useMemo(
+    () => Math.max(...(data?.items ?? []).map((trace) => trace.durationMs), 0),
+    [data?.items],
+  )
 
   const handleTimeRangeChange = useCallback((from: Date, to: Date) => {
     setTimeRange({ from, to })
     setPage(1)
+    setSelectedTraceId(null)
   }, [])
 
   return (
@@ -221,79 +246,104 @@ export const TracesTab: React.FC<TracesTabProps> = ({ sandboxId, getTraceHref, s
           <span className="text-sm">No traces found</span>
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(26rem,0.95fr)]">
-          <ScrollArea fade="mask" className="min-h-[24rem] min-w-0 rounded-md border border-border">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <ScrollArea fade="mask" className="max-h-[28rem] min-h-[18rem] min-w-0 rounded-md border border-border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Trace ID</TableHead>
                   <TableHead>Root Span</TableHead>
-                  <TableHead>Start Time</TableHead>
                   <TableHead>Duration</TableHead>
+                  <TableHead>Start Time</TableHead>
                   <TableHead className="text-center">Spans</TableHead>
+                  <TableHead>Trace ID</TableHead>
                   {getTraceHref && <TableHead className="text-right">Jaeger</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.items.map((trace: TraceSummary) => (
-                  <TableRow
-                    key={trace.traceId}
-                    className={cn(
-                      'cursor-pointer hover:bg-muted/50',
-                      trace.traceId === selectedTraceId && 'bg-muted/70',
-                    )}
-                    onClick={() => setSelectedTraceId(trace.traceId)}
-                  >
-                    <TableCell className="font-mono text-xs">
-                      <div className="flex items-center gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>{truncateTraceId(trace.traceId)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <code className="font-mono text-xs">{trace.traceId}</code>
-                          </TooltipContent>
-                        </Tooltip>
-                        <CopyButton
-                          value={trace.traceId}
-                          tooltipText="Copy Trace ID"
-                          size="icon-xs"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {trace.rootSpanName || <span className="text-muted-foreground">(unnamed root)</span>}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">{formatTimestamp(trace.startTime)}</TableCell>
-                    <TableCell className="font-mono text-xs">{formatDuration(trace.durationMs)}</TableCell>
-                    <TableCell className="text-center">{trace.spanCount}</TableCell>
-                    {getTraceHref && (
-                      <TableCell className="text-right">
-                        <Button asChild variant="ghost" size="icon-xs">
-                          <a
-                            href={getTraceHref(trace.traceId)}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
-                        </Button>
+                {data.items.map((trace: TraceSummary) => {
+                  const durationTone = getTraceDurationTone(trace.durationMs, maxDurationMs)
+                  const durationWidth = maxDurationMs > 0 ? Math.max(4, (trace.durationMs / maxDurationMs) * 100) : 0
+
+                  return (
+                    <TableRow
+                      key={trace.traceId}
+                      className={cn(
+                        'cursor-pointer hover:bg-muted/50',
+                        trace.traceId === selectedTraceId && 'bg-muted/70',
+                      )}
+                      onClick={() =>
+                        setSelectedTraceId((current) => (current === trace.traceId ? null : trace.traceId))
+                      }
+                    >
+                      <TableCell className="max-w-xs truncate">
+                        {trace.rootSpanName || <span className="text-muted-foreground">(unnamed root)</span>}
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      <TableCell className="min-w-[10rem]">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold tabular-nums">{formatDuration(trace.durationMs)}</span>
+                          <Badge
+                            variant="outline"
+                            className={cn('h-5 text-[10px] font-normal', getTraceDurationBadgeClass(durationTone))}
+                          >
+                            {durationTone}
+                          </Badge>
+                        </div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn('h-full rounded-full', getTraceDurationBarClass(durationTone))}
+                            style={{ width: `${durationWidth}%` }}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs tabular-nums">{formatTimestamp(trace.startTime)}</TableCell>
+                      <TableCell className="text-center">{trace.spanCount}</TableCell>
+                      <TableCell className="text-xs">
+                        <div className="flex items-center gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>{truncateTraceId(trace.traceId)}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <span className="text-xs">{trace.traceId}</span>
+                            </TooltipContent>
+                          </Tooltip>
+                          <CopyButton
+                            value={trace.traceId}
+                            tooltipText="Copy Trace ID"
+                            size="icon-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </TableCell>
+                      {getTraceHref && (
+                        <TableCell className="text-right">
+                          <Button asChild variant="ghost" size="icon-xs">
+                            <a
+                              href={getTraceHref(trace.traceId)}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </ScrollArea>
 
-          <TraceWaterfallPanel
-            trace={selectedTrace}
-            traceId={selectedTraceId}
-            rows={spanRows}
-            isLoading={isSpansLoading}
-          />
+          {selectedTraceId && (
+            <TraceWaterfallPanel
+              trace={selectedTrace}
+              traceId={selectedTraceId}
+              rows={spanRows}
+              isLoading={isSpansLoading}
+            />
+          )}
         </div>
       )}
 

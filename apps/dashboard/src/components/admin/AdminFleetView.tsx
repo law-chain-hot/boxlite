@@ -83,7 +83,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
             id={`admin-runner-${r.id}`}
             className={cn(highlightRunnerId === r.id && 'bg-primary/10 transition-colors')}
           >
-            <TableCell className="max-w-[8rem] truncate font-mono text-xs text-muted-foreground">{r.id}</TableCell>
+            <TableCell className="max-w-[8rem] truncate text-xs text-muted-foreground">{r.id}</TableCell>
             <TableCell>
               <div className="flex flex-col gap-1">
                 <AdminStateBadge state={r.state} />
@@ -99,7 +99,7 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
                 )}
               </div>
             </TableCell>
-            <TableCell className="font-mono">
+            <TableCell className="tabular-nums">
               <span className="inline-flex items-baseline gap-1.5">
                 <span>
                   {r.currentAllocatedCpu}/{r.cpu}
@@ -107,23 +107,23 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
                 <span className={cn('text-xs', pct >= 80 ? 'text-destructive' : 'text-muted-foreground')}>{pct}%</span>
               </span>
             </TableCell>
-            <TableCell className="font-mono">
+            <TableCell className="tabular-nums">
               {r.currentAllocatedMemoryGiB.toFixed(1)}/{r.memory.toFixed(1)} GiB
             </TableCell>
             <TableCell>
               {r.currentStartedSandboxes > 0 ? (
                 <button
                   type="button"
-                  className="font-mono text-primary hover:underline"
+                  className="tabular-nums text-primary hover:underline"
                   onClick={() => onShowRunnerBoxes(r.id)}
                 >
                   {r.currentStartedSandboxes}
                 </button>
               ) : (
-                <span className="font-mono text-muted-foreground">0</span>
+                <span className="tabular-nums text-muted-foreground">0</span>
               )}
             </TableCell>
-            <TableCell className="font-mono">{r.availabilityScore?.toFixed(2) ?? '—'}</TableCell>
+            <TableCell className="tabular-nums">{r.availabilityScore?.toFixed(2) ?? '—'}</TableCell>
             <TableCell>
               <div className="flex justify-end gap-2">
                 <Button
@@ -250,9 +250,9 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
                 {machines.length > 0 ? (
                   machines.map((m) => (
                     <TableRow key={m.host}>
-                      <TableCell className="font-mono text-xs">{m.host}</TableCell>
+                      <TableCell className="text-xs">{m.host}</TableCell>
                       <TableCell>{m.region}</TableCell>
-                      <TableCell className="font-mono">
+                      <TableCell className="tabular-nums">
                         {m.oversellCpu.toFixed(1)}×
                         {m.oversellCpu > 1 && (
                           <Badge variant="warning" className="ml-2">
@@ -260,9 +260,9 @@ const AdminFleetView: React.FC<AdminFleetViewProps> = ({ query, highlightRunnerI
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="font-mono">{m.cpuWaterline.toFixed(1)}%</TableCell>
-                      <TableCell className="font-mono">{m.memWaterline.toFixed(1)}%</TableCell>
-                      <TableCell className="font-mono">{m.sandboxes}</TableCell>
+                      <TableCell className="tabular-nums">{m.cpuWaterline.toFixed(1)}%</TableCell>
+                      <TableCell className="tabular-nums">{m.memWaterline.toFixed(1)}%</TableCell>
+                      <TableCell className="tabular-nums">{m.sandboxes}</TableCell>
                     </TableRow>
                   ))
                 ) : (

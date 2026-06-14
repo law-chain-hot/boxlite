@@ -8,10 +8,10 @@ import { OrganizationEmail, OrganizationTier, OrganizationWallet } from '@/billi
 import { Invoice, PaginatedInvoices, PaymentUrl } from '@/billing-api/types/Invoice'
 import { Tier } from '@/billing-api/types/tier'
 import { BoxliteConfiguration } from '@boxlite-ai/api-client/src'
-import { bypass, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 
 const BILLING_API_URL = 'http://localhost:3000/api/billing'
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = (import.meta.env.VITE_BASE_API_URL ?? window.location.origin) + '/api'
 
 const adminPreviewBoxes = [
   {
@@ -105,13 +105,257 @@ const adminPreviewRunners = [
   },
 ]
 
+const GiB = 1024 * 1024 * 1024
+
+function minutesAgo(minutes: number) {
+  return new Date(Date.now() - minutes * 60_000).toISOString()
+}
+
+function metricSeries(metricName: string, values: number[]) {
+  return {
+    metricName,
+    dataPoints: values.map((value, index) => ({
+      timestamp: minutesAgo((values.length - index - 1) * 5),
+      value,
+    })),
+  }
+}
+
+const adminTelemetryLogs = [
+  {
+    timestamp: minutesAgo(3),
+    body: 'GET /api/admin/telemetry/metrics completed in 184ms',
+    severityText: 'INFO',
+    severityNumber: 9,
+    serviceName: 'boxlite-api',
+    resourceAttributes: { 'service.name': 'boxlite-api' },
+    logAttributes: { route: '/api/admin/telemetry/metrics', duration_ms: '184' },
+    traceId: 'trace-telemetry-metrics',
+    spanId: 'span-root-metrics',
+  },
+  {
+    timestamp: minutesAgo(8),
+    body: 'DB pending requests spiked while loading admin boxes',
+    severityText: 'WARN',
+    severityNumber: 13,
+    serviceName: 'boxlite-api',
+    resourceAttributes: { 'service.name': 'boxlite-api' },
+    logAttributes: { pending_requests: '7', component: 'admin.overview' },
+    traceId: 'trace-admin-boxes',
+    spanId: 'span-db-boxes',
+  },
+  {
+    timestamp: minutesAgo(14),
+    body: 'SandboxManager.autostopCheck completed',
+    severityText: 'DEBUG',
+    severityNumber: 5,
+    serviceName: 'boxlite-api',
+    resourceAttributes: { 'service.name': 'boxlite-api' },
+    logAttributes: { job: 'SandboxManager.autostopCheck', duration_ms: '820' },
+  },
+  {
+    timestamp: minutesAgo(19),
+    body: 'Failed to refresh runner heartbeat for runner-stale-03',
+    severityText: 'ERROR',
+    severityNumber: 17,
+    serviceName: 'boxlite-api',
+    resourceAttributes: { 'service.name': 'boxlite-api' },
+    logAttributes: { runner_id: 'runner-stale-03' },
+    traceId: 'trace-runner-error',
+    spanId: 'span-root-runner',
+  },
+]
+
+const adminTelemetryTraces = [
+  {
+    traceId: 'trace-admin-boxes',
+    rootSpanName: 'POST /api/admin/boxes/search',
+    startTime: minutesAgo(4),
+    endTime: minutesAgo(4),
+    durationMs: 312,
+    spanCount: 18,
+    statusCode: 'STATUS_CODE_UNSET',
+  },
+  {
+    traceId: 'trace-telemetry-metrics',
+    rootSpanName: 'GET /api/admin/telemetry/metrics',
+    startTime: minutesAgo(7),
+    endTime: minutesAgo(7),
+    durationMs: 184,
+    spanCount: 11,
+    statusCode: 'STATUS_CODE_UNSET',
+  },
+  {
+    traceId: 'trace-admin-overview',
+    rootSpanName: 'GET /api/admin/overview',
+    startTime: minutesAgo(11),
+    endTime: minutesAgo(11),
+    durationMs: 86,
+    spanCount: 9,
+    statusCode: 'STATUS_CODE_UNSET',
+  },
+  {
+    traceId: 'trace-runner-error',
+    rootSpanName: 'GET /api/admin/runners',
+    startTime: minutesAgo(18),
+    endTime: minutesAgo(18),
+    durationMs: 44,
+    spanCount: 6,
+    statusCode: 'STATUS_CODE_ERROR',
+  },
+]
+
+const adminTelemetrySpans = {
+  'trace-admin-boxes': [
+    {
+      traceId: 'trace-admin-boxes',
+      spanId: 'span-root-boxes',
+      spanName: 'POST /api/admin/boxes/search',
+      timestamp: minutesAgo(4),
+      durationNs: 312_000_000,
+      spanAttributes: { route: '/api/admin/boxes/search', method: 'POST' },
+    },
+    {
+      traceId: 'trace-admin-boxes',
+      spanId: 'span-auth-boxes',
+      parentSpanId: 'span-root-boxes',
+      spanName: 'CombinedAuthGuard',
+      timestamp: minutesAgo(4),
+      durationNs: 25_000_000,
+      spanAttributes: { guard: 'CombinedAuthGuard' },
+    },
+    {
+      traceId: 'trace-admin-boxes',
+      spanId: 'span-db-boxes',
+      parentSpanId: 'span-root-boxes',
+      spanName: 'AdminOverviewService.listBoxes',
+      timestamp: new Date(Date.now() - 4 * 60_000 + 54).toISOString(),
+      durationNs: 181_000_000,
+      spanAttributes: { db: 'postgres', table: 'sandbox' },
+    },
+    {
+      traceId: 'trace-admin-boxes',
+      spanId: 'span-dto-boxes',
+      parentSpanId: 'span-root-boxes',
+      spanName: 'serialize admin boxes',
+      timestamp: new Date(Date.now() - 4 * 60_000 + 250).toISOString(),
+      durationNs: 41_000_000,
+      spanAttributes: { boxes: '38' },
+    },
+  ],
+  'trace-telemetry-metrics': [
+    {
+      traceId: 'trace-telemetry-metrics',
+      spanId: 'span-root-metrics',
+      spanName: 'GET /api/admin/telemetry/metrics',
+      timestamp: minutesAgo(7),
+      durationNs: 184_000_000,
+      spanAttributes: { route: '/api/admin/telemetry/metrics', method: 'GET' },
+    },
+    {
+      traceId: 'trace-telemetry-metrics',
+      spanId: 'span-clickhouse-metrics',
+      parentSpanId: 'span-root-metrics',
+      spanName: 'ClickHouse metrics query',
+      timestamp: new Date(Date.now() - 7 * 60_000 + 33).toISOString(),
+      durationNs: 118_000_000,
+      spanAttributes: { db: 'clickhouse', database: 'otel' },
+    },
+    {
+      traceId: 'trace-telemetry-metrics',
+      spanId: 'span-normalize-metrics',
+      parentSpanId: 'span-root-metrics',
+      spanName: 'normalize metric series',
+      timestamp: new Date(Date.now() - 7 * 60_000 + 154).toISOString(),
+      durationNs: 18_000_000,
+      spanAttributes: { series: '24' },
+    },
+  ],
+  'trace-admin-overview': [
+    {
+      traceId: 'trace-admin-overview',
+      spanId: 'span-root-overview',
+      spanName: 'GET /api/admin/overview',
+      timestamp: minutesAgo(11),
+      durationNs: 86_000_000,
+      spanAttributes: { route: '/api/admin/overview', method: 'GET' },
+    },
+    {
+      traceId: 'trace-admin-overview',
+      spanId: 'span-db-overview',
+      parentSpanId: 'span-root-overview',
+      spanName: 'AdminOverviewService.load',
+      timestamp: new Date(Date.now() - 11 * 60_000 + 19).toISOString(),
+      durationNs: 30_000_000,
+      spanAttributes: { db: 'postgres' },
+    },
+  ],
+  'trace-runner-error': [
+    {
+      traceId: 'trace-runner-error',
+      spanId: 'span-root-runner',
+      spanName: 'GET /api/admin/runners',
+      timestamp: minutesAgo(18),
+      durationNs: 44_000_000,
+      spanAttributes: { route: '/api/admin/runners', method: 'GET' },
+      statusCode: 'STATUS_CODE_ERROR',
+      statusMessage: 'runner heartbeat stale',
+    },
+  ],
+}
+
+const adminTelemetryMetrics = [
+  metricSeries('http.server.duration', [0.082, 0.094, 0.12, 0.184, 0.176, 0.14, 0.158]),
+  metricSeries('http.client.duration', [0.044, 0.052, 0.061, 0.072, 0.068, 0.057, 0.063]),
+  metricSeries('db.client.operation.duration', [0.028, 0.034, 0.041, 0.091, 0.084, 0.062, 0.071]),
+  metricSeries('db.client.connection.pending_requests', [0, 1, 2, 7, 4, 1, 2]),
+  metricSeries('db.client.connection.count', [5, 5, 6, 6, 6, 5, 5]),
+  metricSeries('nodejs.eventloop.delay.p99', [0.014, 0.016, 0.019, 0.021, 0.018, 0.017, 0.019]),
+  metricSeries('nodejs.eventloop.delay.p90', [0.009, 0.011, 0.012, 0.014, 0.013, 0.012, 0.013]),
+  metricSeries('nodejs.eventloop.delay.mean', [0.006, 0.007, 0.008, 0.009, 0.008, 0.008, 0.008]),
+  metricSeries('nodejs.eventloop.delay.max', [0.026, 0.031, 0.038, 0.044, 0.035, 0.029, 0.033]),
+  metricSeries('nodejs.eventloop.utilization', [0.31, 0.34, 0.38, 0.42, 0.37, 0.33, 0.36]),
+  metricSeries('nodejs.eventloop.time', [0.18, 0.21, 0.24, 0.28, 0.25, 0.22, 0.23]),
+  metricSeries('v8js.gc.duration', [0.002, 0.003, 0.004, 0.0048, 0.0034, 0.003, 0.0036]),
+  metricSeries(
+    'v8js.memory.heap.used',
+    [0.62, 0.66, 0.7, 0.72, 0.71, 0.69, 0.72].map((value) => value * GiB),
+  ),
+  metricSeries('v8js.memory.heap.limit', Array(7).fill(1.54 * GiB)),
+  metricSeries(
+    'v8js.memory.heap.space.available_size',
+    [0.91, 0.87, 0.83, 0.81, 0.82, 0.84, 0.81].map((value) => value * GiB),
+  ),
+  metricSeries(
+    'v8js.memory.heap.space.physical_size',
+    [0.74, 0.76, 0.78, 0.79, 0.78, 0.77, 0.79].map((value) => value * GiB),
+  ),
+  metricSeries('sandbox_manager_autostop_check_duration', [0.42, 0.58, 0.61, 1.42, 0.82, 0.76, 0.69]),
+  metricSeries('runner_sync_service_reconcile_duration', [0.21, 0.34, 0.39, 0.79, 0.46, 0.38, 0.41]),
+  metricSeries('sandbox_manager_auto_archive_duration', [0.18, 0.22, 0.26, 0.48, 0.31, 0.27, 0.29]),
+  metricSeries('machine_health_probe_scan_duration', [0.11, 0.14, 0.18, 0.31, 0.24, 0.2, 0.19]),
+]
+
 export const handlers = [
   http.get(`${API_URL}/config`, async () => {
-    const originalConfig = await fetch(bypass(`${API_URL}/config`)).then((res) => res.json())
-
     return HttpResponse.json<Partial<BoxliteConfiguration>>({
-      ...originalConfig,
+      version: '0.0.0-local',
+      oidc: {
+        issuer: 'https://mock.auth.boxlite.local',
+        clientId: 'mock-client',
+        audience: 'mock-api',
+      },
+      linkedAccountsEnabled: false,
+      announcements: {},
+      proxyTemplateUrl: 'https://{{PORT}}-{{sandboxId}}.proxy.localhost',
+      proxyToolboxUrl: 'https://toolbox.proxy.localhost',
+      defaultSnapshot: 'ubuntu:22.04',
+      dashboardUrl: window.location.origin,
+      maxAutoArchiveInterval: 43200,
+      maintananceMode: false,
+      environment: 'local',
       billingApiUrl: BILLING_API_URL,
+      rateLimit: {},
     })
   }),
   http.get(`${API_URL}/organizations`, async () => {
@@ -225,14 +469,31 @@ export const handlers = [
       },
     ])
   }),
-  http.get(`${API_URL}/admin/telemetry/logs`, async () => {
-    return HttpResponse.json({ items: [], nextCursor: null })
+  http.get(`${API_URL}/admin/telemetry/logs`, async ({ request }) => {
+    const url = new URL(request.url)
+    const severities = url.searchParams.getAll('severities').map((severity) => severity.toUpperCase())
+    const search = url.searchParams.get('search')?.toLowerCase()
+    const items = adminTelemetryLogs.filter((log) => {
+      const matchesSeverity = severities.length === 0 || severities.includes(log.severityText)
+      const matchesSearch = !search || log.body.toLowerCase().includes(search)
+      return matchesSeverity && matchesSearch
+    })
+    return HttpResponse.json({ items, total: items.length, page: 1, totalPages: 1 })
   }),
   http.get(`${API_URL}/admin/telemetry/traces`, async () => {
-    return HttpResponse.json({ items: [], nextCursor: null })
+    return HttpResponse.json({
+      items: adminTelemetryTraces,
+      total: adminTelemetryTraces.length,
+      page: 1,
+      totalPages: 1,
+    })
+  }),
+  http.get(`${API_URL}/admin/telemetry/traces/:traceId`, async ({ params }) => {
+    const traceId = String(params.traceId)
+    return HttpResponse.json(adminTelemetrySpans[traceId as keyof typeof adminTelemetrySpans] ?? [])
   }),
   http.get(`${API_URL}/admin/telemetry/metrics`, async () => {
-    return HttpResponse.json({ series: [] })
+    return HttpResponse.json({ series: adminTelemetryMetrics })
   }),
   http.get(`${BILLING_API_URL}/organization/:organizationId/portal-url`, async () => {
     return HttpResponse.json<string>(`${BILLING_API_URL}/portal`)

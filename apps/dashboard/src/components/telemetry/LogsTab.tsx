@@ -171,11 +171,11 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }
                     <TableCell>
                       {expandedRow === index ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{formatTimestamp(log.timestamp)}</TableCell>
+                    <TableCell className="text-xs tabular-nums">{formatTimestamp(log.timestamp)}</TableCell>
                     <TableCell>
                       <SeverityBadge severity={log.severityText} />
                     </TableCell>
-                    <TableCell className="max-w-md truncate font-mono text-xs">{log.body}</TableCell>
+                    <TableCell className="max-w-md truncate text-xs">{log.body}</TableCell>
                   </TableRow>
                   {expandedRow === index && (
                     <TableRow>
@@ -190,13 +190,13 @@ export const LogsTab: React.FC<LogsTabProps> = ({ sandboxId, scope = 'sandbox' }
                           {log.traceId && (
                             <div>
                               <h4 className="text-sm font-medium mb-1">Trace ID</h4>
-                              <code className="text-xs bg-background p-1 rounded">{log.traceId}</code>
+                              <span className="rounded bg-background p-1 text-xs">{log.traceId}</span>
                             </div>
                           )}
                           {log.spanId && (
                             <div>
                               <h4 className="text-sm font-medium mb-1">Span ID</h4>
-                              <code className="text-xs bg-background p-1 rounded">{log.spanId}</code>
+                              <span className="rounded bg-background p-1 text-xs">{log.spanId}</span>
                             </div>
                           )}
                           {Object.keys(log.logAttributes || {}).length > 0 && (

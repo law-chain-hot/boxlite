@@ -8,7 +8,7 @@ import React from 'react'
 import { Navigate } from 'react-router-dom'
 
 const AdminBoxTelemetry: React.FC = () => {
-  return <Navigate to={`${RoutePath.ADMIN}?view=platformTelemetry`} replace />
+  return <Navigate to={RoutePath.ADMIN} replace />
 }
 
 export default AdminBoxTelemetry

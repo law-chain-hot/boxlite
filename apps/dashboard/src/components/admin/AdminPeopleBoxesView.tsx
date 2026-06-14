@@ -91,7 +91,7 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
       {runnerFilter && (
         <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-4 py-2 text-sm">
           <span className="text-muted-foreground">
-            Boxes on runner <span className="font-mono text-foreground">{runnerFilter}</span>
+            Boxes on runner <span className="text-foreground">{runnerFilter}</span>
           </span>
           <Button variant="ghost" size="sm" className="h-7" onClick={onClearRunnerFilter}>
             <X className="h-3.5 w-3.5" />
@@ -157,13 +157,13 @@ const AdminPeopleBoxesView: React.FC<AdminPeopleBoxesViewProps> = ({
                           className={cn('cursor-pointer', isErrorState(box.state) && 'bg-destructive/5')}
                           onClick={() => onOpenBox(box)}
                         >
-                          <TableCell className="font-mono text-xs">{box.id}</TableCell>
+                          <TableCell className="text-xs">{box.id}</TableCell>
                           <TableCell>
                             <AdminStateBadge state={box.state} />
                           </TableCell>
-                          <TableCell className="font-mono">{box.cpu}</TableCell>
-                          <TableCell className="font-mono">{box.memoryGiB} GiB</TableCell>
-                          <TableCell className="truncate font-mono text-xs text-muted-foreground">
+                          <TableCell className="tabular-nums">{box.cpu}</TableCell>
+                          <TableCell className="tabular-nums">{box.memoryGiB} GiB</TableCell>
+                          <TableCell className="truncate text-xs text-muted-foreground">
                             {box.runnerId ?? '—'}
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">

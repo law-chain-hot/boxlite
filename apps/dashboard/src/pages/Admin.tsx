@@ -8,7 +8,6 @@ import { type AdminBox, findBoxById, groupBoxesByOwner } from '@/components/admi
 import AdminFleetView from '@/components/admin/AdminFleetView'
 import AdminOverviewView from '@/components/admin/AdminOverviewView'
 import AdminPeopleBoxesView from '@/components/admin/AdminPeopleBoxesView'
-import AdminPlatformTelemetryView from '@/components/admin/AdminPlatformTelemetryView'
 import AdminStatusStrip from '@/components/admin/AdminStatusStrip'
 import AdminTelemetryDrawer from '@/components/admin/AdminTelemetryDrawer'
 import { ADMIN_VIEWS, adminViewFromParam, type AdminView } from '@/components/admin/adminNavigation'
@@ -16,9 +15,15 @@ import { useAdminActions, useAdminBoxes, useAdminOverview, useAdminRunners } fro
 import { Input } from '@/components/ui/input'
 import { RoutePath } from '@/enums/RoutePath'
 import { cn } from '@/lib/utils'
-import { Search } from 'lucide-react'
+import { Activity, Search, Server, UsersRound, type LucideIcon } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
+
+const ADMIN_VIEW_ICONS: Record<AdminView, LucideIcon> = {
+  overview: Activity,
+  people: UsersRound,
+  fleet: Server,
+}
 
 const Admin: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -118,22 +123,35 @@ const Admin: React.FC = () => {
         <AdminStatusStrip />
 
         {/* toolbar: view switch + global search */}
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="inline-flex w-fit gap-1 rounded-lg border border-border bg-card p-1">
-            {ADMIN_VIEWS.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setView(v.id)}
-                className={cn(
-                  'flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm transition-colors',
-                  view === v.id ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
+        <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <nav
+            aria-label="Admin views"
+            className="grid w-full gap-1 rounded-xl border border-border/80 bg-muted/60 p-1.5 shadow-sm xl:max-w-2xl xl:grid-cols-3"
+          >
+            {ADMIN_VIEWS.map((v) => {
+              const Icon = ADMIN_VIEW_ICONS[v.id]
+              const isActive = view === v.id
+
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => setView(v.id)}
+                  className={cn(
+                    'relative flex min-h-12 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
+                      : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{v.label}</span>
+                  {isActive && <span className="absolute inset-x-4 bottom-1 h-0.5 rounded-full bg-primary" />}
+                </button>
+              )
+            })}
+          </nav>
 
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -159,7 +177,6 @@ const Admin: React.FC = () => {
           {view === 'fleet' && (
             <AdminFleetView query={query} highlightRunnerId={highlightRunner} onShowRunnerBoxes={showRunnerBoxes} />
           )}
-          {view === 'platformTelemetry' && <AdminPlatformTelemetryView />}
         </div>
       </PageContent>
 

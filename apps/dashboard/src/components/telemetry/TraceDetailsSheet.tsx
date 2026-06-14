@@ -116,7 +116,7 @@ export const TraceDetailsSheet: React.FC<TraceDetailsSheetProps> = ({
             Trace Details
             {traceId && (
               <>
-                <code className="text-sm font-mono text-muted-foreground font-normal">{traceId}</code>
+                <span className="text-sm font-normal text-muted-foreground">{traceId}</span>
                 <CopyButton value={traceId} tooltipText="Copy Trace ID" size="icon-xs" />
               </>
             )}
@@ -153,7 +153,7 @@ export const TraceDetailsSheet: React.FC<TraceDetailsSheetProps> = ({
                           }}
                         />
                       </div>
-                      <div className="flex-shrink-0 w-20 text-right text-xs font-mono text-muted-foreground">
+                      <div className="flex-shrink-0 w-20 text-right text-xs tabular-nums text-muted-foreground">
                         {formatDuration(span.durationNs)}
                       </div>
                     </div>
@@ -165,12 +165,12 @@ export const TraceDetailsSheet: React.FC<TraceDetailsSheetProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <span className="text-muted-foreground">Span ID:</span>
-                          <code className="ml-1 font-mono">{span.spanId.slice(0, 16)}</code>
+                          <span className="ml-1">{span.spanId.slice(0, 16)}</span>
                         </div>
                         {span.parentSpanId && (
                           <div>
                             <span className="text-muted-foreground">Parent:</span>
-                            <code className="ml-1 font-mono">{span.parentSpanId.slice(0, 16)}</code>
+                            <span className="ml-1">{span.parentSpanId.slice(0, 16)}</span>
                           </div>
                         )}
                         {span.statusCode && (

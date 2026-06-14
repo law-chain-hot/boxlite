@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-export type AdminView = 'overview' | 'people' | 'fleet' | 'platformTelemetry'
+export type AdminView = 'overview' | 'people' | 'fleet'
 
 export const ADMIN_VIEWS: { id: AdminView; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'people', label: 'People & Boxes' },
   { id: 'fleet', label: 'Fleet' },
-  { id: 'platformTelemetry', label: 'Platform Telemetry' },
 ]
 
 export function adminViewFromParam(value: string | null): AdminView | null {
