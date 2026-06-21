@@ -46,6 +46,8 @@ pub async fn run(profile_name: &str) -> Result<()> {
             if let Some(exp) = p.expires_at.as_deref() {
                 println!("Expires:         {}", exp);
             }
+            sync_stored_path_prefix(profile_name, &p.path_prefix)
+                .context("syncing path prefix in stored credentials")?;
             Ok(())
         }
         Err(BoxliteError::NotFound(_)) => Err(anyhow!(
@@ -63,6 +65,23 @@ pub async fn run(profile_name: &str) -> Result<()> {
         )),
         Err(err) => Err(anyhow!("could not reach {}: {}", url, err)),
     }
+}
+
+fn sync_stored_path_prefix(profile_name: &str, path_prefix: &Option<String>) -> Result<()> {
+    if std::env::var(API_KEY_ENV).is_ok_and(|api_key| !api_key.is_empty()) {
+        return Ok(());
+    }
+
+    let Some(mut profile) = credentials::load_named(profile_name)? else {
+        return Ok(());
+    };
+    if profile.path_prefix == *path_prefix {
+        return Ok(());
+    }
+
+    profile.path_prefix = path_prefix.clone();
+    credentials::save_named(profile_name, &profile)?;
+    Ok(())
 }
 
 /// Active credential, ready to attach to a REST runtime.

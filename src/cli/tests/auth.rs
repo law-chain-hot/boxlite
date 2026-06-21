@@ -7,7 +7,10 @@
 
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
 use std::time::Duration;
 
 use assert_cmd::Command;
@@ -82,6 +85,7 @@ impl Stub {
 }
 
 const PRINCIPAL_JSON: &str = r#"{"sub":"usr_1","principal_type":"user","email":"dev@acme.test","display_name":"Dev","path_prefix":"acme","scopes":["box:read","box:write"]}"#;
+const PRINCIPAL_BRAVO_JSON: &str = r#"{"sub":"usr_1","principal_type":"user","email":"dev@acme.test","display_name":"Dev","path_prefix":"bravo","scopes":["box:read","box:write"]}"#;
 const NOT_FOUND_JSON: &str =
     r#"{"error":{"message":"no /v1/me here","type":"NotFoundError","code":404}}"#;
 const AUTH_ERR_JSON: &str = r#"{"error":{"message":"bad key","type":"AuthError","code":401}}"#;
@@ -195,6 +199,48 @@ fn whoami_prints_identity_after_login() {
             predicate::str::contains("Logged in as:    dev@acme.test")
                 .and(predicate::str::contains("Path prefix:     acme")),
         );
+}
+
+#[test]
+fn whoami_updates_stored_path_prefix_when_server_changes_it() {
+    let me_calls = Arc::new(AtomicUsize::new(0));
+    let handler_calls = Arc::clone(&me_calls);
+    let stub = Stub::start(move |_m, path| match path {
+        "/v1/me" => {
+            if handler_calls.fetch_add(1, Ordering::SeqCst) == 0 {
+                (200, PRINCIPAL_JSON.to_string())
+            } else {
+                (200, PRINCIPAL_BRAVO_JSON.to_string())
+            }
+        }
+        _ => (404, NOT_FOUND_JSON.to_string()),
+    });
+    let home = TempDir::new().unwrap();
+
+    auth_cmd(&home)
+        .args(["auth", "login", "--url", &stub.url(), "--api-key-stdin"])
+        .write_stdin("k_test\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("path prefix: acme"));
+
+    auth_cmd(&home)
+        .args(["auth", "whoami"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Path prefix:     bravo"));
+
+    let raw = std::fs::read_to_string(creds_path(&home)).expect("read credentials");
+    assert!(
+        raw.contains("path_prefix = \"bravo\""),
+        "whoami should sync current server path_prefix into credentials.toml:\n{}",
+        raw
+    );
+    assert!(
+        !raw.contains("path_prefix = \"acme\""),
+        "stale path_prefix must not remain in credentials.toml:\n{}",
+        raw
+    );
 }
 
 #[test]
