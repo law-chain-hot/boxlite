@@ -1,0 +1,45 @@
+# release.yaml — the declarative release request ("the menu").
+#
+# WHAT THIS IS
+#   A small, dumb declaration of *what to ship this time*. You edit it, open a PR
+#   (so the request is reviewed), and merging it lets the release orchestrator act.
+#   It contains NO logic and NO secrets — all gates, builds, and deploys live in the
+#   workflows under .github/workflows/ that READ this file.
+#
+# THE THREE "TRAINS" (independent release lines, pick any combination)
+#   oss     SDKs (Python/Node/Go/C) + CLI + core runtime. FFI-locked to ONE version.
+#           Published to registries (PyPI/npm/crates/Go tag/GitHub Release).
+#   cloud   API + Dashboard + Proxy + SSH-Gateway + Otel. Not semver — deploys a git
+#           SHA (an immutable built artifact) to a stage (dev/prod).
+#   runner  Stateful runner binary + agent images. In-place SSM rollout.
+#
+# HOW IT FLOWS
+#   release.yaml ──> release-build ──> Artifact Manifest ──> release-plan ──> release-apply
+#   (you edit)       (build once)      (digests/versions)    (gates)          (deploy/publish)
+
+# Git commit to build & release from. Empty string = the merge commit / current HEAD.
+# Every enabled train builds from this SAME commit (so the trains stay consistent).
+commit: ""
+
+trains:
+  # ── Train A · OSS ─────────────────────────────────────────────────────────
+  oss:
+    enabled: false
+    # Single version stamped into all SDKs + CLI + core. Required when enabled.
+    version: ""        # e.g. "0.9.6"
+    # stable  → published to the default channel users install.
+    # rc      → prerelease channel (npm dist-tag / PyPI pre-release), never "latest".
+    channel: stable
+
+  # ── Train B · Cloud ───────────────────────────────────────────────────────
+  cloud:
+    enabled: false
+    # Which environment to deploy the built SHA to.
+    stage: dev         # dev | prod
+
+  # ── Train C · Runner ──────────────────────────────────────────────────────
+  runner:
+    enabled: false
+    # skip     → do not touch the stateful runner fleet (the safe default).
+    # upgrade  → SSM in-place atomic binary swap (drain → swap → self-check → rollback).
+    mode: skip
