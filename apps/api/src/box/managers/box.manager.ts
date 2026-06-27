@@ -64,7 +64,9 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
     }
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS, { name: 'auto-stop-check' })
+  //  idle auto-stop disabled: boxes must not be stopped just because they are idle.
+  //  Re-enable by removing `disabled: true`. (suspension-driven stops are unaffected.)
+  @Cron(CronExpression.EVERY_10_SECONDS, { name: 'auto-stop-check', disabled: true })
   @TrackJobExecution()
   @WithInstrumentation()
   @LogExecution('auto-stop-check')
