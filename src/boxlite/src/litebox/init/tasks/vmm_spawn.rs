@@ -361,7 +361,7 @@ fn bind_user_volume_dir(
     target_dir: &Path,
     read_only: bool,
 ) -> BoxliteResult<BindMountHandle> {
-    let mut config = BindMountConfig::new(source_dir, target_dir);
+    let mut config = BindMountConfig::new(source_dir, target_dir).recursive();
     if read_only {
         config = config.read_only();
     }

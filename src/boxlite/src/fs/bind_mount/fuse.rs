@@ -38,6 +38,7 @@ impl FuseBindMount {
             source = %source.display(),
             target = %target.display(),
             read_only = config.read_only,
+            recursive = config.recursive,
             "FUSE bind mount created"
         );
 
