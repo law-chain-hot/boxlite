@@ -9,6 +9,7 @@ export interface OrganizationWallet {
   ongoingBalanceCents: number
   name: string
   creditCardConnected: boolean
+  billingStatus?: string
 
   automaticTopUp?: AutomaticTopUp
   hasFailedOrPendingInvoice?: boolean

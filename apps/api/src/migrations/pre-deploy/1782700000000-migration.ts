@@ -126,9 +126,70 @@ export class Migration1782700000000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "rated_period_org_rated_at_idx" ON "rated_period" ("organizationId", "ratedAt")`,
     )
+
+    await queryRunner.query(
+      `CREATE TABLE "wallet" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "organizationId" character varying NOT NULL,
+        "freeBalanceCents" bigint NOT NULL DEFAULT 0,
+        "paidBalanceCents" bigint NOT NULL DEFAULT 0,
+        "freeExpiresAt" TIMESTAMP WITH TIME ZONE,
+        "billingStatus" character varying NOT NULL DEFAULT 'trial',
+        "creditCardConnected" boolean NOT NULL DEFAULT false,
+        "automaticTopUpThresholdCents" bigint,
+        "automaticTopUpTargetCents" bigint,
+        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        CONSTRAINT "wallet_id_pk" PRIMARY KEY ("id")
+      )`,
+    )
+    await queryRunner.query(`CREATE UNIQUE INDEX "wallet_organization_idx" ON "wallet" ("organizationId")`)
+
+    await queryRunner.query(
+      `CREATE TABLE "wallet_transaction" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "walletId" uuid NOT NULL,
+        "organizationId" character varying NOT NULL,
+        "kind" character varying NOT NULL,
+        "amountCents" bigint NOT NULL,
+        "source" character varying NOT NULL,
+        "ratedPeriodId" uuid,
+        "providerEventId" character varying,
+        "metadata" jsonb,
+        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        CONSTRAINT "wallet_transaction_id_pk" PRIMARY KEY ("id")
+      )`,
+    )
+    await queryRunner.query(
+      `CREATE INDEX "wallet_transaction_wallet_created_idx" ON "wallet_transaction" ("walletId", "createdAt")`,
+    )
+    await queryRunner.query(
+      `CREATE INDEX "wallet_transaction_org_created_idx" ON "wallet_transaction" ("organizationId", "createdAt")`,
+    )
+
+    await queryRunner.query(
+      `CREATE TABLE "top_up_record" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "walletId" uuid NOT NULL,
+        "organizationId" character varying NOT NULL,
+        "amountCents" bigint NOT NULL,
+        "status" character varying NOT NULL DEFAULT 'pending',
+        "checkoutUrl" character varying,
+        "providerReference" character varying,
+        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        CONSTRAINT "top_up_record_id_pk" PRIMARY KEY ("id")
+      )`,
+    )
+    await queryRunner.query(
+      `CREATE INDEX "top_up_record_org_created_idx" ON "top_up_record" ("organizationId", "createdAt")`,
+    )
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE "top_up_record"`)
+    await queryRunner.query(`DROP TABLE "wallet_transaction"`)
+    await queryRunner.query(`DROP TABLE "wallet"`)
     await queryRunner.query(`DROP TABLE "rated_period"`)
     await queryRunner.query(`DROP TABLE "pricing_plan"`)
     await queryRunner.query(`DROP TABLE "usage_period_archive"`)
