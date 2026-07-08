@@ -229,15 +229,15 @@ async fn build_config(
                 }
             }
 
-            container_mgr.add_bind_volume(
-                &vol.tag,
-                Some(guest_user_volume_source(&vol.tag)),
-                &vol.guest_path,
-                vol.read_only,
-                vol.owner_uid,
-                vol.owner_gid,
-                vol.subpath.clone(),
-            );
+            container_mgr.add_bind_volume(ContainerMount {
+                volume_name: vol.tag.clone(),
+                source: Some(guest_user_volume_source(&vol.tag)),
+                destination: vol.guest_path.clone(),
+                read_only: vol.read_only,
+                owner_uid: vol.owner_uid,
+                owner_gid: vol.owner_gid,
+                subpath: vol.subpath.clone(),
+            });
         }
 
         #[cfg(not(target_os = "linux"))]

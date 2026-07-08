@@ -112,25 +112,8 @@ impl<'a> ContainerVolumeManager<'a> {
     ///
     /// Use when guest path already exists (e.g., from block device mount).
     #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-    pub fn add_bind_volume(
-        &mut self,
-        volume_name: &str,
-        source: Option<String>,
-        container_path: &str,
-        read_only: bool,
-        owner_uid: u32,
-        owner_gid: u32,
-        subpath: Option<String>,
-    ) {
-        self.container_mounts.push(ContainerMount {
-            volume_name: volume_name.to_string(),
-            source,
-            destination: container_path.to_string(),
-            read_only,
-            owner_uid,
-            owner_gid,
-            subpath,
-        });
+    pub fn add_bind_volume(&mut self, mount: ContainerMount) {
+        self.container_mounts.push(mount);
     }
 
     /// Build container mount configuration.
@@ -168,15 +151,15 @@ mod tests {
     fn add_bind_volume_does_not_create_guest_virtiofs_share() {
         let mut guest = GuestVolumeManager::new();
         let mut mgr = ContainerVolumeManager::new(&mut guest);
-        mgr.add_bind_volume(
-            "uservol0",
-            Some("/run/boxlite/user-volumes/uservol0".to_string()),
-            "/data",
-            false,
-            1000,
-            1000,
-            Some("app.conf".to_string()),
-        );
+        mgr.add_bind_volume(ContainerMount {
+            volume_name: "uservol0".to_string(),
+            source: Some("/run/boxlite/user-volumes/uservol0".to_string()),
+            destination: "/data".to_string(),
+            read_only: false,
+            owner_uid: 1000,
+            owner_gid: 1000,
+            subpath: Some("app.conf".to_string()),
+        });
 
         let mounts = mgr.build_container_mounts();
         assert_eq!(mounts.len(), 1);
