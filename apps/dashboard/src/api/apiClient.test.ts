@@ -63,3 +63,37 @@ describe('ApiClient 401 -> bounded re-login recovery', () => {
     expect(window.sessionStorage.getItem('boxlite.reauth-attempted')).toBeNull()
   })
 })
+
+describe('resolveBillingApiUrl', () => {
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/dashboard/billing')
+  })
+
+  it('falls back to the dashboard API URL when billingApiUrl is not configured', async () => {
+    const { resolveBillingApiUrl } = await import('./apiClient')
+
+    expect(resolveBillingApiUrl({ apiUrl: `${window.location.origin}/api` })).toBe(`${window.location.origin}/api`)
+  })
+
+  it('adds /api for same-origin bare billing URLs used by the local dashboard proxy', async () => {
+    const { resolveBillingApiUrl } = await import('./apiClient')
+
+    expect(
+      resolveBillingApiUrl({
+        apiUrl: `${window.location.origin}/api`,
+        billingApiUrl: window.location.origin,
+      }),
+    ).toBe(`${window.location.origin}/api`)
+  })
+
+  it('preserves explicit billing API paths', async () => {
+    const { resolveBillingApiUrl } = await import('./apiClient')
+
+    expect(
+      resolveBillingApiUrl({
+        apiUrl: `${window.location.origin}/api`,
+        billingApiUrl: `${window.location.origin}/custom-billing`,
+      }),
+    ).toBe(`${window.location.origin}/custom-billing`)
+  })
+})

@@ -65,6 +65,24 @@ function clearReauthAttempted(): void {
   }
 }
 
+export function resolveBillingApiUrl(config: Pick<DashboardConfig, 'apiUrl' | 'billingApiUrl'>): string {
+  const billingApiUrl = config.billingApiUrl
+  if (!billingApiUrl) {
+    return config.apiUrl
+  }
+
+  try {
+    const url = new URL(billingApiUrl)
+    if (url.origin === window.location.origin && (url.pathname === '' || url.pathname === '/')) {
+      return `${url.origin}/api`
+    }
+  } catch {
+    return billingApiUrl
+  }
+
+  return billingApiUrl
+}
+
 export class ApiClient {
   private config: Configuration
   private onUnauthorized?: () => Promise<void> | void
@@ -131,7 +149,7 @@ export class ApiClient {
     this._userApi = new UsersApi(this.config, undefined, axiosInstance)
     this._apiKeyApi = new ApiKeysApi(this.config, undefined, axiosInstance)
     this._organizationsApi = new OrganizationsApi(this.config, undefined, axiosInstance)
-    this._billingApi = new BillingApiClient(config.billingApiUrl || window.location.origin, accessToken)
+    this._billingApi = new BillingApiClient(resolveBillingApiUrl(config), accessToken)
     this._volumeApi = new VolumesApi(this.config, undefined, axiosInstance)
     this._auditApi = new AuditApi(this.config, undefined, axiosInstance)
     this._regionsApi = new RegionsApi(this.config, undefined, axiosInstance)

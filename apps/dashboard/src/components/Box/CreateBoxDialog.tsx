@@ -5,6 +5,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { BILLING_RATES, boxHourlyCost, formatUsd } from '@/components/billing/rates'
 import { RoutePath } from '@/enums/RoutePath'
 import { useCreateBoxMutation } from '@/hooks/mutations/useCreateBoxMutation'
 import { useSelectedOrganization } from '@/hooks/useSelectedOrganization'
@@ -420,13 +421,7 @@ export const CreateBoxDialog = ({
           </div>
         </div>
 
-        {/* price — billing is not enabled yet, so everything is free ($0) */}
-        <div className="flex shrink-0 flex-col gap-1 border-t border-border px-4 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
-          <span className="font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">Price per hour</span>
-          <span className="font-mono text-[20px] font-bold tracking-[-0.5px] sm:text-[24px]">
-            $0.00 <span className="text-[11px] font-normal text-muted-foreground">/ hr · free in preview</span>
-          </span>
-        </div>
+        <BoxCostEstimate cpu={cpu} memory={memory} disk={disk} />
 
         {/* footer */}
         <div className="grid shrink-0 grid-cols-2 gap-[10px] border-t border-border px-4 py-4 sm:flex sm:justify-end sm:px-6">
@@ -448,5 +443,30 @@ export const CreateBoxDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function BoxCostEstimate({ cpu, memory, disk }: { cpu: number; memory: number; disk: number }) {
+  return (
+    <div className="flex shrink-0 flex-col gap-3 border-t border-border px-4 py-4 sm:px-6">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">Price per hour</span>
+        <span className="font-mono text-[20px] font-bold tracking-[-0.5px] sm:text-[24px]">
+          {formatUsd(boxHourlyCost({ cpu, memory, disk }))}{' '}
+          <span className="text-[11px] font-normal text-muted-foreground">/ hr</span>
+        </span>
+      </div>
+      <div className="grid gap-1 font-mono text-[11px] text-muted-foreground sm:grid-cols-3">
+        <span>
+          CPU {cpu} vCPU × {formatUsd(BILLING_RATES.cpuPerVcpuHour)}/vCPU·hr
+        </span>
+        <span>
+          RAM {memory} GiB × {formatUsd(BILLING_RATES.memoryPerGiBHour)}/GiB·hr
+        </span>
+        <span>
+          Disk {disk} GiB × {formatUsd(BILLING_RATES.diskPerGiBHour, 6)}/GiB·hr
+        </span>
+      </div>
+    </div>
   )
 }

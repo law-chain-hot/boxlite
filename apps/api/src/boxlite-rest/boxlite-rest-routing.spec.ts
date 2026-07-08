@@ -16,6 +16,10 @@ import { BoxliteBoxController } from './boxlite-box.controller'
 import { BoxliteProxyController } from './boxlite-proxy.controller'
 import { BoxliteWsProxyService } from './boxlite-ws-proxy.service'
 
+jest.mock('http-proxy-middleware', () => ({
+  createProxyMiddleware: jest.fn(),
+  fixRequestBody: jest.fn(),
+}))
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid'),
   validate: jest.fn(() => true),

@@ -45,13 +45,23 @@ const LoadingFallback = () => {
 
       {showLongLoadingMessage && (
         <div className="space-y-1 text-[13px] normal-case tracking-normal text-muted-foreground">
-          <p>taking longer than expected…</p>
+          <p>taking longer than expected - refresh sign-in if this persists.</p>
           <p>
             if it persists, ping{' '}
             <a href="mailto:support@boxlite.ai" className="text-brand underline underline-offset-2">
               support@boxlite.ai
             </a>
           </p>
+          <button
+            className="mt-4 border border-border bg-card px-4 py-2 font-mono text-[12px] text-foreground hover:bg-muted"
+            onClick={() => {
+              const nextUrl = new URL(window.location.href)
+              nextUrl.searchParams.set('resetAuth', '1')
+              window.location.assign(nextUrl.toString())
+            }}
+          >
+            Reset local sign-in
+          </button>
         </div>
       )}
     </div>

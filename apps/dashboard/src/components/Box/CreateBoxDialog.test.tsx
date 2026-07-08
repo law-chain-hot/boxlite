@@ -130,6 +130,15 @@ describe('CreateBoxDialog per-org resource cap', () => {
     expect(inputs[1].value).toBe('1')
   })
 
+  it('shows the hourly cost estimate for the selected resource shape', async () => {
+    await renderOpen()
+
+    expect(document.body.textContent).toContain('Price per hour')
+    expect(document.body.textContent).toContain('$0.0677')
+    expect(document.body.textContent).toContain('CPU 1 vCPU × $0.0504/vCPU·hr')
+    expect(document.body.textContent).toContain('Disk 10 GiB × $0.000108/GiB·hr')
+  })
+
   it('pins the visible input at the org max the moment the typed value would overshoot (before any blur)', async () => {
     await renderOpen()
     const input = cpuInput()

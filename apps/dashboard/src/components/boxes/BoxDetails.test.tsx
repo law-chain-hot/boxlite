@@ -183,4 +183,13 @@ describe('BoxDetails refresh', () => {
     expect(mocks.terminalRefetch).toHaveBeenCalledTimes(1)
     expect(document.querySelector('[data-testid="terminal-frame"]')).toBe(frameBeforeRefresh)
   })
+
+  it('shows the box cost section with hourly rate and accumulated cost placeholder', async () => {
+    await renderBoxDetails()
+
+    expect(document.body.textContent).toContain('cost')
+    expect(document.body.textContent).toContain('rate')
+    expect(document.body.textContent).toContain('$0.0839/hr')
+    expect(document.body.textContent).toContain('this box')
+  })
 })

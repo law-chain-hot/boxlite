@@ -5,6 +5,7 @@
 
 import { OrganizationSuspendedError } from '@/api/errors'
 import { OnboardingGuideDialog } from '@/components/OnboardingGuideDialog'
+import { boxHourlyCost, formatUsd } from '@/components/billing/rates'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -436,6 +437,10 @@ export default function BoxDetails() {
               <SpecRow label="cpu">{box.cpu} vcpu</SpecRow>
               <SpecRow label="memory">{box.memory} gib</SpecRow>
               <SpecRow label="disk">{box.disk} gib</SpecRow>
+
+              <SectionHeader title="cost" />
+              <SpecRow label="rate">{formatUsd(boxHourlyCost({ cpu: box.cpu, memory: box.memory, disk: box.disk }))}/hr</SpecRow>
+              <SpecRow label="this box">$0.00</SpecRow>
 
               <SectionHeader title="timestamps" />
               <SpecRow label="created">{getRelativeTimeString(box.createdAt).relativeTimeString}</SpecRow>

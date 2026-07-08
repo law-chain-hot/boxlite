@@ -16,20 +16,40 @@ import { MockAuthProvider } from '../mocks/MockAuthProvider'
 
 const apiUrl = (import.meta.env.VITE_BASE_API_URL ?? window.location.origin) + '/api'
 const isMocking = import.meta.env.VITE_ENABLE_MOCKING === 'true'
+const isLocalDashboard = ['localhost', '127.0.0.1'].includes(window.location.hostname)
 
 type Props = {
   children: ReactNode
 }
 
 export function ConfigProvider(props: Props) {
+  if (isLocalDashboard) {
+    return <LocalConfigProvider>{props.children}</LocalConfigProvider>
+  }
+
+  return <RemoteConfigProvider>{props.children}</RemoteConfigProvider>
+}
+
+function LocalConfigProvider(props: Props) {
+  const config = useMemo(() => localFallbackConfig(), [])
+  return <ConfigProviderInner config={config}>{props.children}</ConfigProviderInner>
+}
+
+function RemoteConfigProvider(props: Props) {
   const { data: config } = useSuspenseQuery({
     queryKey: queryKeys.config.all,
     queryFn: async () => {
-      const res = await fetch(`${apiUrl}/config`)
-      if (!res.ok) {
-        throw res
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3_000)
+      try {
+        const res = await fetch(`${apiUrl}/config`, { signal: controller.signal })
+        if (!res.ok) {
+          throw res
+        }
+        return res.json() as Promise<BoxliteConfiguration>
+      } finally {
+        clearTimeout(timeout)
       }
-      return res.json() as Promise<BoxliteConfiguration>
     },
     // App config (OIDC issuer, feature flags, domains) is fixed for a deploy.
     // Never refetch it on navigation — it gates AuthProvider construction.
@@ -37,6 +57,10 @@ export function ConfigProvider(props: Props) {
     gcTime: Infinity,
   })
 
+  return <ConfigProviderInner config={config}>{props.children}</ConfigProviderInner>
+}
+
+function ConfigProviderInner({ children, config }: Props & { config: BoxliteConfiguration }) {
   const oidcConfig: AuthProviderProps = useMemo(() => {
     return {
       authority: config.oidc.issuer,
@@ -55,7 +79,7 @@ export function ConfigProvider(props: Props) {
       // every load. sessionStorage (not localStorage) keeps the XSS exposure to
       // the tab lifetime; a 401 still clears the user via ApiClient's handler,
       // so a stale/revoked token can't get stuck.
-      userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+      userStore: new WebStorageStateStore({ store: isLocalDashboard ? window.localStorage : window.sessionStorage }),
       onSigninCallback: (user) => {
         const state = user?.state as { returnTo?: string } | undefined
         const targetUrl = state?.returnTo || RoutePath.DASHBOARD
@@ -74,10 +98,33 @@ export function ConfigProvider(props: Props) {
   return (
     <ConfigContext.Provider value={{ ...config, apiUrl }}>
       {isMocking ? (
-        <MockAuthProvider>{props.children}</MockAuthProvider>
+        <MockAuthProvider>{children}</MockAuthProvider>
       ) : (
-        <AuthProvider {...oidcConfig}>{props.children}</AuthProvider>
+        <AuthProvider {...oidcConfig}>{children}</AuthProvider>
       )}
     </ConfigContext.Provider>
   )
+}
+
+function localFallbackConfig(): BoxliteConfiguration {
+  return {
+    version: '0.0.0-dev',
+    oidc: {
+      issuer: 'http://localhost:25556/dex',
+      clientId: 'boxlite',
+      audience: 'boxlite',
+    },
+    linkedAccountsEnabled: false,
+    announcements: {},
+    proxyTemplateUrl: 'http://{{PORT}}-{{boxId}}.localhost:28080',
+    proxyToolboxUrl: 'http://localhost:28080/toolbox',
+    dashboardUrl: window.location.origin,
+    maintananceMode: false,
+    environment: 'local',
+    rateLimit: {
+      authenticated: {},
+      boxCreate: {},
+      boxLifecycle: {},
+    },
+  } as BoxliteConfiguration
 }

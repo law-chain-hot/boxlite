@@ -9,7 +9,7 @@ import { OrganizationsProvider } from '@/providers/OrganizationsProvider'
 import { SelectedOrganizationProvider } from '@/providers/SelectedOrganizationProvider'
 import { initPylon } from '@/vendor/pylon'
 import { usePostHog } from 'posthog-js/react'
-import React, { Suspense, useEffect } from 'react'
+import React, { Suspense, useEffect, useMemo } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { BannerProvider } from './components/Banner'
@@ -32,6 +32,16 @@ import LandingPage from './pages/LandingPage'
 import Logout from './pages/Logout'
 import NotFound from './pages/NotFound'
 import Boxes from './pages/Boxes'
+import Metering from './pages/Metering'
+import { ApiProvider } from './providers/ApiProvider'
+import { RegionsProvider } from './providers/RegionsProvider'
+import { BoxSessionProvider } from './providers/BoxSessionProvider'
+import { useApi } from './hooks/useApi'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './hooks/queries/queryKeys'
+import { SelectedOrganizationContext } from './contexts/SelectedOrganizationContext'
+import { LocalStorageKey } from './enums/LocalStorageKey'
+import { resolveSelectedOrganizationId } from './lib/organization-selection'
 
 // Code-split the heavier, not-first-paint routes out of the main bundle. They
 // load on demand under the dashboard <Outlet> Suspense boundary, so the initial
@@ -46,9 +56,6 @@ const BoxDetails = React.lazy(() => import('./components/boxes').then((m) => ({ 
 const BoxTerminalFullscreen = React.lazy(() =>
   import('./components/boxes').then((m) => ({ default: m.BoxTerminalFullscreen })),
 )
-import { ApiProvider } from './providers/ApiProvider'
-import { RegionsProvider } from './providers/RegionsProvider'
-import { BoxSessionProvider } from './providers/BoxSessionProvider'
 
 const HIDDEN_DASHBOARD_ROUTES = [
   RoutePath.IMAGES,
@@ -81,6 +88,76 @@ const SlackRedirect = () => {
     window.location.href = RoutePath.DASHBOARD
   }, [])
   return null
+}
+
+const MeteringDebugRoute = () => (
+  <ApiProvider>
+    <BannerProvider>
+      <MeteringDebugOrganizationRoute />
+    </BannerProvider>
+  </ApiProvider>
+)
+
+function MeteringDebugOrganizationRoute() {
+  const { organizationsApi } = useApi()
+  const organizationsQuery = useQuery({
+    queryKey: queryKeys.organization.list(),
+    queryFn: async () => {
+      const timeout = new Promise<never>((_, reject) => {
+        window.setTimeout(() => reject(new Error('Timed out loading organizations for metering.')), 8_000)
+      })
+      const organizations = organizationsApi.listOrganizations().then((response) => response.data)
+      return Promise.race([organizations, timeout])
+    },
+    retry: false,
+  })
+
+  const selectedOrganization = useMemo(() => {
+    const organizations = organizationsQuery.data ?? []
+    const organizationId = resolveSelectedOrganizationId(
+      organizations,
+      localStorage.getItem(LocalStorageKey.SelectedOrganizationId),
+    )
+    return organizations.find((organization) => organization.id === organizationId) ?? null
+  }, [organizationsQuery.data])
+
+  const selectedOrganizationContext = useMemo(
+    () => ({
+      selectedOrganization,
+      organizationMembers: [],
+      refreshOrganizationMembers: async () => [],
+      authenticatedUserOrganizationMember: null,
+      authenticatedUserHasPermission: () => true,
+      onSelectOrganization: async (organizationId: string) => {
+        localStorage.setItem(LocalStorageKey.SelectedOrganizationId, organizationId)
+        await organizationsQuery.refetch()
+        return true
+      },
+    }),
+    [organizationsQuery, selectedOrganization],
+  )
+
+  if (organizationsQuery.isLoading) {
+    return (
+      <div className="min-h-svh bg-background p-6 font-mono text-[13px] text-muted-foreground">
+        Loading organization for metering…
+      </div>
+    )
+  }
+
+  if (organizationsQuery.isError) {
+    return (
+      <div className="min-h-svh bg-background p-6 font-mono text-[13px] text-destructive">
+        Metering test page could not load organizations.
+      </div>
+    )
+  }
+
+  return (
+    <SelectedOrganizationContext.Provider value={selectedOrganizationContext}>
+      <Metering />
+    </SelectedOrganizationContext.Provider>
+  )
 }
 
 // Same-origin OIDC silent-renew iframes are legitimate, so frame refusal
@@ -153,6 +230,7 @@ function App() {
       <Route path={RoutePath.LOGOUT} element={<Logout />} />
       <Route path={RoutePath.DOCS} element={<DocsRedirect />} />
       <Route path={RoutePath.SLACK} element={<SlackRedirect />} />
+      <Route path={RoutePath.METERING} element={<MeteringDebugRoute />} />
       <Route
         path={RoutePath.ACCOUNT_SETTINGS}
         element={<Navigate to={`${RoutePath.BOXES}${location.search}`} replace />}
@@ -187,6 +265,7 @@ function App() {
         <Route path={getRouteSubPath(RoutePath.KEYS)} element={<Keys />} />
         <Route path={getRouteSubPath(RoutePath.BOXES)} element={<Boxes />} />
         <Route path={getRouteSubPath(RoutePath.BILLING)} element={<Billing />} />
+        <Route path={getRouteSubPath(RoutePath.METERING)} element={<Metering />} />
         <Route path={getRouteSubPath(RoutePath.PRICING)} element={<Navigate to={RoutePath.BILLING} replace />} />
         <Route path={getRouteSubPath(RoutePath.ADMIN)} element={<Admin />} />
         {/* TODO(image-rewrite): legacy /dashboard/templates route removed with the templates page. */}

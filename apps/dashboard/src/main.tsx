@@ -18,6 +18,18 @@ import './index.css'
 import { ConfigProvider } from './providers/ConfigProvider'
 import { QueryProvider } from './providers/QueryProvider'
 
+if (new URLSearchParams(window.location.search).get('resetAuth') === '1') {
+  try {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  } catch {
+    // best-effort local recovery before React/OIDC starts
+  }
+  const nextUrl = new URL(window.location.href)
+  nextUrl.searchParams.delete('resetAuth')
+  window.history.replaceState({}, '', nextUrl.pathname + nextUrl.search + nextUrl.hash)
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 async function enableMocking() {
