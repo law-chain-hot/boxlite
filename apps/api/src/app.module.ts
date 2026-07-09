@@ -44,6 +44,7 @@ import { AdminModule } from './admin/admin.module'
 import { ClickHouseModule } from './clickhouse/clickhouse.module'
 import { BoxTelemetryModule } from './box-telemetry/box-telemetry.module'
 import { BoxliteRestModule } from './boxlite-rest/boxlite-rest.module'
+import { BillingModule } from './billing/billing.module'
 import { UsageModule } from './usage/usage.module'
 
 @Module({
@@ -201,6 +202,7 @@ import { UsageModule } from './usage/usage.module'
     BoxTelemetryModule,
     BoxliteRestModule,
     UsageModule,
+    BillingModule,
     OpenFeatureModule.forRoot({
       contextFactory: (request: ExecutionContext) => {
         const req = request.switchToHttp().getRequest()
