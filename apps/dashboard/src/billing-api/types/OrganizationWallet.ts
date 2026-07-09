@@ -12,6 +12,10 @@ export interface OrganizationWallet {
 
   automaticTopUp?: AutomaticTopUp
   hasFailedOrPendingInvoice?: boolean
+  freeBalanceCents?: number
+  paidBalanceCents?: number
+  freeExpiresAt?: Date
+  billingStatus?: 'trial' | 'active' | 'low_balance' | 'zero_balance' | 'suspended' | 'closed' | 'frozen'
 }
 
 export type AutomaticTopUp = {

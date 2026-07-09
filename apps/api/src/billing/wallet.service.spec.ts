@@ -214,7 +214,7 @@ describe('WalletService', () => {
       paidBalanceCents: 0,
       billingStatus: 'trial',
       creditCardConnected: false,
-      hasFailedOrPendingTopUp: false,
+      hasFailedOrPendingInvoice: false,
     })
     expect(transactions.rows).toHaveLength(1)
     expect(transactions.rows[0]).toMatchObject({
@@ -307,5 +307,54 @@ describe('WalletService', () => {
     await expect(service.setAutomaticTopUp(ORG_ID, { thresholdAmount: 20, targetAmount: 25 })).rejects.toBeInstanceOf(
       BadRequestException,
     )
+  })
+
+  it('aggregates rated usage into the dashboard usage shape', async () => {
+    ratedPeriods.rows.push(ratedPeriod({ ratedCents: '50', ratedAt: new Date('2026-07-08T00:00:00Z') }))
+
+    const usage = await service.getOrganizationUsage(ORG_ID, new Date('2026-07-08T12:00:00Z'))
+
+    expect(usage.amountCents).toBe(50)
+    expect(usage.totalAmountCents).toBe(50)
+    expect(usage.usageCharges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ billableMetric: 'cpu_usage', units: '7200', eventsCount: 1 }),
+        expect.objectContaining({ billableMetric: 'ram_usage', units: '14400', eventsCount: 1 }),
+        expect.objectContaining({ billableMetric: 'disk_usage', units: '36000', eventsCount: 1 }),
+      ]),
+    )
+  })
+
+  it('lists top-ups as receipt invoices and voids pending invoices', async () => {
+    await service.createTopUp(ORG_ID, 2500)
+    await service.createTopUp(ORG_ID, 5000)
+    topUps.rows[0].createdAt = new Date('2026-07-08T00:00:00Z')
+    topUps.rows[1].createdAt = new Date('2026-07-09T00:00:00Z')
+
+    const invoices = await service.listInvoices(ORG_ID, 1, 1)
+
+    expect(invoices).toMatchObject({
+      totalItems: 2,
+      totalPages: 2,
+      page: 1,
+      perPage: 1,
+    })
+    expect(invoices.items[0]).toMatchObject({
+      id: 'top-up-2',
+      totalAmountCents: 5000,
+      totalDueAmountCents: 5000,
+      paymentStatus: 'pending',
+      status: 'pending',
+      type: 'one_off',
+    })
+
+    await service.voidInvoice(ORG_ID, 'top-up-2')
+    const voidedInvoices = await service.listInvoices(ORG_ID, 1, 1)
+    expect(voidedInvoices.items[0]).toMatchObject({
+      id: 'top-up-2',
+      totalDueAmountCents: 0,
+      paymentStatus: 'failed',
+      status: 'voided',
+    })
   })
 })
