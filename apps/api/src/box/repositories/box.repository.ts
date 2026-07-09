@@ -20,6 +20,7 @@ import { BoxDesiredStateUpdatedEvent } from '../events/box-desired-state-updated
 import { BoxPublicStatusUpdatedEvent } from '../events/box-public-status-updated.event'
 import { BoxOrganizationUpdatedEvent } from '../events/box-organization-updated.event'
 import { BoxLookupCacheInvalidationService } from '../services/box-lookup-cache-invalidation.service'
+import { applyUsagePeriodTransition } from '../../usage/usage-period-transition'
 
 // Cap how long the proxy auto-start UPDATE waits to acquire the box row's
 // write lock. Concurrent start/stop/sync go through updateWhere(), which holds
@@ -62,6 +63,7 @@ export class BoxRepository extends BaseRepository<Box> {
     await this.dataSource.transaction(async (entityManager) => {
       await entityManager.insert(Box, box)
       await this.upsertLastActivity(entityManager, box.id, box.createdAt)
+      await applyUsagePeriodTransition(entityManager, box, box.createdAt, this.logger)
     })
 
     this.invalidateLookupCacheOnInsert(box)
@@ -123,6 +125,10 @@ export class BoxRepository extends BaseRepository<Box> {
       if (previousBox.state !== box.state || previousBox.organizationId !== box.organizationId) {
         await this.upsertLastActivity(entityManager, id, box.updatedAt)
       }
+
+      if (this.hasUsageRelevantChange(previousBox, box)) {
+        await applyUsagePeriodTransition(entityManager, box, box.updatedAt, this.logger)
+      }
     })
 
     this.emitUpdateEvents(box, previousBox)
@@ -151,7 +157,7 @@ export class BoxRepository extends BaseRepository<Box> {
   ): Promise<Box> {
     const { updateData, whereCondition } = params
 
-    return this.manager.transaction(async (entityManager) => {
+    const { box, previousBox } = await this.manager.transaction(async (entityManager) => {
       const whereClause = {
         ...whereCondition,
         id,
@@ -181,11 +187,17 @@ export class BoxRepository extends BaseRepository<Box> {
         await this.upsertLastActivity(entityManager, id, box.updatedAt)
       }
 
-      this.emitUpdateEvents(box, previousBox)
-      this.invalidateLookupCacheOnUpdate(box, previousBox)
+      if (this.hasUsageRelevantChange(previousBox, box)) {
+        await applyUsagePeriodTransition(entityManager, box, box.updatedAt, this.logger)
+      }
 
-      return box
+      return { box, previousBox }
     })
+
+    this.emitUpdateEvents(box, previousBox)
+    this.invalidateLookupCacheOnUpdate(box, previousBox)
+
+    return box
   }
 
   /**
@@ -265,6 +277,22 @@ export class BoxRepository extends BaseRepository<Box> {
    */
   private async upsertLastActivity(entityManager: EntityManager, boxId: string, lastActivityAt: Date): Promise<void> {
     await entityManager.upsert(BoxLastActivity, { boxId, lastActivityAt }, ['boxId'])
+  }
+
+  private hasUsageRelevantChange(
+    previousBox: Pick<Box, 'state' | 'desiredState' | 'organizationId' | 'region' | 'cpu' | 'mem' | 'disk' | 'gpu'>,
+    updatedBox: Pick<Box, 'state' | 'desiredState' | 'organizationId' | 'region' | 'cpu' | 'mem' | 'disk' | 'gpu'>,
+  ): boolean {
+    return (
+      previousBox.state !== updatedBox.state ||
+      previousBox.desiredState !== updatedBox.desiredState ||
+      previousBox.organizationId !== updatedBox.organizationId ||
+      previousBox.region !== updatedBox.region ||
+      previousBox.cpu !== updatedBox.cpu ||
+      previousBox.mem !== updatedBox.mem ||
+      previousBox.disk !== updatedBox.disk ||
+      previousBox.gpu !== updatedBox.gpu
+    )
   }
 
   /**
