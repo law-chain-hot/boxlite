@@ -66,7 +66,7 @@ function Billing() {
   const usage = usageQuery.data
   const currentTier = tiersQuery.data?.[0]
   const currentBalance = wallet?.ongoingBalanceCents ?? 0
-  const spentThisMonth = wallet ? wallet.balanceCents - wallet.ongoingBalanceCents : (usage?.totalAmountCents ?? 0)
+  const spentThisMonth = wallet ? wallet.balanceCents - wallet.ongoingBalanceCents : 0
   const currentTierLimits = {
     boxes: 10,
     cpu: currentTier?.tierLimit.concurrentCPU ?? 10,
@@ -116,79 +116,93 @@ function Billing() {
       </PageHeader>
 
       <PageContent size="full" className="gap-6">
-        <div className="flex items-center">
-          <div className="inline-flex border border-border bg-background">
-            {(['usage', 'billing'] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  'min-w-[92px] px-5 py-3 font-mono text-[13px] transition-colors',
-                  activeTab === tab ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {tab === 'usage' ? 'Usage' : 'Billing'}
-              </button>
-            ))}
+        {walletQuery.isLoading ? (
+          <div className="border border-border bg-card px-[22px] py-6 font-mono text-[13px] text-muted-foreground">
+            Loading billing data...
           </div>
-        </div>
-
-        {wallet?.billingStatus === 'suspended' || wallet?.billingStatus === 'frozen' ? <SuspendedBanner /> : null}
-
-        {activeTab === 'usage' ? (
-          <div className="flex flex-col gap-9">
-            <BalanceOverviewCard
-              currentBalanceCents={currentBalance}
-              spentThisMonthCents={spentThisMonth}
-              creditCardConnected={Boolean(wallet?.creditCardConnected)}
-            />
-
-            <QuotaPanel tier={currentTier?.tier ?? 1} limits={currentTierLimits} />
-
-            <div>
-              <SectionTitle
-                title="Usage over time"
-                right={
-                  <div className="flex flex-wrap items-center gap-2">
-                    {['Last 1 hour', 'Last 6 hours', 'Last 24 hours', 'Last 7 days', 'Last 30 days'].map((range) => (
-                      <Button
-                        key={range}
-                        size="sm"
-                        variant={rangeLabel === range ? 'default' : 'secondary'}
-                        onClick={() => setRangeLabel(range)}
-                      >
-                        {range}
-                      </Button>
-                    ))}
-                    <Button size="sm" variant="secondary" onClick={() => setRangeLabel('Custom range')}>
-                      Custom range
-                    </Button>
-                  </div>
-                }
-              />
-              <UsageTrendCharts {...usageStats} />
-            </div>
+        ) : walletQuery.isError || !wallet ? (
+          <div className="border border-destructive/40 bg-card px-[22px] py-6 font-mono text-[13px] text-destructive">
+            Billing data is unavailable.
           </div>
         ) : (
-          <BillingPanel
-            automaticTopUp={wallet?.automaticTopUp}
-            invoices={invoicesQuery.data?.items ?? []}
-            isSavingAutomaticTopUp={automaticTopUpMutation.isPending}
-            isCreatingTopUp={topUpMutation.isPending}
-            onSaveAutomaticTopUp={(automaticTopUp) =>
-              automaticTopUpMutation.mutateAsync({
-                organizationId,
-                automaticTopUp,
-              })
-            }
-            onTopUp={(amountCents) =>
-              topUpMutation.mutateAsync({
-                organizationId,
-                amountCents,
-              })
-            }
-          />
+          <>
+            <div className="flex items-center">
+              <div className="inline-flex border border-border bg-background">
+                {(['usage', 'billing'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      'min-w-[92px] px-5 py-3 font-mono text-[13px] transition-colors',
+                      activeTab === tab ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {tab === 'usage' ? 'Usage' : 'Billing'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {wallet?.billingStatus === 'suspended' || wallet?.billingStatus === 'frozen' ? <SuspendedBanner /> : null}
+
+            {activeTab === 'usage' ? (
+              <div className="flex flex-col gap-9">
+                <BalanceOverviewCard
+                  currentBalanceCents={currentBalance}
+                  spentThisMonthCents={spentThisMonth}
+                  creditCardConnected={Boolean(wallet?.creditCardConnected)}
+                />
+
+                <QuotaPanel tier={currentTier?.tier ?? 1} limits={currentTierLimits} />
+
+                <div>
+                  <SectionTitle
+                    title="Usage over time"
+                    right={
+                      <div className="flex flex-wrap items-center gap-2">
+                        {['Last 1 hour', 'Last 6 hours', 'Last 24 hours', 'Last 7 days', 'Last 30 days'].map(
+                          (range) => (
+                            <Button
+                              key={range}
+                              size="sm"
+                              variant={rangeLabel === range ? 'default' : 'secondary'}
+                              onClick={() => setRangeLabel(range)}
+                            >
+                              {range}
+                            </Button>
+                          ),
+                        )}
+                        <Button size="sm" variant="secondary" onClick={() => setRangeLabel('Custom range')}>
+                          Custom range
+                        </Button>
+                      </div>
+                    }
+                  />
+                  <UsageTrendCharts {...usageStats} />
+                </div>
+              </div>
+            ) : (
+              <BillingPanel
+                automaticTopUp={wallet?.automaticTopUp}
+                invoices={invoicesQuery.data?.items ?? []}
+                isSavingAutomaticTopUp={automaticTopUpMutation.isPending}
+                isCreatingTopUp={topUpMutation.isPending}
+                onSaveAutomaticTopUp={(automaticTopUp) =>
+                  automaticTopUpMutation.mutateAsync({
+                    organizationId,
+                    automaticTopUp,
+                  })
+                }
+                onTopUp={(amountCents) =>
+                  topUpMutation.mutateAsync({
+                    organizationId,
+                    amountCents,
+                  })
+                }
+              />
+            )}
+          </>
         )}
       </PageContent>
     </PageLayout>

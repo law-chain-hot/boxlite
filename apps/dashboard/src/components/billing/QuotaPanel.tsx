@@ -24,7 +24,7 @@ function QuotaBar({ used, limit, segments = 32 }: { used: number; limit: number;
   const filled = Math.max(0, Math.min(segments, Math.round(ratio * segments)))
   const color = ratio >= 0.9 ? 'hsl(var(--destructive))' : ratio >= 0.7 ? 'hsl(var(--warning))' : BILLING_BRAND
   return (
-    <div className="flex min-w-[180px] max-w-[760px] flex-1 gap-[3px]">
+    <div className="flex min-w-0 max-w-[760px] flex-1 gap-[3px]">
       {Array.from({ length: segments }).map((_, index) => (
         <span
           key={index}
@@ -39,7 +39,7 @@ function QuotaBar({ used, limit, segments = 32 }: { used: number; limit: number;
 function CapacityRow({ label, used, limit, unit }: Quota) {
   const atLimit = limit > 0 && used >= limit
   return (
-    <div className="grid grid-cols-[58px_86px_minmax(120px,1fr)] items-center gap-3 py-[7px] font-mono text-[13px] sm:grid-cols-[70px_110px_minmax(180px,1fr)] sm:gap-4">
+    <div className="grid grid-cols-[48px_minmax(84px,auto)_minmax(0,1fr)] items-center gap-2 py-[7px] font-mono text-[13px] sm:grid-cols-[70px_110px_minmax(180px,1fr)] sm:gap-4">
       <span className="uppercase tracking-[0.5px] text-muted-foreground">{label}</span>
       <span className="tabular-nums">
         <span className={cn('text-foreground', atLimit && 'text-destructive')}>{used}</span>
@@ -129,10 +129,10 @@ export function QuotaPanel({
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="mt-3 flex items-center gap-2 border-t border-border pt-3 font-mono text-[10px] uppercase tracking-[1.5px] text-muted-foreground transition-colors hover:text-foreground"
+          className="mt-3 flex max-w-full items-start gap-2 border-t border-border pt-3 text-left font-mono text-[10px] uppercase leading-relaxed tracking-[1.5px] text-muted-foreground transition-colors hover:text-foreground"
         >
-          <span className="text-[11px]">{open ? '▾' : '▸'}</span>
-          Per-box max &amp; rate limits
+          <span className="shrink-0 text-[11px]">{open ? '▾' : '▸'}</span>
+          <span>Per-box max &amp; rate limits</span>
         </button>
         {open ? (
           <div className="mt-3 grid grid-cols-1 gap-x-10 gap-y-2 font-mono text-[12px] sm:grid-cols-2">

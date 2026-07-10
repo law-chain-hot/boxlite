@@ -15,6 +15,10 @@ const mutationMocks = vi.hoisted(() => ({
   topUpWallet: vi.fn(),
 }))
 
+const queryState = vi.hoisted(() => ({
+  walletMode: 'ready' as 'ready' | 'loading' | 'error',
+}))
+
 vi.mock('react-router-dom', () => ({
   Link: ({ children }: { children: ReactNode }) => <a>{children}</a>,
 }))
@@ -34,19 +38,27 @@ vi.mock('@/hooks/useSelectedOrganization', () => ({
 }))
 
 vi.mock('@/hooks/queries/billingQueries', () => ({
-  useOwnerWalletQuery: () => ({
-    data: {
-      balanceCents: 10000,
-      ongoingBalanceCents: 8400,
-      name: 'Acme',
-      creditCardConnected: false,
-      automaticTopUp: { thresholdAmount: 20, targetAmount: 100 },
-      hasFailedOrPendingInvoice: false,
-    },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
+  useOwnerWalletQuery: () =>
+    queryState.walletMode === 'ready'
+      ? {
+          data: {
+            balanceCents: 10000,
+            ongoingBalanceCents: 8400,
+            name: 'Acme',
+            creditCardConnected: false,
+            automaticTopUp: { thresholdAmount: 20, targetAmount: 100 },
+            hasFailedOrPendingInvoice: false,
+          },
+          isLoading: false,
+          isError: false,
+          refetch: vi.fn(),
+        }
+      : {
+          data: undefined,
+          isLoading: queryState.walletMode === 'loading',
+          isError: queryState.walletMode === 'error',
+          refetch: vi.fn(),
+        },
   useOwnerInvoicesQuery: () => ({
     data: { items: [], totalItems: 0, totalPages: 0 },
     isLoading: false,
@@ -57,8 +69,8 @@ vi.mock('@/hooks/queries/billingQueries', () => ({
 vi.mock('@/hooks/queries/useOrganizationUsageQuery', () => ({
   useOrganizationUsageQuery: () => ({
     data: {
-      amountCents: 1600,
-      totalAmountCents: 1600,
+      amountCents: 1700,
+      totalAmountCents: 1700,
       usageCharges: [
         { billableMetric: 'cpu_usage', units: '7200', amountCents: 1008, eventsCount: 1 },
         { billableMetric: 'ram_usage', units: '14400', amountCents: 648, eventsCount: 1 },
@@ -121,6 +133,7 @@ describe('Billing page', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    queryState.walletMode = 'ready'
   })
 
   afterEach(() => {
@@ -153,6 +166,11 @@ describe('Billing page', () => {
     expect(document.body.textContent).toContain('Usage Cost')
     expect(document.body.textContent).toContain('Limits')
 
+    const spentLabel = Array.from(document.querySelectorAll('span')).find((element) =>
+      element.textContent?.includes('Spent this month'),
+    )
+    expect(spentLabel?.parentElement?.querySelector('[aria-label="16.00"]')).not.toBeNull()
+
     const billingTab = Array.from(document.querySelectorAll('button')).find(
       (button) => button.textContent === 'Billing',
     )
@@ -165,6 +183,15 @@ describe('Billing page', () => {
 
     expect(document.body.textContent).toContain('Auto-reload')
     expect(document.body.textContent).not.toContain('Billing is on the way')
+  })
+
+  it('does not present unavailable wallet data as a zero balance', async () => {
+    queryState.walletMode = 'error'
+
+    await renderBilling()
+
+    expect(document.body.textContent).toContain('Billing data is unavailable')
+    expect(document.body.textContent).not.toContain('Current balance')
   })
 
   it('renders product billing controls with editable auto top-up, custom range, receipt search, and top-up confirmation', async () => {
