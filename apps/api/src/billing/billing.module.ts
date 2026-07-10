@@ -15,6 +15,7 @@ import { TopUpRecord } from './entities/top-up-record.entity'
 import { WalletTransaction } from './entities/wallet-transaction.entity'
 import { Wallet } from './entities/wallet.entity'
 import { RatingService } from './rating/rating.service'
+import { SettlementService } from './settlement.service'
 import { WalletService } from './wallet.service'
 
 @Module({
@@ -23,7 +24,7 @@ import { WalletService } from './wallet.service'
     TypeOrmModule.forFeature([RatedPeriod, PricingPlan, UsagePeriodArchive, Wallet, WalletTransaction, TopUpRecord]),
   ],
   controllers: [BillingController],
-  providers: [RatingService, WalletService, OrganizationActionGuard],
+  providers: [RatingService, WalletService, SettlementService, OrganizationActionGuard],
   exports: [RatingService, WalletService],
 })
 export class BillingModule {}

@@ -4,7 +4,6 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common'
-import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectRepository } from '@nestjs/typeorm'
 import { QueryFailedError, Repository } from 'typeorm'
 import { UsagePeriodArchive } from '../../usage/entities/usage-period-archive.entity'
@@ -30,14 +29,6 @@ export class RatingService {
     @InjectRepository(PricingPlan)
     private readonly pricingPlans: Repository<PricingPlan>,
   ) {}
-
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async scheduledSweep(): Promise<void> {
-    const result = await this.rateClosedPeriods()
-    if (result.rated || result.skipped) {
-      this.logger.log(`rating sweep: rated ${result.rated}, skipped ${result.skipped}`)
-    }
-  }
 
   async rateClosedPeriods(): Promise<{ rated: number; skipped: number }> {
     const periods = await this.findUnratedArchivedPeriods()

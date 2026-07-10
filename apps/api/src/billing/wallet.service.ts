@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0
  */
 
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
-import { Cron, CronExpression } from '@nestjs/schedule'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import Decimal from 'decimal.js'
-import { EntityManager, QueryFailedError, Repository } from 'typeorm'
+import { Between, EntityManager, QueryFailedError, Repository } from 'typeorm'
 import { PricingPlan } from './entities/pricing-plan.entity'
 import { RatedPeriod } from './entities/rated-period.entity'
 import { TopUpRecord } from './entities/top-up-record.entity'
@@ -122,8 +121,6 @@ function isUniqueViolation(err: unknown): boolean {
 
 @Injectable()
 export class WalletService {
-  private readonly logger = new Logger(WalletService.name)
-
   constructor(
     @InjectRepository(Wallet)
     private readonly wallets: Repository<Wallet>,
@@ -137,21 +134,27 @@ export class WalletService {
     private readonly pricingPlans: Repository<PricingPlan>,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES, { name: 'debit-rated-periods' })
-  async scheduledDebitSweep(): Promise<void> {
-    const result = await this.debitRatedPeriods()
-    if (result.debited || result.skipped) {
-      this.logger.log(`wallet debit sweep: debited ${result.debited}, skipped ${result.skipped}`)
-    }
-  }
-
-  async getWalletView(organizationId: string): Promise<OrganizationWalletView> {
+  async getWalletView(organizationId: string, now: Date = new Date()): Promise<OrganizationWalletView> {
     const wallet = await this.getOrCreateWallet(organizationId)
-    const openTopUps = await this.topUps.find({ where: { organizationId } })
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
+    const [openTopUps, usageDebits] = await Promise.all([
+      this.topUps.find({ where: { organizationId } }),
+      this.transactions.find({
+        where: {
+          organizationId,
+          kind: 'usage_debit',
+          createdAt: Between(monthStart, now),
+        },
+      }),
+    ])
     const ongoingBalanceCents = this.availableBalanceCents(wallet)
+    const spentThisMonthCents = usageDebits.reduce(
+      (sum, transaction) => sum + Math.max(0, -Number(transaction.amountCents)),
+      0,
+    )
 
     return {
-      balanceCents: ongoingBalanceCents,
+      balanceCents: ongoingBalanceCents + spentThisMonthCents,
       ongoingBalanceCents,
       name: organizationId,
       creditCardConnected: wallet.creditCardConnected,
@@ -299,7 +302,10 @@ export class WalletService {
         }
 
         const wallet = await this.findWalletForUpdate(manager, period.organizationId)
-        const amountCents = Math.max(0, Number(period.ratedCents))
+        const remainderBefore = new Decimal(wallet.settlementRemainderCents ?? 0)
+        const accumulatedPreciseCents = remainderBefore.plus(period.preciseCents)
+        const amountCents = Decimal.max(accumulatedPreciseCents, 0).toDecimalPlaces(0, Decimal.ROUND_FLOOR).toNumber()
+        const remainderAfter = accumulatedPreciseCents.minus(amountCents)
         const freeBefore = Number(wallet.freeBalanceCents)
         const paidBefore = Number(wallet.paidBalanceCents)
         const freeDebitCents = Math.min(Math.max(0, freeBefore), amountCents)
@@ -307,6 +313,7 @@ export class WalletService {
 
         wallet.freeBalanceCents = String(freeBefore - freeDebitCents)
         wallet.paidBalanceCents = String(paidBefore - paidDebitCents)
+        wallet.settlementRemainderCents = remainderAfter.toString()
         wallet.billingStatus = await this.statusForWallet(manager, wallet)
         await manager.getRepository(Wallet).save(wallet)
 
@@ -323,6 +330,9 @@ export class WalletService {
               freeDebitCents,
               paidDebitCents,
               ratedCents: period.ratedCents,
+              preciseCents: period.preciseCents,
+              settlementRemainderBeforeCents: remainderBefore.toString(),
+              settlementRemainderAfterCents: remainderAfter.toString(),
             },
           }),
         )
@@ -436,7 +446,7 @@ export class WalletService {
       .createQueryBuilder('rp')
       .leftJoin(WalletTransaction, 'wt', 'wt."ratedPeriodId" = rp.id')
       .where('wt.id IS NULL')
-      .orderBy('rp."ratedAt"', 'ASC')
+      .orderBy('rp.ratedAt', 'ASC')
       .limit(Math.max(1, Math.min(1000, Math.trunc(limit))))
       .getMany()
   }
@@ -458,6 +468,7 @@ export class WalletService {
         organizationId,
         freeBalanceCents: String(defaultGrantCents),
         paidBalanceCents: '0',
+        settlementRemainderCents: '0',
         freeExpiresAt: null,
         billingStatus: defaultGrantCents > 0 ? 'trial' : 'active',
         creditCardConnected: false,

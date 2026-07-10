@@ -389,16 +389,31 @@ describe('UsageService', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('ignoring stale usage transition'))
   })
 
-  it('rolls open periods older than 24 hours and reopens the same billable kind', async () => {
+  it('rolls open periods older than five minutes and reopens the same billable kind', async () => {
     const box = makeBox(BoxState.STARTED, BoxDesiredState.STARTED)
     periods.boxes.set(box.id, box)
-    await service.applyTransition(box, BoxState.STARTED, BoxDesiredState.STARTED, new Date('2026-07-06T00:00:00Z'))
+    await service.applyTransition(box, BoxState.STARTED, BoxDesiredState.STARTED, new Date('2026-07-08T00:00:00Z'))
 
-    await service.closeAndReopenUsagePeriods(new Date('2026-07-08T00:00:00Z'))
+    await service.closeAndReopenUsagePeriods(new Date('2026-07-08T00:05:01Z'))
 
     expect(periods.rows).toHaveLength(2)
-    expect(periods.rows[0].endAt).toEqual(new Date('2026-07-08T00:00:00Z'))
-    expect(periods.rows[1]).toMatchObject({ kind: 'running', startAt: new Date('2026-07-08T00:00:00Z'), endAt: null })
+    expect(periods.rows[0].endAt).toEqual(new Date('2026-07-08T00:05:01Z'))
+    expect(periods.rows[1]).toMatchObject({
+      kind: 'running',
+      startAt: new Date('2026-07-08T00:05:01Z'),
+      endAt: null,
+    })
+  })
+
+  it('does not roll an open period before five minutes', async () => {
+    const box = makeBox(BoxState.STARTED, BoxDesiredState.STARTED)
+    periods.boxes.set(box.id, box)
+    await service.applyTransition(box, BoxState.STARTED, BoxDesiredState.STARTED, new Date('2026-07-08T00:00:00Z'))
+
+    await service.closeAndReopenUsagePeriods(new Date('2026-07-08T00:04:59Z'))
+
+    expect(periods.rows).toHaveLength(1)
+    expect(periods.rows[0]).toMatchObject({ startAt: new Date('2026-07-08T00:00:00Z'), endAt: null })
   })
 
   it('archives closed periods and removes them from the active table', async () => {

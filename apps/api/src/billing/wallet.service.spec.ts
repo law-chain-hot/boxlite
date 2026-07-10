@@ -14,6 +14,15 @@ import { WalletService } from './wallet.service'
 
 const ORG_ID = 'f5de33a9-4eb2-4279-a8de-9f02d63cc4f0'
 
+function matchesFindValue(actual: unknown, expected: unknown): boolean {
+  const operator = expected as { _type?: string; _value?: unknown[] }
+  if (operator?._type === 'between' && Array.isArray(operator._value)) {
+    const [from, to] = operator._value
+    return actual instanceof Date && from instanceof Date && to instanceof Date && actual >= from && actual <= to
+  }
+  return actual === expected
+}
+
 class FakeEntityManager {
   constructor(private readonly repositories: Map<unknown, FakeRepository<unknown>>) {}
 
@@ -62,7 +71,7 @@ class FakeRepository<T extends { id?: string }> {
   async find(opts: { where?: Partial<T>; take?: number } = {}): Promise<T[]> {
     const where = opts.where ?? {}
     const result = this.rows.filter((row) =>
-      Object.entries(where).every(([key, value]) => (row as Record<string, unknown>)[key] === value),
+      Object.entries(where).every(([key, value]) => matchesFindValue((row as Record<string, unknown>)[key], value)),
     )
     return result.slice(0, opts.take)
   }
@@ -113,6 +122,8 @@ class FakePricingPlanRepository extends FakeRepository<PricingPlan> {
 }
 
 class FakeRatedPeriodRepository extends FakeRepository<RatedPeriod> {
+  orderByPath?: string
+
   constructor(
     prefix: string,
     private readonly transactions: FakeWalletTransactionRepository,
@@ -124,14 +135,17 @@ class FakeRatedPeriodRepository extends FakeRepository<RatedPeriod> {
     return {
       leftJoin: () => ({
         where: () => ({
-          orderBy: () => ({
-            limit: (limit: number) => ({
-              getMany: async () =>
-                this.rows
-                  .filter((period) => !this.transactions.rows.some((tx) => tx.ratedPeriodId === period.id))
-                  .slice(0, limit),
-            }),
-          }),
+          orderBy: (path: string) => {
+            this.orderByPath = path
+            return {
+              limit: (limit: number) => ({
+                getMany: async () =>
+                  this.rows
+                    .filter((period) => !this.transactions.rows.some((tx) => tx.ratedPeriodId === period.id))
+                    .slice(0, limit),
+              }),
+            }
+          },
         }),
       }),
     }
@@ -241,7 +255,39 @@ describe('WalletService', () => {
       paidBalanceCents: '0',
       billingStatus: 'trial',
     })
+    const debit = transactions.rows.find((tx) => tx.kind === 'usage_debit')
+    expect(debit).toBeDefined()
+    if (!debit) {
+      throw new Error('expected usage debit transaction')
+    }
+    debit.createdAt = new Date('2026-07-08T00:01:00Z')
+
+    await expect(service.getWalletView(ORG_ID, new Date('2026-07-08T12:00:00Z'))).resolves.toMatchObject({
+      balanceCents: 10000,
+      ongoingBalanceCents: 7500,
+    })
     expect(transactions.rows.filter((tx) => tx.kind === 'usage_debit')).toHaveLength(1)
+  })
+
+  it('carries sub-cent usage forward instead of rounding every period', async () => {
+    const first = ratedPeriod({
+      id: '26e46977-e7be-419f-9768-76d01747edc2',
+      preciseCents: '0.6',
+      ratedCents: '1',
+    })
+    const second = ratedPeriod({
+      id: 'e1d44fa5-cf11-46ac-a8a6-1c8d3f42e0df',
+      preciseCents: '0.6',
+      ratedCents: '1',
+    })
+
+    expect(await service.debitRatedPeriod(first)).toMatchObject({ amountCents: '0' })
+    expect(await service.debitRatedPeriod(second)).toMatchObject({ amountCents: '-1' })
+    expect(wallets.rows[0]).toMatchObject({
+      freeBalanceCents: '9999',
+      paidBalanceCents: '0',
+      settlementRemainderCents: '0.2',
+    })
   })
 
   it('allows negative paid balance when usage exceeds prepaid balance', async () => {
@@ -273,6 +319,7 @@ describe('WalletService', () => {
 
     expect(await service.debitRatedPeriods()).toEqual({ debited: 1, skipped: 0 })
     expect(transactions.rows.filter((tx) => tx.kind === 'usage_debit')).toHaveLength(2)
+    expect(ratedPeriods.orderByPath).toBe('rp.ratedAt')
   })
 
   it('creates pending top-ups and completes provider events idempotently', async () => {

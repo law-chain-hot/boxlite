@@ -17,6 +17,7 @@ import { UsagePeriod } from './entities/usage-period.entity'
 import { applyUsagePeriodTransition, createUsagePeriodInput } from './usage-period-transition'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const METERING_SLICE_MS = 5 * 60 * 1000
 const DEFAULT_METERING_LOOKBACK_MS = 30 * ONE_DAY_MS
 const DEFAULT_METERING_LIMIT = 250
 const MAX_METERING_LIMIT = 1000
@@ -125,7 +126,7 @@ export class UsageService {
       const oldOpenPeriods = await this.periods.find({
         where: {
           endAt: IsNull(),
-          startAt: LessThan(new Date(now.getTime() - ONE_DAY_MS)),
+          startAt: LessThan(new Date(now.getTime() - METERING_SLICE_MS)),
         },
         take: 100,
       })

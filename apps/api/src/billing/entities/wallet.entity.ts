@@ -22,6 +22,9 @@ export class Wallet {
   @Column({ type: 'bigint', default: 0 })
   paidBalanceCents: string
 
+  @Column({ type: 'numeric', precision: 30, scale: 5, default: 0 })
+  settlementRemainderCents: string
+
   @Column({ type: 'timestamp with time zone', nullable: true })
   freeExpiresAt: Date | null
 
