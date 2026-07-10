@@ -487,6 +487,7 @@ def _seed_api_env(p: _Paths, agent_img: str | None = None) -> None:
     # and point the curated-image allowlist at the local arm64 agent image.
     _set_env_kv(api_env, "PORT", str(PORT_API))
     _set_env_kv(api_env, "APP_URL", f"http://localhost:{PORT_API}")
+    _set_env_kv(api_env, "BILLING_API_URL", f"http://localhost:{PORT_API}/api")
     if agent_img:
         _set_env_kv(api_env, "BOXLITE_SYSTEM_BASE_IMAGE", agent_img)
     apps_env = p.apps / ".env"  # NestJS reads .env from cwd=apps/
@@ -649,6 +650,9 @@ def restart(cfg: InfraConfig, names: list[str]) -> int:
     if unknown:
         err(f"unknown component/box: {' '.join(unknown)}")
         return 2
+
+    if "api" in l2:
+        _seed_api_env(p)
 
     healthy = True
     for name in l2:
