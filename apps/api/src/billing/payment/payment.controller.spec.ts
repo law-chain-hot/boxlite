@@ -63,4 +63,16 @@ describe('BillingPaymentController', () => {
     )
     await expect(controller.handle({ rawBody } as never, undefined)).rejects.toBeInstanceOf(BadRequestException)
   })
+
+  it('rejects an invalid Stripe signature as a bad request', async () => {
+    const controller = new PaymentWebhookController(paymentService as never)
+    const signatureError = Object.assign(new Error('signature does not match'), {
+      type: 'StripeSignatureVerificationError',
+    })
+    paymentService.handleWebhook.mockRejectedValueOnce(signatureError)
+
+    await expect(controller.handle({ rawBody: Buffer.from('{}') } as never, 'invalid')).rejects.toBeInstanceOf(
+      BadRequestException,
+    )
+  })
 })
