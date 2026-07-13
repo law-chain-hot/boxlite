@@ -94,7 +94,14 @@ export class PaymentWebhookController {
   ): Promise<{ received: true }> {
     if (!request.rawBody) throw new BadRequestException('payment webhook raw body is required')
     if (!signature) throw new BadRequestException('payment webhook signature is required')
-    await this.paymentService.handleWebhook(request.rawBody, signature)
+    try {
+      await this.paymentService.handleWebhook(request.rawBody, signature)
+    } catch (error) {
+      if ((error as { type?: string } | null)?.type === 'StripeSignatureVerificationError') {
+        throw new BadRequestException('payment webhook signature is invalid')
+      }
+      throw error
+    }
     return { received: true }
   }
 }
