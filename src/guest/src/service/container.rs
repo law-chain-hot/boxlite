@@ -209,8 +209,8 @@ impl ContainerService for GuestServer {
         }
 
         // Convert proto BindMount to UserMount for OCI spec.
-        // Prefer an explicit guest source path; otherwise keep the legacy
-        // convention: /run/boxlite/shared/containers/{id}/volumes/{name}.
+        // Construct full source path from convention:
+        // /run/boxlite/shared/containers/{id}/volumes/{name}
         let guest_layout = boxlite_shared::layout::SharedGuestLayout::new("/run/boxlite/shared");
         let container_layout = guest_layout.container(&container_id);
 
@@ -218,11 +218,7 @@ impl ContainerService for GuestServer {
             .mounts
             .iter()
             .map(|m| {
-                let volume_dir = if m.source.is_empty() {
-                    container_layout.volume_dir(&m.volume_name)
-                } else {
-                    std::path::PathBuf::from(&m.source)
-                };
+                let volume_dir = container_layout.volume_dir(&m.volume_name);
                 // Single-file mount: bind just the one file within the shared dir.
                 let source = if m.subpath.is_empty() {
                     volume_dir

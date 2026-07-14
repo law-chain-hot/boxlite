@@ -256,7 +256,7 @@ impl BoxBuilder {
             };
 
             #[cfg(target_os = "linux")]
-            let bind_mounts = std::mem::take(&mut ctx.bind_mounts);
+            let bind_mount = ctx.bind_mount.take();
 
             // Take the guard out of context, replacing with a disarmed placeholder.
             // The caller is responsible for disarming the returned guard after all
@@ -274,7 +274,7 @@ impl BoxBuilder {
                 container_disk,
                 guest_disk,
                 #[cfg(target_os = "linux")]
-                bind_mounts,
+                bind_mount,
             );
 
             Ok::<(LiveState, types::CleanupGuard), BoxliteError>((live_state, guard))

@@ -65,7 +65,7 @@ pub(crate) struct LiveState {
     // Platform-specific
     #[cfg(target_os = "linux")]
     #[allow(dead_code)]
-    bind_mounts: Vec<BindMountHandle>,
+    bind_mount: Option<BindMountHandle>,
 }
 
 impl LiveState {
@@ -76,7 +76,7 @@ impl LiveState {
         metrics: BoxMetricsStorage,
         container_rootfs_disk: Disk,
         guest_rootfs_disk: Option<Disk>,
-        #[cfg(target_os = "linux")] bind_mounts: Vec<BindMountHandle>,
+        #[cfg(target_os = "linux")] bind_mount: Option<BindMountHandle>,
     ) -> Self {
         Self {
             handler: std::sync::Mutex::new(handler),
@@ -85,7 +85,7 @@ impl LiveState {
             _container_rootfs_disk: container_rootfs_disk,
             guest_rootfs_disk,
             #[cfg(target_os = "linux")]
-            bind_mounts,
+            bind_mount,
         }
     }
 }

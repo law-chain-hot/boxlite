@@ -20,18 +20,17 @@ impl NativeBindMount {
         let target = config.target;
 
         ensure_target_dir_exists(target)?;
-        create_bind_mount(source, target, config.recursive)?;
-        set_slave_propagation(target, config.recursive)?;
+        create_bind_mount(source, target)?;
+        set_slave_propagation(target)?;
 
         if config.read_only {
-            remount_read_only(target, config.recursive)?;
+            remount_read_only(target)?;
         }
 
         debug!(
             source = %source.display(),
             target = %target.display(),
             read_only = config.read_only,
-            recursive = config.recursive,
             "Native bind mount created"
         );
 
@@ -70,13 +69,15 @@ impl BindMountImpl for NativeBindMount {
 // Helper functions
 // ============================================================================
 
-fn create_bind_mount(source: &Path, target: &Path, recursive: bool) -> BoxliteResult<()> {
-    let mut flags = MsFlags::MS_BIND;
-    if recursive {
-        flags |= MsFlags::MS_REC;
-    }
-
-    mount(Some(source), target, None::<&str>, flags, None::<&str>).map_err(|e| {
+fn create_bind_mount(source: &Path, target: &Path) -> BoxliteResult<()> {
+    mount(
+        Some(source),
+        target,
+        None::<&str>,
+        MsFlags::MS_BIND,
+        None::<&str>,
+    )
+    .map_err(|e| {
         BoxliteError::Storage(format!(
             "Failed to create bind mount {} -> {}: {}",
             source.display(),
@@ -86,13 +87,15 @@ fn create_bind_mount(source: &Path, target: &Path, recursive: bool) -> BoxliteRe
     })
 }
 
-fn set_slave_propagation(target: &Path, recursive: bool) -> BoxliteResult<()> {
-    let mut flags = MsFlags::MS_SLAVE;
-    if recursive {
-        flags |= MsFlags::MS_REC;
-    }
-
-    mount(None::<&str>, target, None::<&str>, flags, None::<&str>).map_err(|e| {
+fn set_slave_propagation(target: &Path) -> BoxliteResult<()> {
+    mount(
+        None::<&str>,
+        target,
+        None::<&str>,
+        MsFlags::MS_SLAVE,
+        None::<&str>,
+    )
+    .map_err(|e| {
         // Cleanup on failure
         let _ = umount2(target, MntFlags::MNT_DETACH);
         BoxliteError::Storage(format!(
@@ -103,13 +106,15 @@ fn set_slave_propagation(target: &Path, recursive: bool) -> BoxliteResult<()> {
     })
 }
 
-fn remount_read_only(target: &Path, recursive: bool) -> BoxliteResult<()> {
-    let mut flags = MsFlags::MS_BIND | MsFlags::MS_REMOUNT | MsFlags::MS_RDONLY;
-    if recursive {
-        flags |= MsFlags::MS_REC;
-    }
-
-    mount(None::<&str>, target, None::<&str>, flags, None::<&str>).map_err(|e| {
+fn remount_read_only(target: &Path) -> BoxliteResult<()> {
+    mount(
+        None::<&str>,
+        target,
+        None::<&str>,
+        MsFlags::MS_BIND | MsFlags::MS_REMOUNT | MsFlags::MS_RDONLY,
+        None::<&str>,
+    )
+    .map_err(|e| {
         // Cleanup on failure
         let _ = umount2(target, MntFlags::MNT_DETACH);
         BoxliteError::Storage(format!(

@@ -6,7 +6,6 @@
 //! Uses convention-based paths following Kata pattern:
 //! - Host: Only tracks volume_name, doesn't know guest paths
 //! - Guest: Constructs paths from `/run/boxlite/shared/containers/{container_id}/volumes/{volume_name}`
-//! - Or host may provide an explicit guest source path for aggregate shares
 
 use std::path::PathBuf;
 
@@ -20,8 +19,6 @@ use super::guest_volume::GuestVolumeManager;
 pub struct ContainerMount {
     /// Volume name (guest constructs full path using convention)
     pub volume_name: String,
-    /// Optional explicit source path in the guest.
-    pub source: Option<String>,
     /// Destination path in container
     pub destination: String,
     /// Read-only mount
@@ -99,7 +96,6 @@ impl<'a> ContainerVolumeManager<'a> {
         // Record container bind mount - guest constructs source path from convention
         self.container_mounts.push(ContainerMount {
             volume_name: volume_name.to_string(),
-            source: None,
             destination: container_path.to_string(),
             read_only,
             owner_uid,
@@ -153,7 +149,6 @@ mod tests {
         let mut mgr = ContainerVolumeManager::new(&mut guest);
         mgr.add_bind_volume(ContainerMount {
             volume_name: "uservol0".to_string(),
-            source: Some("/run/boxlite/user-volumes/uservol0".to_string()),
             destination: "/data".to_string(),
             read_only: false,
             owner_uid: 1000,
@@ -164,10 +159,6 @@ mod tests {
         let mounts = mgr.build_container_mounts();
         assert_eq!(mounts.len(), 1);
         assert_eq!(mounts[0].volume_name, "uservol0");
-        assert_eq!(
-            mounts[0].source.as_deref(),
-            Some("/run/boxlite/user-volumes/uservol0")
-        );
         assert_eq!(mounts[0].subpath, Some("app.conf".to_string()));
 
         drop(mgr);
