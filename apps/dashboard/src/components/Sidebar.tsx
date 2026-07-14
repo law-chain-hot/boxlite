@@ -73,9 +73,7 @@ const themeOptions: { value: Theme; label: string; icon: React.ReactElement }[] 
 function ThemeMenuItems({ theme, setTheme }: { theme: Theme; setTheme: (theme: Theme) => void }) {
   return (
     <div className="px-2 py-2">
-      <div className="px-1 pb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-        Theme
-      </div>
+      <div className="px-1 pb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Theme</div>
       <ToggleGroup
         type="single"
         value={theme}

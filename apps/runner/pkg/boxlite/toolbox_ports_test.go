@@ -51,4 +51,3 @@ func TestRemoveToolboxPortRecord(t *testing.T) {
 		t.Fatal("expected missing toolbox port record after removal")
 	}
 }
-

@@ -12,12 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useCreateApiKeyMutation } from '@/hooks/mutations/useCreateApiKeyMutation'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { handleApiError } from '@/lib/error-handling'
