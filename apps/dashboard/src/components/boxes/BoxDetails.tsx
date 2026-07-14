@@ -356,15 +356,19 @@ export default function BoxDetails() {
                   <Pause className="size-[13px]" fill="currentColor" /> stop
                 </button>
               )}
-              {writePermitted && isTransitioning(box) && !isRecoverable(box) && !isStartable(box) && !isStoppable(box) && (
-                <button
-                  type="button"
-                  disabled
-                  className="flex min-h-10 items-center gap-2 border border-border px-[15px] py-2 text-[13px] font-medium text-muted-foreground"
-                >
-                  <RefreshCw className="size-[14px] animate-spin" /> working…
-                </button>
-              )}
+              {writePermitted &&
+                isTransitioning(box) &&
+                !isRecoverable(box) &&
+                !isStartable(box) &&
+                !isStoppable(box) && (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex min-h-10 items-center gap-2 border border-border px-[15px] py-2 text-[13px] font-medium text-muted-foreground"
+                  >
+                    <RefreshCw className="size-[14px] animate-spin" /> working…
+                  </button>
+                )}
               {deletePermitted && (
                 <DropdownMenu>
                   <DropdownMenuTrigger
