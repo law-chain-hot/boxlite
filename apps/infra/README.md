@@ -196,12 +196,19 @@ For Auth0 specifically:
 
    Set **Allowed Logout URLs** to `https://<STACK_DOMAIN>`.
 2. **Custom API** — identifier becomes `OIDC_AUDIENCE` (e.g. `https://dev.boxlite.ai/api`)
-3. **Post-Login Action** — Auth0 access_tokens don't include `email_verified` by default;
+3. **Database email verification** — for manual email/password signups, require
+   Auth0 to verify the email before redirecting to BoxLite:
+   Authentication → Database → your connection → Attributes → Email →
+   **Verification Method: One-Time Password**. Auth0 requires Universal Login,
+   Flexible Identifiers, and Identifier-First login for email OTP verification.
+4. **Post-Login Action** — Auth0 access_tokens don't include `email_verified` by default;
    without it BoxLite suspends the user's organization. Use
    `functions/auth0/setCustomClaims.onExecutePostLogin.js`, copied from upstream BoxLite
-   with its AGPL-3.0 SPDX header preserved.
+   with its AGPL-3.0 SPDX header preserved. The action also denies login when
+   Auth0 still reports `email_verified !== true`, so unverified users do not
+   enter the BoxLite dashboard.
    Deploy → Actions → Flows → Login → drag onto flow → Apply.
-4. **RP-Initiated Logout End Session Endpoint Discovery** — required so the SPA's
+5. **RP-Initiated Logout End Session Endpoint Discovery** — required so the SPA's
    logout fully terminates the Auth0 session (otherwise the browser silently
    re-authenticates via the still-alive Auth0 cookie and "Sign out" looks like a
    page refresh). Dashboard → Settings → Advanced → "Login and Logout" → enable
@@ -394,8 +401,10 @@ received the `end_session_endpoint` fallback. Check API logs for the
 fix the underlying connectivity to the IdP and the next `/api/config` request
 self-heals.
 
-**"Organization is suspended: Please verify your email address"** — Auth0 access_token
-missing `email_verified` claim. Deploy the Post-Login Action described above.
+**"Organization is suspended: Please verify your email address"** — Auth0 let an
+unverified user reach BoxLite or the access_token is missing the
+`email_verified` claim. Enable email OTP verification on the Auth0 database
+connection and deploy the Post-Login Action described above.
 
 **Runner never reaches `READY`** — the runner pairs to its DB row by token
 (`BOXLITE_RUNNER_TOKEN`, baked into the EC2's user-data, must equal the row's
