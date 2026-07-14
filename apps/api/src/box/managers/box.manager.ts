@@ -178,6 +178,7 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
         readyRunners.map(async (runner) => {
           const boxes = await this.boxRepository
             .createQueryBuilder('box')
+            .addSelect('activity."lastActivityAt"', 'activity_lastActivityAt')
             .innerJoin('box_last_activity', 'activity', 'activity."boxId" = box.id')
             .where('box."runnerId" = :runnerId', { runnerId: runner.id })
             .andWhere('box."organizationId" != :warmPoolOrg', {
@@ -190,7 +191,7 @@ export class BoxManager implements TrackableJobExecutions, OnApplicationShutdown
             .andWhere('box.pending != true')
             .andWhere('box."autoDeleteInterval" >= 0')
             .andWhere('activity."lastActivityAt" < NOW() - INTERVAL \'1 minute\' * box."autoDeleteInterval"')
-            .orderBy('activity."lastActivityAt"', 'ASC')
+            .orderBy('activity_lastActivityAt', 'ASC')
             .limit(100)
             .getMany()
 

@@ -14,6 +14,7 @@ import { SystemRole } from '../../user/enums/system-role.enum'
 import { UserCreatedEvent } from '../../user/events/user-created.event'
 import { UserDeletedEvent } from '../../user/events/user-deleted.event'
 import { OrganizationDto } from '../dto/organization.dto'
+import { RegionType } from '../../region/enums/region-type.enum'
 
 const legacyOrganizationPersonalFlag = ['pers', 'onal'].join('')
 
@@ -33,7 +34,7 @@ function createEntityManager() {
   return { entityManager, saved }
 }
 
-function createOrganizationService() {
+function createOrganizationService(overrides: { regionRepository?: unknown } = {}) {
   const configService = {
     get: jest.fn(() => undefined),
     getOrThrow: jest.fn((key: string) => {
@@ -51,7 +52,7 @@ function createOrganizationService() {
     { emitAsync: jest.fn() } as never,
     configService as never,
     {} as never,
-    {} as never,
+    (overrides.regionRepository ?? {}) as never,
     {} as never,
     {} as never,
   )
@@ -110,6 +111,53 @@ describe('default organization membership semantics', () => {
       isDefaultForUser: true,
     })
     expect(saved).toContain(organization)
+  })
+
+  it('lists available regions without referencing the removed region quota table', async () => {
+    const queryFragments: string[] = []
+    const region = {
+      id: 'us',
+      name: 'us',
+      organizationId: null,
+      regionType: RegionType.SHARED,
+      createdAt: new Date('2026-07-06T00:00:00.000Z'),
+      updatedAt: new Date('2026-07-06T00:00:00.000Z'),
+      proxyUrl: 'https://proxy.app.boxlite.ai',
+      sshGatewayUrl: 'ssh://ssh.app.boxlite.ai:2222',
+    }
+    const queryBuilder = {
+      where: jest.fn((fragment: string) => {
+        queryFragments.push(fragment)
+        return queryBuilder
+      }),
+      orWhere: jest.fn((fragment: string) => {
+        queryFragments.push(fragment)
+        return queryBuilder
+      }),
+      orderBy: jest.fn(() => queryBuilder),
+      getMany: jest.fn().mockResolvedValue([region]),
+    }
+    const service = createOrganizationService({
+      regionRepository: {
+        createQueryBuilder: jest.fn(() => queryBuilder),
+      },
+    })
+
+    const regions = await service.listAvailableRegions('org-1')
+
+    expect(regions).toEqual([
+      {
+        id: 'us',
+        name: 'us',
+        organizationId: null,
+        regionType: RegionType.SHARED,
+        createdAt: '2026-07-06T00:00:00.000Z',
+        updatedAt: '2026-07-06T00:00:00.000Z',
+        proxyUrl: 'https://proxy.app.boxlite.ai',
+        sshGatewayUrl: 'ssh://ssh.app.boxlite.ai:2222',
+      },
+    ])
+    expect(queryFragments.join('\n')).not.toContain('region_quota')
   })
 
   it('allows invitations to default organizations because they are regular organizations', async () => {

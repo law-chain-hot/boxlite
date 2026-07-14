@@ -22,7 +22,7 @@ export type AppEnvironment = 'local' | 'development' | 'production'
 // `local` is intentionally omitted: it falls back to the dashboard's own /api.
 const REST_API_URL_BY_ENV: Partial<Record<AppEnvironment, string>> = {
   development: 'https://dev.boxlite.ai/api',
-  production: 'https://api.boxlite.ai/api',
+  production: 'https://api.app.boxlite.ai/api',
 }
 
 /** Resolve the current environment from the hostname. */
